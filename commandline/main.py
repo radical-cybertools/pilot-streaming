@@ -1,5 +1,5 @@
 '''
-Command Line Util for using BigJob (via the Pilot-API)
+Command Line Util for using PilotStreaming (via the Pilot-API)
 '''
 import saga
 import argparse

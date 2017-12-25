@@ -39,7 +39,7 @@ Try to run a local Hadoop (e.g. for development and testing)
     
 Try to run a Hadoop cluster inside a PBS/Torque job:
 
-    saga-hadoop --resource pbs+ssh://india.futuregrid.org --number_cores 8
+    psm --resource pbs+ssh://india.futuregrid.org --number_cores 8
 
 Some Blog Posts about SAGA-Hadoop:
 
@@ -66,17 +66,17 @@ see `dask` for setting up a Dask Distributed 1.20.2 cluster
 
 ***Stampede:***
 
-    saga-hadoop --resource=slurm://localhost --queue=normal --walltime=239 --number_cores=256 --project=xxx
+    psm --resource=slurm://localhost --queue=normal --walltime=239 --number_cores=256 --project=xxx
 
 
 ***Gordon:***
 
-    saga-hadoop --resource=pbs://localhost --walltime=59 --number_cores=16 --project=TG-CCR140028 --framework=spark
+    psm --resource=pbs://localhost --walltime=59 --number_cores=16 --project=TG-CCR140028 --framework=spark
     
 
 ***Wrangler***
 
     export JAVA_HOME=/usr/java/jdk1.8.0_45/
-    saga-hadoop --resource=slurm://localhost --queue=normal --walltime=59 --number_cores=24 --project=xxx
+    psm --resource=slurm://localhost --queue=normal --walltime=59 --number_cores=24 --project=xxx
 
 
