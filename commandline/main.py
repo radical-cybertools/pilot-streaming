@@ -13,12 +13,14 @@ import time
 import subprocess
 import re
 import spark.bootstrap_spark
-
+import uuid
 
 
 logging.basicConfig(level=logging.DEBUG)
  
-SAGA_HADOOP_DIRECTORY="~/.hadoop"  
+SAGA_HADOOP_DIRECTORY="~/.hadoop"
+
+jobid = "dask-"+str(uuid.uuid1())
   
 class SAGAHadoopCLI(object):
     
@@ -42,6 +44,12 @@ class SAGAHadoopCLI(object):
                          config_name="default"
                          ):
 
+        wd = os.path.join(working_directory, jobid)
+        try:
+            os.makedirs(os.path.join(working_directory, jobid))
+        except:
+            pass
+
         try:
             # create a job service for Futuregrid's 'india' PBS cluster
             js = saga.job.Service(resource_url)
@@ -56,9 +64,9 @@ class SAGAHadoopCLI(object):
             jd.executable = executable
             jd.arguments = arguments
             # output options
-            jd.output = os.path.join("dask_job.stdout")
-            jd.error = os.path.join("dask_job.stderr")
-            jd.working_directory = working_directory
+            jd.output = os.path.join(wd, "dask_job.stdout")
+            jd.error = os.path.join(wd, "dask_job.stderr")
+            jd.working_directory = wd
             jd.queue = queue
             if project != None:
                 jd.project = project
@@ -83,8 +91,8 @@ class SAGAHadoopCLI(object):
                 state = myjob.get_state()
                 print "Job State: %s" % state
                 if state == "Running":
-                    if os.path.exists(os.path.join(working_directory, "work/dask_started")):
-                        self.get_flink_config_data(id, working_directory)
+                    if os.path.exists(os.path.join(wd, "dask_started")):
+                        self.get_dask_config_data(id, wd)
                         break
                 elif state == "Failed":
                     break
@@ -564,7 +572,9 @@ def main():
     saga_hadoop_group.add_argument('--framework', action="store", nargs="?", metavar="FRAMEWORK", help="Framework to start: [hadoop, spark, kafka, flink]", default="hadoop")
     saga_hadoop_group.add_argument("-n", "--config_name", action="store", nargs="?", metavar="CONFIG_NAME", help="Name of config for host", default="default")
 
-    parsed_arguments = parser.parse_args()    
+    parsed_arguments = parser.parse_args()
+
+
 
     if parsed_arguments.version==True:
         app.version()
