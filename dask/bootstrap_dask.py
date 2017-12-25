@@ -19,7 +19,7 @@ import datetime
 
 logging.basicConfig(level=logging.DEBUG)
 
-WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
+WORKING_DIRECTORY = os.path.join(os.getcwd())
 try:
     os.makedirs(WORKING_DIRECTORY)
 except:

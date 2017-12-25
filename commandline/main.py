@@ -20,7 +20,9 @@ logging.basicConfig(level=logging.DEBUG)
  
 SAGA_HADOOP_DIRECTORY="~/.hadoop"
 
+global jobid
 jobid = "dask-"+str(uuid.uuid1())
+global wd
   
 class SAGAHadoopCLI(object):
     
@@ -87,16 +89,27 @@ class SAGAHadoopCLI(object):
             # print "**** Job: " + str(id) + " State : %s" % (myjob.get_state())
             # print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
 
+            print "Waiting for cluster startup"
+            print "Job Id: %s. Job State: %s" % (myjob.id, myjob.get_state())
             while True:
                 state = myjob.get_state()
-                print "Job State: %s" % state
+                logging.debug("Job Id: %s. Job State: %s" % (myjob.id, myjob.get_state()))
                 if state == "Running":
-                    if os.path.exists(os.path.join(wd, "dask_started")):
+                    if os.path.exists(os.path.join(wd, "dask_scheduler")):
+                        print "Job active. \n***************Cluster Information********" 
                         self.get_dask_config_data(id, wd)
                         break
                 elif state == "Failed":
                     break
                 time.sleep(3)
+
+            print "Pilot Streaming Job Id: %s"%jobid
+            job_match=re.search("(?<=-\\[)[0-9]*", myjob.id, re.S)
+            if job_match:
+                job_ref = job_match.group(0)
+                print "Local Resource Manager Job Id: %s"%job_ref
+                print """To cancel job: 
+                        qdel %s or scancel %s"""%(job_ref,job_ref)
             return myjob
 
         except Exception as ex:
@@ -514,7 +527,7 @@ class SAGAHadoopCLI(object):
     # auxiliary methods
 
     def version(self):
-        print "SAGA Hadoop Version: " + bigjob.version
+        print "Pilot Streaming Version: " + bigjob.version
     
     def clean(self):
         os.remove(self.__get_save_filename())
@@ -555,7 +568,7 @@ def main():
                               default="fork://localhost")
     saga_hadoop_group.add_argument('--working_directory', action="store", nargs="?", metavar="WORKING_DIRECTORY", 
                               help="Working directory (by default current working directory)",
-                              default=os.getcwd())
+                              default=os.path.join(os.getcwd(), "work"))
         
     saga_hadoop_group.add_argument('--spmd_variation', action="store", nargs="?", metavar="SPMD_VARIATION", 
                               help="Parallel environment, e.g. openmpi",
@@ -577,7 +590,7 @@ def main():
     parsed_arguments = parser.parse_args()
 
     # Create working directory if needed
-    wd = os.path.join(parsed_arguments.working_directory, "work")
+    wd = parsed_arguments.working_directory
     try:
         os.makedirs(os.path.join(wd))
     except:

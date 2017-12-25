@@ -1,10 +1,10 @@
 # Pilot-Streaming
 
-Last Updated: 12/09/2017
+Last Updated: 12/25/2017
 
 # Overview:
 
-Use [SAGA](http://saga-project.github.io/saga-python/) to manage Streaming environment 
+ Pilot-Streaming is a tool to manage Streaming environment 
  consisting of Kafka, Spark Streaming, Flink and Dask on HPC systems. 
  It is based on the [SAGA-Hadoop](http://github.com/drelu/saga-hadoop) tool and extends 
  it for streaming.
@@ -22,19 +22,20 @@ Requirements:
 	* JAVA needs to be installed and in PATH
 
 
+Anaconda is the preferred distribution
 
 
 # Usage
 
 Requirement (in case a manual installation is required):
     
-    pip install pykafka saga-python
+    pip install pykafka saga-python paramiko
 
 Try to run a local Hadoop (e.g. for development and testing)
 	
 	
-    pip install saga-hadoop
-    saga-hadoop --resource fork://localhost
+    pip install --upgrade .
+    psm --resource fork://localhost
     
     
 Try to run a Hadoop cluster inside a PBS/Torque job:
