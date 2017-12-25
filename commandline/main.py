@@ -13,7 +13,7 @@ import time
 import subprocess
 import re
 import spark.bootstrap_spark
-
+import 
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -544,7 +544,7 @@ def main():
                               help="submit a job to specified resource, e.g. fork://localhost",
                               default="fork://localhost")
     saga_hadoop_group.add_argument('--working_directory', action="store", nargs="?", metavar="WORKING_DIRECTORY", 
-                              help="submit a job to specified resource, e.g. fork://localhost",
+                              help="Working directory (by default current working directory)",
                               default=os.getcwd())    
         
     saga_hadoop_group.add_argument('--spmd_variation', action="store", nargs="?", metavar="SPMD_VARIATION", 

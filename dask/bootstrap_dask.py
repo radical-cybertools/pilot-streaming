@@ -137,7 +137,7 @@ class DaskBootstrap():
         self.nodes = self.get_nodelist_from_resourcemanager()
         logging.debug("Dask nodes: " + str(self.nodes))
         self.master = socket.gethostname().split(".")[0]
-        with open(os.path.join(WORKING_DIRECTORY, "dask_scheduler")) as master_file:
+        with open(os.path.join(WORKING_DIRECTORY, "dask_scheduler"), "w") as master_file:
             master_file.write(self.master+":8686")
 
 
