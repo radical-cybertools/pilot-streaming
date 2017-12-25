@@ -541,6 +541,8 @@ class SAGAHadoopCLI(object):
 
 
 def main():
+
+
     app = SAGAHadoopCLI()
     parser = argparse.ArgumentParser(add_help=True, description="""SAGA Hadoop Command Line Utility""")
     
@@ -553,7 +555,7 @@ def main():
                               default="fork://localhost")
     saga_hadoop_group.add_argument('--working_directory', action="store", nargs="?", metavar="WORKING_DIRECTORY", 
                               help="Working directory (by default current working directory)",
-                              default=os.getcwd())    
+                              default=os.getcwd())
         
     saga_hadoop_group.add_argument('--spmd_variation', action="store", nargs="?", metavar="SPMD_VARIATION", 
                               help="Parallel environment, e.g. openmpi",
@@ -574,6 +576,12 @@ def main():
 
     parsed_arguments = parser.parse_args()
 
+    # Create working directory if needed
+    wd = os.path.join(parsed_arguments.working_directory, "work")
+    try:
+        os.makedirs(os.path.join(wd))
+    except:
+        pass
 
 
     if parsed_arguments.version==True:
@@ -628,9 +636,7 @@ def main():
                               walltime=parsed_arguments.walltime,
                               project=parsed_arguments.project,
                               config_name=parsed_arguments.config_name)
-    
-    
+
         
 if __name__ == '__main__':
     main()
-    
