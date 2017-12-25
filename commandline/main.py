@@ -323,6 +323,12 @@ class SAGAHadoopCLI(object):
                           project=None,
                           config_name="default"
     ):
+        wd = os.path.join(working_directory, jobid)
+        try:
+            os.makedirs(os.path.join(working_directory, jobid))
+        except:
+            pass
+
 
         try:
             # create a job service for Futuregrid's 'india' PBS cluster
