@@ -167,6 +167,13 @@ class SparkBootstrap(object):
             slave_file.close()
             logging.debug("Spark cluster nodes: " + str(nodes))
 
+    def configure_spark_extension(self):
+        nodes = self.get_nodelist_from_resourcemanager()
+        if nodes!=None:
+            slave_file = open(os.path.join(self.job_conf_dir, "slaves"), "w")
+            slave_file.writelines(nodes) 
+            slave_file.close()
+            logging.debug("Spark cluster nodes: " + str(nodes))
 
     def start_spark(self):
         logging.debug("Start Spark")
@@ -205,7 +212,7 @@ class SparkBootstrap(object):
 
     def extend(self):
         """Extend parent Spark cluster"""
-        self.configure_spark()
+        self.configure_spark_extension()
         self.start_spark_slaves()
 
     def start_spark_slaves(self):
@@ -224,13 +231,14 @@ class SparkBootstrap(object):
         master_ip = socket.gethostbyname(socket.gethostname())
         with open(os.path.join(path_to_parent_spark_job, "spark_master"), "r") as f:
             master_ip = f.read()
-
-        self.job_conf_dir = os.path.join(path_to_parent_spark_job,
-                                         os.path.basename(SPARK_DOWNLOAD_URL).rpartition(".")[0],
-                                         "conf")
-
-        logging.debug("Export SPARK_CONF_DIR to %s"%self.job_conf_dir)
         os.environ["SPARK_CONF_DIR"]=self.job_conf_dir
+
+        #self.job_conf_dir = os.path.join(path_to_parent_spark_job,
+        #                                 os.path.basename(SPARK_DOWNLOAD_URL).rpartition(".")[0],
+        #                                 "conf")
+
+        #logging.debug("Export SPARK_CONF_DIR to %s"%self.job_conf_dir)
+        #os.environ["SPARK_CONF_DIR"]=self.job_conf_dir
         #os.environ["SPARK_MASTER_IP"]=socket.gethostname().split(".")[0]
         os.environ["SPARK_MASTER_IP"]=master_ip
         print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_IP"])
