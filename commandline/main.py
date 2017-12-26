@@ -325,6 +325,8 @@ class SAGAHadoopCLI(object):
             # environment, executable & arguments
             executable = "python"
             arguments = ["-m", "spark.bootstrap_spark"]
+            if extend_job_id!=None:
+                arguments = ["-m", "spark.bootstrap_spark", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
             jd.executable  = executable
             jd.arguments   = arguments
@@ -520,7 +522,8 @@ class SAGAHadoopCLI(object):
         os.remove(self.__get_save_filename())
 
     def print_pilot_streaming_job_id(self, job):
-        print "Pilot Streaming Job Id: %s" % job.id
+        global jobid
+        print "Pilot Streaming Job Id: %s" % jobid
         job_match = re.search("(?<=-\\[)[0-9]*", job.id, re.S)
         if job_match:
             job_ref = job_match.group(0)
