@@ -231,7 +231,6 @@ class SparkBootstrap(object):
     def set_env_extension(self):
         master_ip = self.find_parent_master()
         os.environ["SPARK_CONF_DIR"]=self.job_conf_dir
-
         #self.job_conf_dir = os.path.join(path_to_parent_spark_job,
         #                                 os.path.basename(SPARK_DOWNLOAD_URL).rpartition(".")[0],
         #                                 "conf")
@@ -240,6 +239,7 @@ class SparkBootstrap(object):
         #os.environ["SPARK_CONF_DIR"]=self.job_conf_dir
         #os.environ["SPARK_MASTER_IP"]=socket.gethostname().split(".")[0]
         os.environ["SPARK_MASTER_IP"]=master_ip
+        os.environ["SPARK_MASTER_HOST"]=master_ip
         print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_IP"])
         os.system("pkill -9 java")
 
@@ -249,6 +249,7 @@ class SparkBootstrap(object):
         master_ip = socket.gethostbyname(socket.gethostname())
         with open(os.path.join(path_to_parent_spark_job, "spark_master"), "r") as f:
             master_ip = f.read()
+        print "Master of Parent Cluster: %s"%master_ip
         return master_ip
 
     ###################################################################################################################
