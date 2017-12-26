@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1254de8c-5a74-4637-aa37-ad529ca33370" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/commandline/main.py" afterPath="$PROJECT_DIR$/commandline/main.py" />
+      <change beforePath="$PROJECT_DIR$/spark/bootstrap_spark.py" afterPath="$PROJECT_DIR$/spark/bootstrap_spark.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -25,7 +25,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="main.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/commandline/main.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="484">
@@ -47,11 +47,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="bootstrap_spark.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="bootstrap_spark.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/spark/bootstrap_spark.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="355">
-              <caret line="283" column="22" lean-forward="true" selection-start-line="283" selection-start-column="22" selection-end-line="283" selection-end-column="22" />
+            <state relative-caret-position="529">
+              <caret line="317" column="22" lean-forward="false" selection-start-line="317" selection-start-column="22" selection-end-line="317" selection-end-column="22" />
               <folding />
             </state>
           </provider>
@@ -115,6 +115,7 @@
     <findStrings>
       <find>Working</find>
       <find>scan_dir</find>
+      <find>set_env</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -128,8 +129,8 @@
         <option value="$PROJECT_DIR$/pilot/streaming/manager.py" />
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/spark/bootstrap_spark_extension.py" />
-        <option value="$PROJECT_DIR$/spark/bootstrap_spark.py" />
         <option value="$PROJECT_DIR$/commandline/main.py" />
+        <option value="$PROJECT_DIR$/spark/bootstrap_spark.py" />
       </list>
     </option>
   </component>
@@ -579,14 +580,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/spark/bootstrap_spark.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="355">
-          <caret line="283" column="22" lean-forward="true" selection-start-line="283" selection-start-column="22" selection-end-line="283" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/commandline/main.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="484">
@@ -594,6 +587,14 @@
           <folding>
             <element signature="e#71#82#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/spark/bootstrap_spark.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="529">
+          <caret line="317" column="22" lean-forward="false" selection-start-line="317" selection-start-column="22" selection-end-line="317" selection-end-column="22" />
+          <folding />
         </state>
       </provider>
     </entry>

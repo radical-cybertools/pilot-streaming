@@ -62,13 +62,14 @@ def handler(signum, frame):
 class SparkBootstrap(object):
 
 
-    def __init__(self, working_directory, spark_home):
+    def __init__(self, working_directory, spark_home, extension_job_id=None):
         self.working_directory=working_directory
         self.jobid = "spark-conf-"+str(uuid.uuid1())
         #self.job_working_directory = os.path.join(WORKING_DIRECTORY, self.jobid)
         self.job_working_directory=spark_home
         self.job_conf_dir = os.path.join(self.job_working_directory, "conf")
         self.master="localhost"
+        self.extension_job_id = extension_job_id # Pilot Streaming job id of base cluster
 
 
     ###################################################################################################### 
@@ -161,7 +162,6 @@ class SparkBootstrap(object):
             master_file2.write(master)
             master_file2.close()    
 
-
             slave_file = open(os.path.join(self.job_conf_dir, "slaves"), "w")
             slave_file.writelines(nodes) 
             slave_file.close()
@@ -176,16 +176,15 @@ class SparkBootstrap(object):
         #os.system(". ~/.bashrc & " + start_command)
         status = subprocess.call(start_command, shell=True)
         print("SPARK started, please set SPARK_CONF_DIR to:\nexport SPARK_CONF_DIR=%s"%self.job_conf_dir)
-        
-        
+
+
     def stop_spark(self):
         logging.debug("Stop Spark")
         self.set_env() 
         stop_command = os.path.join(SPARK_HOME, "sbin/stop-all.sh")
         logging.debug("Execute: %s"%stop_command)
         os.system(stop_command)
-    
-    
+
     def start(self):
         if not os.environ.has_key("SPARK_CONF_DIR") or os.path.exists(os.environ["SPARK_CONF_DIR"])==False:
             self.configure_spark()
@@ -194,7 +193,6 @@ class SparkBootstrap(object):
             self.job_conf_dir=os.environ["SPARK_CONF_DIR"]
 
         self.start_spark()
-        
 
     def stop(self):
         if os.environ.has_key("SPARK_CONF_DIR") and os.path.exists(os.environ["SPARK_CONF_DIR"])==True:
@@ -202,6 +200,44 @@ class SparkBootstrap(object):
             self.job_log_dir=os.path.join(self.job_conf_dir, "../log")
         self.stop_spark()
 
+    ###################################################################################################################
+    # Methods for extending Spark Cluster
+
+    def extend(self):
+        """Extend parent Spark cluster"""
+        self.configure_spark()
+        self.start_spark_slaves()
+
+    def start_spark_slaves(self):
+        logging.debug("Start Spark Slaves Only")
+        self.set_env_extension()
+        start_command = os.path.join(SPARK_HOME, "sbin/start-slaves.sh")
+        logging.debug("Execute: %s"%start_command)
+        #os.system(". ~/.bashrc & " + start_command)
+        status = subprocess.call(start_command, shell=True)
+        print("SPARK started, please set SPARK_CONF_DIR to:\nexport SPARK_CONF_DIR=%s"%self.job_conf_dir)
+
+
+    def set_env_extension(self):
+        path_to_parent_spark_job = os.path.join(os.getcwd(), "..", self.extension_job_id)
+        logging.debug("Extend parent Spark job: %s"%path_to_parent_spark_job)
+        master_ip = socket.gethostbyname(socket.gethostname())
+        with open(os.path.join(path_to_parent_spark_job, "spark_master"), "r") as f:
+            master_ip = f.read()
+
+        self.job_conf_dir = os.path.join(path_to_parent_spark_job,
+                                         os.path.basename(SPARK_DOWNLOAD_URL).rpartition(".")[0],
+                                         "conf")
+
+        logging.debug("Export SPARK_CONF_DIR to %s"%self.job_conf_dir)
+        os.environ["SPARK_CONF_DIR"]=self.job_conf_dir
+        #os.environ["SPARK_MASTER_IP"]=socket.gethostname().split(".")[0]
+        os.environ["SPARK_MASTER_IP"]=master_ip
+        print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_IP"])
+        os.system("pkill -9 java")
+
+    ###################################################################################################################
+    # Aux methods
 
     def set_env(self):
         logging.debug("Export SPARK_CONF_DIR to %s"%self.job_conf_dir)
@@ -276,15 +312,14 @@ if __name__ == "__main__" :
     performance_trace_file.flush() 
     (options, args) = parser.parse_args()
     
-    spark = SparkBootstrap(WORKING_DIRECTORY, SPARK_HOME)
+    spark = SparkBootstrap(WORKING_DIRECTORY, SPARK_HOME, options.jobid)
     if options.jobid is not None and options.jobid != "None":
-        logging.debug("Extend SPARK Cluster on: %s" % options.jobid)
+        logging.debug("Extend SPARK Cluster with PS ID: %s" % options.jobid)
+        spark.extend()
     elif options.start:
         spark.start()
         number_workers=0
         while number_workers!=number_nodes:
-            #brokers=spark.check_spark()
-            #number_workers=len(brokers)
             number_workers=spark.check_spark()
             logging.debug("Number workers: %d, number nodes: %d"%(number_workers,number_nodes))
             time.sleep(1)
@@ -294,9 +329,7 @@ if __name__ == "__main__" :
     else:
         spark.stop()
         if options.clean:
-            directory = "/tmp/hadoop-"+os.getlogin()
-            logging.debug("delete: " + directory)
-            shutil.rmtree(directory)
+            pass
         sys.exit(0)
     
     print "Finished launching of SPARK Cluster - Sleeping now"
