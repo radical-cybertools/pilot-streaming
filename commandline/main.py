@@ -27,9 +27,7 @@ global wd
 class SAGAHadoopCLI(object):
     
     def __init__(self):
-        self.pilots = []
-        self.__restore()
-
+        pass
 
     ####################################################################################################################
     # Dask Distributed 1.20.2
@@ -45,12 +43,7 @@ class SAGAHadoopCLI(object):
                          project=None,
                          config_name="default"
                          ):
-        jobid = "dask-"+jobid
-        wd = os.path.join(working_directory, jobid)
-        try:
-            os.makedirs(os.path.join(working_directory, jobid))
-        except:
-            pass
+        wd = self.create_job_directory(working_directory, "dask")
 
         try:
             # create a job service for Futuregrid's 'india' PBS cluster
@@ -84,7 +77,6 @@ class SAGAHadoopCLI(object):
             # print "Starting Spark bootstrap job ..."
             # run the job (submit the job to PBS)
             myjob.run()
-            id = myjob.get_id()
             # id = id[id.index("]-[")+3: len(id)-1]
             # print "**** Job: " + str(id) + " State : %s" % (myjob.get_state())
             # print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
@@ -103,17 +95,13 @@ class SAGAHadoopCLI(object):
                     break
                 time.sleep(3)
 
-            print "Pilot Streaming Job Id: %s"%jobid
-            job_match=re.search("(?<=-\\[)[0-9]*", myjob.id, re.S)
-            if job_match:
-                job_ref = job_match.group(0)
-                print "Local Resource Manager Job Id: %s"%job_ref
-                print """To cancel job: 
-                        qdel %s or scancel %s"""%(job_ref,job_ref)
+            self.print_pilot_streaming_job_id(myjob)
             return myjob
 
         except Exception as ex:
             print "An error occurred: %s" % (str(ex))
+
+
 
     def get_dask_config_data(self, jobid, working_directory=None):
         master_file = os.path.join(working_directory, "dask_scheduler")
@@ -239,6 +227,7 @@ class SAGAHadoopCLI(object):
                          config_name="default"
                          ):
 
+        wd = self.create_job_directory(working_directory, "kafka")
         try:
             # create a job service for Futuregrid's 'india' PBS cluster
             js = saga.job.Service(resource_url)
@@ -321,15 +310,10 @@ class SAGAHadoopCLI(object):
                           queue=None,
                           walltime=None,
                           project=None,
-                          config_name="default"
+                          config_name="default",
+                          extend_job_id=None
     ):
-        global jobid
-        jobid="spark-"+jobid
-        wd = os.path.join(working_directory, jobid)
-        try:
-            os.makedirs(os.path.join(working_directory, jobid))
-        except:
-            pass
+        wd = self.create_job_directory(working_directory, "spark")
 
         try:
             # create a job service for Futuregrid's 'india' PBS cluster
@@ -379,18 +363,12 @@ class SAGAHadoopCLI(object):
                 elif state == "Failed":
                     break
                 time.sleep(3)
+
+            self.print_pilot_streaming_job_id(myjob)
             return myjob
 
         except Exception as ex:
             print "An error occurred: %s" % (str(ex))
-
-    def scan_dir(dir):
-        for name in os.listdir(dir):
-            path = os.path.join(dir, name)
-            if os.path.isfile(path):
-                print path
-            else:
-                scan_dir(path)
 
 
     def get_spark_config_data(self, jobid, working_directory):
@@ -536,11 +514,30 @@ class SAGAHadoopCLI(object):
     # auxiliary methods
 
     def version(self):
-        print "Pilot Streaming Version: " + bigjob.version
+        print "Pilot Streaming Version: 0.0.0"
     
     def clean(self):
         os.remove(self.__get_save_filename())
-    
+
+    def print_pilot_streaming_job_id(self, job):
+        print "Pilot Streaming Job Id: %s" % job.id
+        job_match = re.search("(?<=-\\[)[0-9]*", job.id, re.S)
+        if job_match:
+            job_ref = job_match.group(0)
+            print "Local Resource Manager Job Id: %s" % job_ref
+            print """To cancel job: 
+                           qdel %s or scancel %s""" % (job_ref, job_ref)
+
+    def create_job_directory(self, working_directory, framework):
+        global jobid
+        jobid = framework + "-" + jobid
+        wd = os.path.join(working_directory, jobid)
+        try:
+            os.makedirs(os.path.join(working_directory, jobid))
+        except:
+            pass
+        return wd
+
     ###########################################################################
     # private and protected methods
     
@@ -566,7 +563,7 @@ def main():
 
 
     app = SAGAHadoopCLI()
-    parser = argparse.ArgumentParser(add_help=True, description="""SAGA Hadoop Command Line Utility""")
+    parser = argparse.ArgumentParser(add_help=True, description="""Pilot-Streaming Command Line Utility""")
     
     parser.add_argument('--clean', action="store_true", default=False)
     parser.add_argument('--version', action="store_true", default=False)    
@@ -587,13 +584,16 @@ def main():
                               default=None)    
     saga_hadoop_group.add_argument('--walltime', action="store", nargs="?", metavar="WALLTIME", 
                               help="Wall time limit",
-                              default=None)    
+                              default=None)
+    saga_hadoop_group.add_argument('--extend', action="store", nargs="?", metavar="EXTEND",
+                                   help="Add resources to existing cluster.",
+                                   default=None)
 
     saga_hadoop_group.add_argument('--number_cores', default="1", nargs="?")
     saga_hadoop_group.add_argument('--cores_per_node',  default="1", nargs="?")    
     saga_hadoop_group.add_argument('--project', action="store", nargs="?", metavar="PROJECT", help="Allocation id for project", default=None)
 
-    saga_hadoop_group.add_argument('--framework', action="store", nargs="?", metavar="FRAMEWORK", help="Framework to start: [hadoop, spark, kafka, flink]", default="hadoop")
+    saga_hadoop_group.add_argument('--framework', action="store", nargs="?", metavar="FRAMEWORK", help="Framework to start: [hadoop, spark, kafka, flink, dask]", default="hadoop")
     saga_hadoop_group.add_argument("-n", "--config_name", action="store", nargs="?", metavar="CONFIG_NAME", help="Name of config for host", default="default")
 
     parsed_arguments = parser.parse_args()
@@ -627,7 +627,8 @@ def main():
                               queue=parsed_arguments.queue,
                               walltime=parsed_arguments.walltime,
                               project=parsed_arguments.project,
-                              config_name=parsed_arguments.config_name)
+                              config_name=parsed_arguments.config_name,
+                              extend_job_id=parsed_arguments.extend)
     elif parsed_arguments.framework=="flink":
         app.submit_flink_job(resource_url=parsed_arguments.resource,
                              working_directory=parsed_arguments.working_directory,
@@ -648,7 +649,7 @@ def main():
                              walltime=parsed_arguments.walltime,
                              project=parsed_arguments.project,
                              config_name=parsed_arguments.config_name)
-    else:
+    elif parsed_arguments.framework == "hadoop":
         app.submit_hadoop_job(resource_url=parsed_arguments.resource, 
                               working_directory=parsed_arguments.working_directory, 
                               number_cores=parsed_arguments.number_cores, 
@@ -658,6 +659,8 @@ def main():
                               walltime=parsed_arguments.walltime,
                               project=parsed_arguments.project,
                               config_name=parsed_arguments.config_name)
+    else:
+        print "No framework specified. Please use --framework argument (see --help)"
 
         
 if __name__ == '__main__':

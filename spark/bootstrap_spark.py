@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" Spark Bootstrap Script (based on Spark 1.2 release) """
+""" Spark Bootstrap Script (based on Spark 2.2 release) """
 import os, sys
 import pdb
 import urllib
@@ -237,6 +237,8 @@ if __name__ == "__main__" :
     parser = OptionParser()
     parser.add_option("-s", "--start", action="store_true", dest="start",
                   help="start Spark", default=True)
+    parser.add_option("-j", "--job", type="string", action="store", dest="jobid",
+                      help="Job ID of Spark Cluster to Extend")
     parser.add_option("-q", "--quit", action="store_false", dest="start",
                   help="terminate Spark")
 
@@ -256,7 +258,6 @@ if __name__ == "__main__" :
             os.makedirs(WORKING_DIRECTORY)
         except:
             pass
-        
 
         download_destination = os.path.join(WORKING_DIRECTORY,"spark.tar.gz")
         if os.path.exists(download_destination)==False:
@@ -276,7 +277,9 @@ if __name__ == "__main__" :
     (options, args) = parser.parse_args()
     
     spark = SparkBootstrap(WORKING_DIRECTORY, SPARK_HOME)
-    if options.start:
+    if options.jobid is not None and options.jobid != "None":
+        logging.debug("Extend SPARK Cluster on: %s" % options.jobid)
+    elif options.start:
         spark.start()
         number_workers=0
         while number_workers!=number_nodes:
