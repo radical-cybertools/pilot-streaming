@@ -50,8 +50,8 @@
       <file leaf-file-name="bootstrap_spark.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/spark/bootstrap_spark.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="529">
-              <caret line="317" column="22" lean-forward="false" selection-start-line="317" selection-start-column="22" selection-end-line="317" selection-end-column="22" />
+            <state relative-caret-position="416">
+              <caret line="169" column="40" lean-forward="false" selection-start-line="169" selection-start-column="40" selection-end-line="169" selection-end-column="40" />
               <folding />
             </state>
           </provider>
@@ -592,8 +592,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/spark/bootstrap_spark.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="529">
-          <caret line="317" column="22" lean-forward="false" selection-start-line="317" selection-start-column="22" selection-end-line="317" selection-end-column="22" />
+        <state relative-caret-position="416">
+          <caret line="169" column="40" lean-forward="false" selection-start-line="169" selection-start-column="40" selection-end-line="169" selection-end-column="40" />
           <folding />
         </state>
       </provider>
