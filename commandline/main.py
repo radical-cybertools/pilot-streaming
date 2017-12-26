@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.DEBUG)
 SAGA_HADOOP_DIRECTORY="~/.hadoop"
 
 global jobid
-jobid = "dask-"+str(uuid.uuid1())
+jobid = str(uuid.uuid1())
 global wd
   
 class SAGAHadoopCLI(object):
@@ -45,7 +45,7 @@ class SAGAHadoopCLI(object):
                          project=None,
                          config_name="default"
                          ):
-
+        jobid = "dask-"+jobid
         wd = os.path.join(working_directory, jobid)
         try:
             os.makedirs(os.path.join(working_directory, jobid))
@@ -323,12 +323,13 @@ class SAGAHadoopCLI(object):
                           project=None,
                           config_name="default"
     ):
+        global jobid
+        jobid="spark-"+jobid
         wd = os.path.join(working_directory, jobid)
         try:
             os.makedirs(os.path.join(working_directory, jobid))
         except:
             pass
-
 
         try:
             # create a job service for Futuregrid's 'india' PBS cluster
@@ -346,7 +347,7 @@ class SAGAHadoopCLI(object):
             # output options
             jd.output =  os.path.join("spark_job.stdout")
             jd.error  = os.path.join("spark_job.stderr")
-            jd.working_directory=working_directory
+            jd.working_directory=wd
             jd.queue=queue
             if project!=None:
                 jd.project=project
@@ -363,15 +364,17 @@ class SAGAHadoopCLI(object):
             # run the job (submit the job to PBS)
             myjob.run()
             id = myjob.get_id()
-            #id = id[id.index("]-[")+3: len(id)-1]
-            #print "**** Job: " + str(id) + " State : %s" % (myjob.get_state())
+            local_id = id[id.index("]-[")+3: len(id)-1]
+            print "**** Job: " + str(local_id) + " State : %s" % (myjob.get_state())
             #print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
 
             while True:
                 state = myjob.get_state()
+                logging.debug("**** Job: " + str(local_id) + " State: %s" % (state))
                 if state=="Running":
-                    if os.path.exists(os.path.join(working_directory, "work/spark_started")):
-                        self.get_spark_config_data(id, working_directory)
+                    logging.debug("looking for spark startup state at: %s"%wd)
+                    if os.path.exists(os.path.join(wd, "spark_started")):
+                        self.get_spark_config_data(id, wd)
                         break
                 elif state == "Failed":
                     break
@@ -390,12 +393,12 @@ class SAGAHadoopCLI(object):
                 scan_dir(path)
 
 
-    def get_spark_config_data(self, jobid, working_directory=None):
+    def get_spark_config_data(self, jobid, working_directory):
         spark_home_path=spark.bootstrap_spark.SPARK_HOME
         # search for spark_home:
-        base_work_dir = os.path.join(working_directory, "work")
-        spark_home=''.join([i.strip() if os.path.isdir("work/" + i) and i.find("spark")>=0 else '' for i in os.listdir("work")])
-        spark_home_path=os.path.join(working_directory, "work", os.path.basename(spark_home_path))
+        base_work_dir = os.path.join(working_directory)
+        spark_home=''.join([i.strip() if os.path.isdir(os.path.join(base_work_dir, i)) and i.find("spark")>=0 else '' for i in os.listdir(base_work_dir)])
+        spark_home_path=os.path.join(working_directory, os.path.basename(spark_home_path))
         master_file=os.path.join(spark_home_path, "conf/masters")
         #print master_file
         counter = 0

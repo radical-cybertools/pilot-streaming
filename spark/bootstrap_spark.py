@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
 VERSION="2.2.1"
-SPARK_DOWNLOAD_URL = "http://mirror.reverse.net/pub/apache/spark/spark-"+ VERSION + "/spark-" + VERSION+"-bin-hadoop2.7.tgz"
+SPARK_DOWNLOAD_URL = "http://apache.mirrors.tds.net/spark/spark-"+ VERSION + "/spark-" + VERSION+"-bin-hadoop2.7.tgz"
 WORKING_DIRECTORY = os.path.join(os.getcwd())
 
 # For using an existing installation
@@ -216,9 +216,13 @@ class SparkBootstrap(object):
         matches = []
         response = urllib.urlopen(url)
         data = response.read()
-        matches=re.findall("(?<=>)worker-[0-9\\-.]*", data, re.DOTALL)
-        print matches
-        return matches
+        #matches=re.findall("(?<=>)worker-[0-9\\-.]*", data, re.DOTALL)
+        matches=re.search("(?<=Alive\ Workers:</strong>\ )[0-9]*(?=</li>)", data, re.DOTALL)
+        n = 0
+        if matches: n=int(matches.group(0))
+        return n
+        #print matches
+        #return matches
 
 #########################################################
 #  main                                                 #
@@ -276,8 +280,9 @@ if __name__ == "__main__" :
         spark.start()
         number_workers=0
         while number_workers!=number_nodes:
-            brokers=spark.check_spark()
-            number_workers=len(brokers)
+            #brokers=spark.check_spark()
+            #number_workers=len(brokers)
+            number_workers=spark.check_spark()
             logging.debug("Number workers: %d, number nodes: %d"%(number_workers,number_nodes))
             time.sleep(1)
         end_start=time.time()
