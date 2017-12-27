@@ -219,7 +219,7 @@ class KafkaBootstrap():
         logging.debug("Kafka Instance Configuration Directory: " + self.job_conf_dir)
         nodes = self.get_nodelist_from_resourcemanager()
         logging.debug("Kafka nodes: " + str(nodes))
-        master = socket.gethostname().split(".")[0]
+        master = self.find_parent_zookeeper()
 
         for idx, node in enumerate(nodes):
             path = os.path.join(self.job_conf_dir, "broker-%d" % idx)
@@ -231,21 +231,23 @@ class KafkaBootstrap():
             server_properties_file.close()
             self.broker_config_files[node] = server_properties_filename
 
-        zookeeper_properties_file = open(os.path.join(self.job_conf_dir, "zookeeper.properties"), "w")
-        zookeeper_properties_file.write(self.get_zookeeper_properties(master))
-        zookeeper_properties_file.close()
-
     def find_parent_zookeeper(self):
-        path_to_parent_spark_job = os.path.join(os.getcwd(), "..", self.extension_job_id)
-        logging.debug("Extend parent Kafka job: %s" % path_to_parent_spark_job)
-        master_ip = socket.gethostbyname(socket.gethostname())
-        with open(os.path.join(path_to_parent_spark_job, "spark_master"), "r") as f:
-            master_ip = f.read()
-        print "Master of Parent Cluster: %s" % master_ip
-        return master_ip
+        path_to_parent_spark_job = os.path.join(os.getcwd(), "..", self.extension_job_id, "config/broker-0/server.properties")
+        print "Master of Parent Cluster: %s" % path_to_parent_spark_job
+        zk = None
+        with open(path_to_parent_spark_job, "r") as config:
+            lines = config.readlines()
+            for line in lines:
+                if line.startswith("zookeeper.connect"):
+                    zk = line.strip().split("=")[1]
+
+        logging.debug("Parent Zookeeper: %s"%zk)
+        return zk
 
     def extend(self):
-        pass
+        self.configure_kafka_extension()
+        self.start_kafka_extension()
+
 
     ##################################################################################################################
     # Stop
@@ -337,7 +339,6 @@ if __name__ == "__main__" :
 
     #initialize object for managing kafka clusters    
     kafka = KafkaBootstrap(WORKING_DIRECTORY, kafka_home, config_name, options.jobid)
-
     if options.jobid is not None and options.jobid != "None":
         logging.debug("Extend SPARK Cluster with PS ID: %s" % options.jobid)
         kafka.extend()

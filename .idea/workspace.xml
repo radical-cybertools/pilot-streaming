@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1254de8c-5a74-4637-aa37-ad529ca33370" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/dask/bootstrap_dask.py" afterPath="$PROJECT_DIR$/dask/bootstrap_dask.py" />
       <change beforePath="$PROJECT_DIR$/kafka/bootstrap_kafka.py" afterPath="$PROJECT_DIR$/kafka/bootstrap_kafka.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -15,23 +13,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="manager.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pilot/streaming/manager.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="795">
-              <caret line="55" column="36" lean-forward="false" selection-start-line="55" selection-start-column="36" selection-end-line="55" selection-end-column="36" />
-              <folding>
-                <element signature="e#247#275#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/commandline/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4650">
-              <caret line="323" column="35" lean-forward="false" selection-start-line="323" selection-start-column="35" selection-end-line="323" selection-end-column="35" />
+            <state relative-caret-position="747">
+              <caret line="294" column="13" lean-forward="false" selection-start-line="294" selection-start-column="13" selection-end-line="299" selection-end-column="65" />
               <folding>
                 <element signature="e#71#82#0" expanded="true" />
               </folding>
@@ -62,8 +48,28 @@
       <file leaf-file-name="bootstrap_kafka.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/kafka/bootstrap_kafka.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="677">
-              <caret line="244" column="24" lean-forward="false" selection-start-line="244" selection-start-column="24" selection-end-line="244" selection-end-column="24" />
+            <state relative-caret-position="268">
+              <caret line="340" column="85" lean-forward="false" selection-start-line="340" selection-start-column="85" selection-end-line="340" selection-end-column="85" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="zookeeper.properties" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/kafka/configs/default/zookeeper.properties">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="server.properties" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/kafka/configs/default/server.properties">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-901">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -193,6 +199,19 @@
             <path>
               <item name="pilot-streaming" type="b2602c69:ProjectViewProjectNode" />
               <item name="pilot-streaming" type="462c0819:PsiDirectoryNode" />
+              <item name="kafka" type="462c0819:PsiDirectoryNode" />
+              <item name="configs" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="pilot-streaming" type="b2602c69:ProjectViewProjectNode" />
+              <item name="pilot-streaming" type="462c0819:PsiDirectoryNode" />
+              <item name="kafka" type="462c0819:PsiDirectoryNode" />
+              <item name="configs" type="462c0819:PsiDirectoryNode" />
+              <item name="default" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="pilot-streaming" type="b2602c69:ProjectViewProjectNode" />
+              <item name="pilot-streaming" type="462c0819:PsiDirectoryNode" />
               <item name="pilot" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -311,7 +330,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#247#275#0" expanded="true" />
+            <element signature="e#247#275#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -374,7 +393,7 @@
         <state relative-caret-position="795">
           <caret line="55" column="36" lean-forward="false" selection-start-line="55" selection-start-column="36" selection-end-line="55" selection-end-column="36" />
           <folding>
-            <element signature="e#247#275#0" expanded="true" />
+            <element signature="e#247#275#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -434,7 +453,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#247#275#0" expanded="true" />
+            <element signature="e#247#275#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -481,7 +500,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#247#275#0" expanded="true" />
+            <element signature="e#247#275#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -521,7 +540,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#247#275#0" expanded="true" />
+            <element signature="e#247#275#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -566,10 +585,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/pilot/streaming/manager.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="795">
+        <state relative-caret-position="0">
           <caret line="55" column="36" lean-forward="false" selection-start-line="55" selection-start-column="36" selection-end-line="55" selection-end-column="36" />
           <folding>
-            <element signature="e#247#275#0" expanded="true" />
+            <element signature="e#247#275#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -633,16 +652,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/spark/bootstrap_spark_extension.py" />
-    <entry file="file://$PROJECT_DIR$/commandline/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4650">
-          <caret line="323" column="35" lean-forward="false" selection-start-line="323" selection-start-column="35" selection-end-line="323" selection-end-column="35" />
-          <folding>
-            <element signature="e#71#82#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/dask/bootstrap_dask.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="482">
@@ -659,10 +668,36 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/kafka/configs/default/zookeeper.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/commandline/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="747">
+          <caret line="294" column="13" lean-forward="false" selection-start-line="294" selection-start-column="13" selection-end-line="299" selection-end-column="65" />
+          <folding>
+            <element signature="e#71#82#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/kafka/configs/default/server.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-901">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/kafka/bootstrap_kafka.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="677">
-          <caret line="244" column="24" lean-forward="false" selection-start-line="244" selection-start-column="24" selection-end-line="244" selection-end-column="24" />
+        <state relative-caret-position="268">
+          <caret line="340" column="85" lean-forward="false" selection-start-line="340" selection-start-column="85" selection-end-line="340" selection-end-column="85" />
           <folding />
         </state>
       </provider>
