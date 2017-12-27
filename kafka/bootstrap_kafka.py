@@ -46,7 +46,7 @@ class KafkaBootstrap():
         self.kafka_home=kafka_home
         self.config_name=config_name
         self.jobid = "kafka-"+str(uuid.uuid1())
-        self.job_working_directory = os.path.join(WORKING_DIRECTORY, self.jobid)
+        self.job_working_directory = os.path.join(WORKING_DIRECTORY)
         self.job_conf_dir = os.path.join(self.job_working_directory, "config")
         self.extension_job_id = extension_job_id
         self.broker_config_files = {}
