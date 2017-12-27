@@ -38,7 +38,7 @@ def handler(signum, frame):
 class DaskBootstrap():
 
 
-    def __init__(self, working_directory, dask_home, config_name="default"):
+    def __init__(self, working_directory, dask_home, config_name="default", extension_job_id=None):
         self.working_directory=working_directory
         self.dask_home=dask_home
         self.config_name=config_name
@@ -48,6 +48,7 @@ class DaskBootstrap():
         self.nodes = []
         self.master = ""
         self.dask_process = None
+        self.extension_job_id = extension_job_id
         os.makedirs(self.job_conf_dir)
 
 
@@ -158,7 +159,7 @@ class DaskBootstrap():
         try:
             import distributed
             client = distributed.Client(self.nodes[0]+":8686")
-            print "Found %d brokers: %s" % (len(brokers.keys()), str(brokers))
+            print "Found %d workers: %s" % (len(brokers.keys()), str(brokers))
             return client.scheduler_info()
         except:
             pass
@@ -172,6 +173,9 @@ class DaskBootstrap():
     def start(self):
         self.configure_dask()
         self.start_dask()
+
+    def extend(self):
+        pass
         
     def stop(self):
         self.stop_dask()
@@ -194,6 +198,8 @@ if __name__ == "__main__" :
                   help="start Dask", default=True)
     parser.add_option("-q", "--quit", action="store_false", dest="start",
                   help="terminate Dask")
+    parser.add_option("-j", "--job", type="string", action="store", dest="jobid",
+                      help="Job ID of Dask Cluster to Extend")
     parser.add_option("-c", "--clean", action="store_true", dest="clean",
                   help="clean Dask")
 
@@ -217,9 +223,11 @@ if __name__ == "__main__" :
         print "No Dask Distributed found. Please install Dask Distributed!"
 
     #initialize object for managing dask clusters
-    dask = DaskBootstrap(WORKING_DIRECTORY, None, None)
-
-    if options.start:
+    dask = DaskBootstrap(WORKING_DIRECTORY, None, None, options.jobid)
+    if options.jobid is not None and options.jobid != "None":
+        logging.debug("Extend SPARK Cluster with PS ID: %s" % options.jobid)
+        dask.extend()
+    elif options.start:
         dask.start()
         number_brokers=0
         while number_brokers!=number_nodes:

@@ -41,13 +41,14 @@ def handler(signum, frame):
 class KafkaBootstrap():
 
 
-    def __init__(self, working_directory, kafka_home, config_name="default"):
+    def __init__(self, working_directory, kafka_home, config_name="default", extension_job_id=None):
         self.working_directory=working_directory
         self.kafka_home=kafka_home
         self.config_name=config_name
         self.jobid = "kafka-"+str(uuid.uuid1())
         self.job_working_directory = os.path.join(WORKING_DIRECTORY, self.jobid)
         self.job_conf_dir = os.path.join(self.job_working_directory, "config")
+        self.extension_job_id = extension_job_id
         self.broker_config_files = {}
         os.makedirs(self.job_conf_dir)
 
@@ -190,21 +191,79 @@ class KafkaBootstrap():
         print "Found %d brokers: %s"%(len(brokers.keys()), str(brokers))
         return brokers
         
-    def stop_kafka(self):
-        logging.debug("Stop Kafka")
-        self.set_env() 
-        stop_command = os.path.join(KAFKA_HOME, "bin/kafka-server-stop.sh")
-        logging.debug("Execute: %s"%stop_command)
-        stop_command = os.path.join(KAFKA_HOME, "bin/zookeeper-server-stop.sh")
-        logging.debug("Execute: %s"%stop_command)
-        os.system(stop_command)
+
 
     def start(self):
         self.configure_kafka()
         self.start_kafka()
-        
+
+    ##################################################################################################################
+    # Extend cluster
+    def start_kafka_extension(self):
+        logging.debug("Start Kafka")
+        os.system("killall -s 9 java")
+        os.system("pkill -9 java")
+        time.sleep(5)
+
+        logging.debug("Start Kafka Cluster")
+        for node in self.broker_config_files.keys():
+            config = self.broker_config_files[node]
+            start_command = os.path.join("ssh " + node.strip() + " " + self.kafka_home, "bin/kafka-server-start.sh") + \
+                                        " -daemon " + config
+            logging.debug("Execute: %s"%start_command)
+            os.system(". ~/.bashrc & " + start_command)
+
+        print("Kafka started with configuration: %s"%self.job_conf_dir)
+
+    def configure_kafka_extension(self):
+        logging.debug("Kafka Instance Configuration Directory: " + self.job_conf_dir)
+        nodes = self.get_nodelist_from_resourcemanager()
+        logging.debug("Kafka nodes: " + str(nodes))
+        master = socket.gethostname().split(".")[0]
+
+        for idx, node in enumerate(nodes):
+            path = os.path.join(self.job_conf_dir, "broker-%d" % idx)
+            os.makedirs(path)
+            server_properties_filename = os.path.join(path, "server.properties")
+            server_properties_file = open(server_properties_filename, "w")
+            server_properties_file.write(
+                self.get_server_properties(master=master, hostname=node.strip(), broker_id=idx))
+            server_properties_file.close()
+            self.broker_config_files[node] = server_properties_filename
+
+        zookeeper_properties_file = open(os.path.join(self.job_conf_dir, "zookeeper.properties"), "w")
+        zookeeper_properties_file.write(self.get_zookeeper_properties(master))
+        zookeeper_properties_file.close()
+
+    def find_parent_zookeeper(self):
+        path_to_parent_spark_job = os.path.join(os.getcwd(), "..", self.extension_job_id)
+        logging.debug("Extend parent Kafka job: %s" % path_to_parent_spark_job)
+        master_ip = socket.gethostbyname(socket.gethostname())
+        with open(os.path.join(path_to_parent_spark_job, "spark_master"), "r") as f:
+            master_ip = f.read()
+        print "Master of Parent Cluster: %s" % master_ip
+        return master_ip
+
+    def extend(self):
+        pass
+
+    ##################################################################################################################
+    # Stop
     def stop(self):
         self.stop_kafka()
+
+    def stop_kafka(self):
+        logging.debug("Stop Kafka")
+        self.set_env()
+        stop_command = os.path.join(KAFKA_HOME, "bin/kafka-server-stop.sh")
+        logging.debug("Execute: %s" % stop_command)
+        stop_command = os.path.join(KAFKA_HOME, "bin/zookeeper-server-stop.sh")
+        logging.debug("Execute: %s" % stop_command)
+        os.system(stop_command)
+
+    ##################################################################################################################
+    # Utils
+
     
 
 
@@ -222,6 +281,8 @@ if __name__ == "__main__" :
     parser = OptionParser()
     parser.add_option("-s", "--start", action="store_true", dest="start",
                   help="start Kafka", default=True)
+    parser.add_option("-j", "--job", type="string", action="store", dest="jobid",
+                      help="Job ID of Kafka Cluster to Extend")
     parser.add_option("-q", "--quit", action="store_false", dest="start",
                   help="terminate Hadoop")
     parser.add_option("-c", "--clean", action="store_true", dest="clean",
@@ -275,7 +336,11 @@ if __name__ == "__main__" :
 
 
     #initialize object for managing kafka clusters    
-    kafka = KafkaBootstrap(WORKING_DIRECTORY, kafka_home, config_name)
+    kafka = KafkaBootstrap(WORKING_DIRECTORY, kafka_home, config_name, options.jobid)
+
+    if options.jobid is not None and options.jobid != "None":
+        logging.debug("Extend SPARK Cluster with PS ID: %s" % options.jobid)
+        kafka.extend()
 
     if options.start:
         kafka.start()
