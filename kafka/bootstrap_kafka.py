@@ -220,8 +220,9 @@ class KafkaBootstrap():
         nodes = self.get_nodelist_from_resourcemanager()
         logging.debug("Kafka nodes: " + str(nodes))
         master = self.find_parent_zookeeper()
-
-        for idx, node in enumerate(nodes):
+        max_id = self.find_max_broker_id()
+        for node in nodes:
+            idx = max_id + 1
             path = os.path.join(self.job_conf_dir, "broker-%d" % idx)
             os.makedirs(path)
             server_properties_filename = os.path.join(path, "server.properties")
@@ -231,6 +232,20 @@ class KafkaBootstrap():
             server_properties_file.close()
             self.broker_config_files[node] = server_properties_filename
 
+    def find_max_broker_id(self):
+        path_to_parent_kafka_configs = os.path.join(os.getcwd(), "..", self.extension_job_id, "config")
+        files = os.listdir(path_to_parent_kafka_configs)
+        max_id = 0
+        for i in files:
+            bid = 0
+            try:
+                bid = int(i[-1])
+            except:
+                pass
+            if bid > max_id:
+                max_id = bid
+        return max_id
+
     def find_parent_zookeeper(self):
         path_to_parent_spark_job = os.path.join(os.getcwd(), "..", self.extension_job_id, "config/broker-0/server.properties")
         print "Master of Parent Cluster: %s" % path_to_parent_spark_job
@@ -238,8 +253,9 @@ class KafkaBootstrap():
         with open(path_to_parent_spark_job, "r") as config:
             lines = config.readlines()
             for line in lines:
-                if line.startswith("zookeeper.connect"):
+                if line.startswith("zookeeper.connect="):
                     zk = line.strip().split("=")[1]
+                    zk = zk.split(":")[0]   
 
         logging.debug("Parent Zookeeper: %s"%zk)
         return zk
@@ -340,10 +356,14 @@ if __name__ == "__main__" :
     #initialize object for managing kafka clusters    
     kafka = KafkaBootstrap(WORKING_DIRECTORY, kafka_home, config_name, options.jobid)
     if options.jobid is not None and options.jobid != "None":
-        logging.debug("Extend SPARK Cluster with PS ID: %s" % options.jobid)
+        logging.debug("Extend Kafka Cluster with PS ID: %s" % options.jobid)
         kafka.extend()
-
-    if options.start:
+        end_start = time.time()
+        performance_trace_file.write("startup-extension, %d, %.5f\n"%(number_nodes, (end_start-end_download)))
+        performance_trace_file.flush()
+        with open("kafka_started", "w") as f:
+            f.write(str(node_list))
+    elif options.start:
         kafka.start()
         number_brokers=0
         while number_brokers!=number_nodes:
@@ -356,7 +376,6 @@ if __name__ == "__main__" :
         performance_trace_file.flush()
         with open("kafka_started", "w") as f:
             f.write(str(node_list))
-
     else:
         kafka.stop()
         if options.clean:

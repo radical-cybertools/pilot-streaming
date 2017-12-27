@@ -224,7 +224,8 @@ class SAGAHadoopCLI(object):
                          queue=None,
                          walltime=None,
                          project=None,
-                         config_name="default"
+                         config_name="default",
+                         extend_job_id=None
                          ):
 
         wd = self.create_job_directory(working_directory, "kafka")
@@ -238,6 +239,8 @@ class SAGAHadoopCLI(object):
             # environment, executable & arguments
             executable = "python"
             arguments = ["-m", "kafka.bootstrap_kafka"]
+            if extend_job_id!=None:
+                arguments = ["-m", "kafka.bootstrap_kafka", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
             jd.executable  = executable
             jd.arguments   = arguments
@@ -257,13 +260,13 @@ class SAGAHadoopCLI(object):
             # create the job (state: New)
             myjob = js.create_job(jd)
 
-            #print "Starting Spark bootstrap job ..."
+            #print "Starting Kafka bootstrap job ..."
             # run the job (submit the job to PBS)
             myjob.run()
             id = myjob.get_id()
             #id = id[id.index("]-[")+3: len(id)-1]
             #print "**** Job: " + str(id) + " State : %s" % (myjob.get_state())
-            #print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
+            #print "Wait for Kafka Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
 
             while True:
                 state = myjob.get_state()
@@ -632,7 +635,8 @@ def main():
                              queue=parsed_arguments.queue,
                              walltime=parsed_arguments.walltime,
                              project=parsed_arguments.project,
-                             config_name=parsed_arguments.config_name)
+                             config_name=parsed_arguments.config_name,
+                             extend_job_id=parsed_arguments.extend)
     elif parsed_arguments.framework=="spark":
         app.submit_spark_job(resource_url=parsed_arguments.resource,
                               working_directory=parsed_arguments.working_directory,
