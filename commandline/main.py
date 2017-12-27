@@ -244,7 +244,7 @@ class SAGAHadoopCLI(object):
             # output options
             jd.output =  os.path.join("kafka_job.stdout")
             jd.error  = os.path.join("kafka_job.stderr")
-            jd.working_directory=working_directory
+            jd.working_directory=wd
             jd.queue=queue
             if project!=None:
                 jd.project=project
@@ -268,12 +268,13 @@ class SAGAHadoopCLI(object):
             while True:
                 state = myjob.get_state()
                 if state=="Running":
-                    if os.path.exists(os.path.join(working_directory, "work/kafka_started")):
-                        self.get_kafka_config_data(id, working_directory)
+                    if os.path.exists(os.path.join(wd, "kafka_started")):
+                        self.get_kafka_config_data(id, wd)
                         break
                 elif state == "Failed":
                     break
                 time.sleep(3)
+            self.print_pilot_streaming_job_id(myjob)
             return myjob
 
         except Exception as ex:
@@ -281,7 +282,7 @@ class SAGAHadoopCLI(object):
 
 
     def get_kafka_config_data(self, jobid, working_directory=None, all=False):
-        base_work_dir = os.path.join(working_directory, "work")
+        base_work_dir = os.path.join(working_directory)
         kafka_config_dirs = [i if os.path.isdir(os.path.join(base_work_dir,i)) and i.find("kafka-")>=0 else None for i in os.listdir(base_work_dir)]
         kafka_config_dirs = filter(lambda a: a != None, kafka_config_dirs)
         kafka_config_dirs.sort(key=lambda x: os.path.getmtime(os.path.join(base_work_dir, x)),  reverse=True)

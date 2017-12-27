@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" Kafka Bootstrap Script (based on Kafka 0.10 release) """
+""" Kafka Bootstrap Script (based on Kafka 1.0.0 release) """
 import os, sys
 import pdb
 import urllib
@@ -23,10 +23,10 @@ logging.basicConfig(level=logging.DEBUG)
 VERSION="1.0.0"
 #KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
-WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
+WORKING_DIRECTORY = os.path.join(os.getcwd())
 
 # For using an existing installation
-KAFKA_HOME=os.path.join(os.getcwd(), "work/kafka-" + VERSION)
+KAFKA_HOME=os.path.join(os.getcwd(), "kafka-" + VERSION)
 KAFKA_CONF_DIR=os.path.join(KAFKA_HOME, "etc")
 
 STOP=False
