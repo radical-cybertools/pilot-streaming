@@ -214,7 +214,7 @@ class PilotComputeService(object):
         :return: Pilot
         """
         import commandline.main
-        spark_cluster = commandline.main.SAGAHadoopCLI()
+        spark_cluster = commandline.main.PilotStreamingCLI()
 
         if pilotcompute_description.has_key("service_url"):
             resource_url=pilotcompute_description["service_url"]

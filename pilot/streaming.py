@@ -1,30 +1,15 @@
 #######################
 # Mac OS:
-# brew install apache-spark
-# SPARK_HOME='/usr/local/Cellar/apache-spark/2.0.0/libexec/'
-# Start Spark: /usr/local/Cellar/apache-spark/2.0.0/libexec/sbin/start-all.sh
+# brew install apache-spark kafka
+# conda install dask distributed
+# SPARK_HOME='/usr/local/Cellar/apache-spark/2.2.1/libexec/'
+# Start Spark: /usr/local/Cellar/apache-spark/2.0.1/libexec/sbin/start-all.sh
 # py4j needs be installed in your virtualenv
 
 import spark.bootstrap_spark
 import os, sys
 import time
-
-SPARK_HOME = os.environ["SPARK_HOME"]
-print "SPARK Home: %s" % SPARK_HOME
-
-try:
-    sys.path.insert(0, os.path.join(SPARK_HOME, "python"))
-    sys.path.insert(0, os.path.join(SPARK_HOME, 'python/lib/py4j-0.8.2.1-src.zip'))
-    sys.path.insert(0, os.path.join(SPARK_HOME, 'bin'))
-
-    # import Spark Libraries
-    from pyspark import SparkContext, SparkConf, Accumulator, AccumulatorParam
-    from pyspark.sql import SQLContext
-    from pyspark.sql.types import *
-    from pyspark.mllib.linalg import Vector
-
-except:
-    print "Error  importing Spark"
+import findspark
 
 
 class PilotComputeDescription(dict):
@@ -69,7 +54,7 @@ class PilotCompute(object):
         This is the object that is returned by the PilotComputeService when a
         new PilotCompute (aka Pilot-Job) is created based on a PilotComputeDescription.
 
-        A Pilot-Compute in Pilot-Hadoop represents an active Hadoop YARN or Spark cluster
+        A Pilot-Compute in Pilot-Streaming represents an active Spark, Dask, Kafka cluster
 
         The PilotCompute object can be used by the application to keep track
         of PilotComputes that are active.
@@ -152,14 +137,6 @@ class PilotComputeService(object):
             A PilotCompute handle
         """
 
-        if os.environ.has_key("SPARK_HOME"):
-            # print "Cleanup old Spark Installation"
-            try:
-                os.remove(os.path.join(os.environ["SPARK_HOME"], "conf/masters"))
-                os.remove(os.path.join(os.environ["SPARK_HOME"], "conf/slaves"))
-            except:
-                pass
-
         # {
         #     "resource_url":"slurm+ssh://localhost",
         #     "number_cores": 16,
@@ -197,6 +174,61 @@ class PilotComputeService(object):
         """
         pass
 
+    ####################################################################################################################
+    # Start Cluster
+    @classmethod
+    def __start_cluster(self, pilotcompute_description):
+        """
+        Bootstraps Spark Cluster
+        :param pilotcompute_description: dictionary containing detail about the spark cluster to launch
+        :return: Pilot
+        """
+        import commandline.main
+        spark_cluster = commandline.main.PilotStreamingCLI()
+
+        if pilotcompute_description.has_key("service_url"):
+            resource_url = pilotcompute_description["service_url"]
+        elif pilotcompute_description.has_key("resource_url"):
+            resource_url = pilotcompute_description["resource_url"]
+
+        working_directory = "/tmp"
+        if pilotcompute_description.has_key("working_directory"):
+            working_directory = pilotcompute_description["working_directory"]
+
+        project = None
+        if pilotcompute_description.has_key("project"):
+            project = pilotcompute_description["project"]
+
+        queue = None
+        if pilotcompute_description.has_key("queue"):
+            queue = pilotcompute_description["queue"]
+
+        walltime = 10
+        if pilotcompute_description.has_key("walltime"):
+            walltime = pilotcompute_description["walltime"]
+
+        number_cores = 1
+        if pilotcompute_description.has_key("number_cores"):
+            number_cores = int(pilotcompute_description["number_cores"])
+
+        cores_per_node = 1
+        if pilotcompute_description.has_key("cores_per_node"):
+            cores_per_node = int(pilotcompute_description["cores_per_node"])
+
+        saga_job = spark_cluster.submit_spark_job(
+            resource_url=resource_url,
+            working_directory=working_directory,
+            number_cores=number_cores,
+            cores_per_node=cores_per_node,
+            queue=queue,
+            walltime=walltime,
+            project=project
+        )
+
+        details = PilotComputeService.get_spark_config_data(working_directory)
+        pilot = PilotCompute(saga_job, details)
+        return pilot
+
     @classmethod
     def __start_spark_cluster(self, pilotcompute_description):
         """
@@ -204,8 +236,8 @@ class PilotComputeService(object):
         :param pilotcompute_description: dictionary containing detail about the spark cluster to launch
         :return: Pilot
         """
-        import commandline.hadoop
-        spark_cluster = commandline.hadoop.SAGAHadoopCLI()
+        import commandline.main
+        spark_cluster = commandline.main.PilotStreamingCLI()
 
         if pilotcompute_description.has_key("service_url"):
             resource_url = pilotcompute_description["service_url"]

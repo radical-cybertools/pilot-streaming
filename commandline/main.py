@@ -24,7 +24,7 @@ global jobid
 jobid = str(uuid.uuid1())
 global wd
   
-class SAGAHadoopCLI(object):
+class PilotStreamingCLI(object):
     
     def __init__(self):
         pass
@@ -580,7 +580,7 @@ class SAGAHadoopCLI(object):
 def main():
 
 
-    app = SAGAHadoopCLI()
+    app = PilotStreamingCLI()
     parser = argparse.ArgumentParser(add_help=True, description="""Pilot-Streaming Command Line Utility""")
     
     parser.add_argument('--clean', action="store_true", default=False)
