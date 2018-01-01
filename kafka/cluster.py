@@ -119,6 +119,6 @@ class Manager():
 
     def print_config_data(self):
         details = self.get_config_data()
-        print "Zookeeper: %s"%details["details"]
+        print "Zookeeper: %s"%details["master_url"]
 
 
