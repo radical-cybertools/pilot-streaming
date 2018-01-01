@@ -10,6 +10,7 @@ import spark.bootstrap_spark
 import os, sys
 import time
 import findspark
+from pyspark import *
 
 
 class PilotComputeDescription(dict):
@@ -228,6 +229,7 @@ class PilotComputeService(object):
         details = PilotComputeService.get_spark_config_data(working_directory)
         pilot = PilotCompute(saga_job, details)
         return pilot
+
 
     @classmethod
     def __start_spark_cluster(self, pilotcompute_description):
