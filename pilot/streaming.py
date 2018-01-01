@@ -3,14 +3,15 @@
 # brew install apache-spark kafka
 # conda install dask distributed
 # SPARK_HOME='/usr/local/Cellar/apache-spark/2.2.1/libexec/'
-# Start Spark: /usr/local/Cellar/apache-spark/2.0.1/libexec/sbin/start-all.sh
+# Start Spark: /usr/local/Cellar/apache-spark/2.2.1/libexec/sbin/start-all.sh
 # py4j needs be installed in your virtualenv
 
-import spark.bootstrap_spark
 import os, sys
 import time
 import findspark
-from pyspark import *
+import uuid
+import spark.cluster
+import spark.bootstrap_spark
 
 
 class PilotComputeDescription(dict):
@@ -64,11 +65,12 @@ class PilotCompute(object):
         re-initialized.
     """
 
-    def __init__(self, saga_job=None, details=None, spark_context=None, spark_sql_context=None):
+    def __init__(self, saga_job=None, details=None, spark_context=None, spark_sql_context=None, cluster_manager=None):
         self.saga_job = saga_job
         self.details = details
         self.spark_context = spark_context
         self.spark_sql_context = spark_sql_context
+        self.cluster_manager = cluster_manager
 
     def cancel(self):
         """ Remove the PilotCompute from the PilotCompute Service.
@@ -106,6 +108,9 @@ class PilotCompute(object):
 
     def get_details(self):
         return self.details
+    
+    def get_context(self):
+        return self.cluster_manager.get_context()
 
 
 class PilotComputeService(object):
@@ -142,15 +147,15 @@ class PilotComputeService(object):
         #     "resource_url":"slurm+ssh://localhost",
         #     "number_cores": 16,
         #     "cores_per_node":16,
-        #     "project": "TG-CCR140028",
+        #     "project": "TG-MCB090174",
         #     "type":"spark"
         # }
 
         resource_url = "fork://localhost"
-        if pilotcompute_description.has_key("service_url"):
-            resource_url = pilotcompute_description["service_url"]
-        elif pilotcompute_description.has_key("resource_url"):
-            resource_url = pilotcompute_description["resource_url"]
+        if pilotcompute_description.has_key("resource"):
+            resource_url = pilotcompute_description["resource"]
+        elif pilotcompute_description.has_key("resource"):
+            resource_url = pilotcompute_description["resource"]
         if resource_url.startswith("yarn"):
             pilot = cls.__connected_yarn_spark_cluster(pilotcompute_description)
             return pilot
@@ -159,7 +164,7 @@ class PilotComputeService(object):
             pilot = cls.__connected_spark_cluster(resource_url, pilotcompute_description)
             return pilot
         else:
-            pilot = cls.__start_spark_cluster(pilotcompute_description)
+            pilot = cls.__start_cluster(pilotcompute_description)
             return pilot
 
     def cancel(self):
@@ -184,67 +189,13 @@ class PilotComputeService(object):
         :param pilotcompute_description: dictionary containing detail about the spark cluster to launch
         :return: Pilot
         """
-        import commandline.main
-        spark_cluster = commandline.main.PilotStreamingCLI()
+        #import commandline.main
+        #spark_cluster = commandline.main.PilotStreamingCLI()
 
-        if pilotcompute_description.has_key("service_url"):
-            resource_url = pilotcompute_description["service_url"]
-        elif pilotcompute_description.has_key("resource_url"):
-            resource_url = pilotcompute_description["resource_url"]
-
-        working_directory = "/tmp"
-        if pilotcompute_description.has_key("working_directory"):
-            working_directory = pilotcompute_description["working_directory"]
-
-        project = None
-        if pilotcompute_description.has_key("project"):
-            project = pilotcompute_description["project"]
-
-        queue = None
-        if pilotcompute_description.has_key("queue"):
-            queue = pilotcompute_description["queue"]
-
-        walltime = 10
-        if pilotcompute_description.has_key("walltime"):
-            walltime = pilotcompute_description["walltime"]
-
-        number_cores = 1
-        if pilotcompute_description.has_key("number_cores"):
-            number_cores = int(pilotcompute_description["number_cores"])
-
-        cores_per_node = 1
-        if pilotcompute_description.has_key("cores_per_node"):
-            cores_per_node = int(pilotcompute_description["cores_per_node"])
-
-        saga_job = spark_cluster.submit_spark_job(
-            resource_url=resource_url,
-            working_directory=working_directory,
-            number_cores=number_cores,
-            cores_per_node=cores_per_node,
-            queue=queue,
-            walltime=walltime,
-            project=project
-        )
-
-        details = PilotComputeService.get_spark_config_data(working_directory)
-        pilot = PilotCompute(saga_job, details)
-        return pilot
-
-
-    @classmethod
-    def __start_spark_cluster(self, pilotcompute_description):
-        """
-        Bootstraps Spark Cluster
-        :param pilotcompute_description: dictionary containing detail about the spark cluster to launch
-        :return: Pilot
-        """
-        import commandline.main
-        spark_cluster = commandline.main.PilotStreamingCLI()
-
-        if pilotcompute_description.has_key("service_url"):
-            resource_url = pilotcompute_description["service_url"]
-        elif pilotcompute_description.has_key("resource_url"):
-            resource_url = pilotcompute_description["resource_url"]
+        if pilotcompute_description.has_key("resource"):
+            resource_url = pilotcompute_description["resource"]
+        elif pilotcompute_description.has_key("resource"):
+            resource_url = pilotcompute_description["resource"]
 
         working_directory = "/tmp"
         if pilotcompute_description.has_key("working_directory"):
@@ -270,9 +221,11 @@ class PilotComputeService(object):
         if pilotcompute_description.has_key("cores_per_node"):
             cores_per_node = int(pilotcompute_description["cores_per_node"])
 
-        saga_job = spark_cluster.submit_spark_job(
+            
+        jobid = "spark-"+str(uuid.uuid1())
+        manager = spark.cluster.Manager(jobid, working_directory)
+        batch_job = manager.submit_job(
             resource_url=resource_url,
-            working_directory=working_directory,
             number_cores=number_cores,
             cores_per_node=cores_per_node,
             queue=queue,
@@ -280,9 +233,11 @@ class PilotComputeService(object):
             project=project
         )
 
-        details = PilotComputeService.get_spark_config_data(working_directory)
-        pilot = PilotCompute(saga_job, details)
+        details = manager.get_config_data()
+        pilot = PilotCompute(batch_job, details, cluster_manager=manager)
         return pilot
+    
+    
 
     @classmethod
     def __connected_yarn_spark_cluster(self, pilotcompute_description):
@@ -334,7 +289,7 @@ class PilotComputeService(object):
     def get_spark_config_data(cls, working_directory=None):
         spark_home_path = spark.bootstrap_spark.SPARK_HOME
         if working_directory != None:
-            spark_home_path = os.path.join(working_directory, "work", os.path.basename(spark_home_path))
+            spark_home_path = os.path.join(working_directory, os.path.basename(spark_home_path))
         master_file = os.path.join(spark_home_path, "conf/masters")
         print master_file
         counter = 0
