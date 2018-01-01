@@ -1,12 +1,11 @@
 """
-Spark Cluster Manager
+Kafka Cluster Manager
 """
-
 import saga, os, sys
 import logging
 import time
-import bootstrap_spark
-import pyspark
+import bootstrap_kafka
+
 
 
 class Manager():
@@ -14,12 +13,13 @@ class Manager():
     def __init__(self, jobid, working_directory):
         self.jobid = jobid
         self.working_directory = os.path.join(working_directory, jobid)
-        self.myjob = None # SAGA Job
-        self.local_id = None # Local Resource Manager ID (e.g. SLURM id)
+        self.myjob = None  # SAGA Job
+        self.local_id = None  # Local Resource Manager ID (e.g. SLURM id)
         try:
             os.makedirs(self.working_directory)
         except:
             pass
+
 
     # Spark 2.x
     def submit_job(self,
@@ -42,15 +42,15 @@ class Manager():
             jd.total_cpu_count = int(number_cores)
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "spark.bootstrap_spark"]
+            arguments = ["-m", "kafka.bootstrap_kafka"]
             if extend_job_id!=None:
-                arguments = ["-m", "spark.bootstrap_spark", "-j", extend_job_id]
+                arguments = ["-m", "kafka.bootstrap_kafka", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
             jd.executable  = executable
             jd.arguments   = arguments
             # output options
-            jd.output =  os.path.join("spark_job.stdout")
-            jd.error  = os.path.join("spark_job.stderr")
+            jd.output =  os.path.join("kafka_job.stdout")
+            jd.error  = os.path.join("kafka_job.stderr")
             jd.working_directory=self.working_directory
             jd.queue=queue
             if project!=None:
@@ -67,7 +67,7 @@ class Manager():
             #print "Starting Spark bootstrap job ..."
             # run the job (submit the job to PBS)
             self.myjob.run()
-            id = self.myjob.get_id()
+            #id = self.myjob.get_id()
             self.local_id = id[id.index("]-[")+3: len(id)-1]
             print "**** Job: " + str(self.local_id) + " State : %s" % (self.myjob.get_state())
             #print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
@@ -88,56 +88,37 @@ class Manager():
             elif state == "Failed":
                 break
             time.sleep(3)
-    
+
+
     def get_context(self):
-        sc = pyspark.SparkContext(master=self.get_config_data()["master_url"], appName=self.jobid)
-        return sc        
+        pass
         
             
     def get_config_data(self):
-        spark_home_path=bootstrap_spark.SPARK_HOME
-        working_directory=self.working_directory
-        if working_directory != None:
-            spark_home_path = os.path.join(working_directory, os.path.basename(spark_home_path))
-        master_file = os.path.join(spark_home_path, "conf/masters")
-        print master_file
-        counter = 0
-        while os.path.exists(master_file) == False and counter < 600:
-            logging.debug("Looking for %s" % master_file)
-            time.sleep(1)
-            counter = counter + 1
+        conf = os.path.join(self.working_directory, "config")
+        broker_config_dirs = [i if os.path.isdir(os.path.join(conf, i)) and i.find("broker-") >= 0 else None for i in
+                              os.listdir(conf)]
+        broker_config_dirs = filter(lambda a: a != None, broker_config_dirs)
 
-        print "Open master file: %s" % master_file
-        with open(master_file, 'r') as f:
-            master = f.read().strip()
-        f.closed
-        print("Create Spark Context for URL: %s" % ("spark://%s:7077" % master))
-        details = {
-            "spark_home": spark_home_path,
-            "master_url": "spark://%s:7077" % master,
-            "web_ui_url": "http://%s:8080" % master,
-        }
+        kafka_config ={}
+        for broker in broker_config_dirs:
+            with open(os.path.join(conf, broker, "server.properties"), "r") as config:
+                print "Kafka Config: %s (%s)" % (conf, time.ctime(os.path.getmtime(conf)))
+                lines = config.readlines()
+                for line in lines:
+                    if line.startswith("broker.id") or line.startswith("listeners") or line.startswith(
+                            "zookeeper.connect"):
+                        #print line.strip().replace("=", ": ")
+                        line_comp = line.split("=")
+                        kafka_config[line_comp[0].strip()]=line_comp[1].strip()
+
+        details = {"master_url":kafka_config["zookeeper.connect"],
+                   "details" : kafka_config}
         return details
 
 
     def print_config_data(self):
-        spark_home_path=bootstrap_spark.SPARK_HOME
-        # search for spark_home:
-        base_work_dir = os.path.join(self.working_directory)
-        spark_home=''.join([i.strip() if os.path.isdir(os.path.join(base_work_dir, i)) and i.find("spark")>=0 else '' for i in os.listdir(base_work_dir)])
-        spark_home_path=os.path.join(self.working_directory, os.path.basename(spark_home_path))
-        master_file=os.path.join(spark_home_path, "conf/masters")
-        #print master_file
-        counter = 0
-        while os.path.exists(master_file)==False and counter <600:
-            time.sleep(1)
-            counter = counter + 1
+        details = self.get_config_data()
+        print "Zookeeper: %s"%details["details"]
 
-        with open(master_file, 'r') as f:
-            master = f.read()
-        print "SPARK installation directory: %s"%spark_home_path
-        print "(please allow some time until the SPARK cluster is completely initialized)"
-        print "export PATH=%s/bin:$PATH"%(spark_home_path)
-        print "Spark Web URL: http://" + master + ":8080"
-        print "Spark Submit endpoint: spark://" + master + ":7077"
 

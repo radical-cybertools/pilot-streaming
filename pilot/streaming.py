@@ -12,6 +12,10 @@ import findspark
 import uuid
 import spark.cluster
 import spark.bootstrap_spark
+import pyspark
+
+class PilotAPIException(Exception):
+    pass
 
 
 class PilotComputeDescription(dict):
@@ -221,9 +225,24 @@ class PilotComputeService(object):
         if pilotcompute_description.has_key("cores_per_node"):
             cores_per_node = int(pilotcompute_description["cores_per_node"])
 
+        if not pilotcompute_description.has_key("type"):
+            raise PilotAPIException("Invalid Pilot Compute Description: type not specified")
+            type = pilotcompute_description["type"]
+
             
-        jobid = "spark-"+str(uuid.uuid1())
-        manager = spark.cluster.Manager(jobid, working_directory)
+        manager = None
+        if type == "spark":
+            jobid = "spark-" + str(uuid.uuid1())
+            manager = spark.cluster.Manager(jobid, working_directory)
+        elif type == "kafka":
+            jobid = "kafka-" + str(uuid.uuid1())
+            manager = kafka.cluster.Manager(jobid, working_directory)
+        elif type == "dask":
+            jobid = "dask-" + str(uuid.uuid1())
+            manager = dask.cluster.Manager(jobid, working_directory)
+        else:
+            raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s"%type)
+
         batch_job = manager.submit_job(
             resource_url=resource_url,
             number_cores=number_cores,
@@ -254,7 +273,7 @@ class PilotComputeService(object):
         if pilotcompute_description.has_key("number_of_processes"):
             executor_memory = pilotcompute_description["physical_memory_per_process"]
 
-        conf = SparkConf()
+        conf = pyspark.SparkConf()
         conf.set("spark.num.executors", str(number_of_processes))
         conf.set("spark.executor.instances", str(number_of_processes))
         conf.set("spark.executor.memory", executor_memory)
@@ -265,14 +284,14 @@ class PilotComputeService(object):
                     conf.set(i, pilotcompute_description[i])
         conf.setAppName("Pilot-Spark")
         conf.setMaster("yarn-client")
-        sc = SparkContext(conf=conf)
-        sqlCtx = SQLContext(sc)
+        sc = pyspark.SparkContext(conf=conf)
+        sqlCtx = pyspark.SQLContext(sc)
         pilot = PilotCompute(spark_context=sc, spark_sql_context=sqlCtx)
         return pilot
 
     @classmethod
     def __connected_spark_cluster(self, resource_url, pilot_description=None):
-        conf = SparkConf()
+        conf = pyspark.SparkConf()
         conf.setAppName("Pilot-Spark")
         if pilot_description != None:
             for i in pilot_description.keys():
@@ -280,8 +299,8 @@ class PilotComputeService(object):
                     conf.set(i, pilot_description[i])
         conf.setMaster(resource_url)
         print(conf.toDebugString())
-        sc = SparkContext(conf=conf)
-        sqlCtx = SQLContext(sc)
+        sc = pyspark.SparkContext(conf=conf)
+        sqlCtx = pyspark.SQLContext(sc)
         pilot = PilotCompute(spark_context=sc, spark_sql_context=sqlCtx)
         return pilot
 
