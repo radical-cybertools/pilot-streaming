@@ -85,6 +85,6 @@ setup(name='Pilot-Streaming',
       install_requires=['uuid', 'radical.utils', 'saga-python', 'pykafka', 'argparse', "python-hostlist", "setuptools-git" ],
       entry_points = {
         'console_scripts': ['psm=commandline.main:main',
-                            'pilot-streaming-manager=commandline.main:main']
+                            'pilot-streaming=commandline.main:main']
       }
 )

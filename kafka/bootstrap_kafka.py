@@ -22,7 +22,8 @@ logging.basicConfig(level=logging.DEBUG)
 #VERSION="0.10.1.0"
 VERSION="1.0.0"
 #KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
-KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
+#KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
+KAFKA_DOWNLOAD_URL = "http://apache.mirrors.lucidnetworks.net/kafka/"+ VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 WORKING_DIRECTORY = os.path.join(os.getcwd())
 
 # For using an existing installation
@@ -50,7 +51,10 @@ class KafkaBootstrap():
         self.job_conf_dir = os.path.join(self.job_working_directory, "config")
         self.extension_job_id = extension_job_id
         self.broker_config_files = {}
-        os.makedirs(self.job_conf_dir)
+        try:
+            os.makedirs(self.job_conf_dir)
+        except:
+            pass
 
 
     

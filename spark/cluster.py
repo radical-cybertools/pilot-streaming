@@ -20,6 +20,7 @@ class Manager():
             os.makedirs(self.working_directory)
         except:
             pass
+        self.sc=None
 
     # Spark 2.x
     def submit_job(self,
@@ -89,9 +90,11 @@ class Manager():
                 break
             time.sleep(3)
     
-    def get_context(self):
-        sc = pyspark.SparkContext(master=self.get_config_data()["master_url"], appName=self.jobid)
-        return sc        
+    def get_context(self, configuration):
+        if self.sc is None:
+            logging.debug("Init Spark Context with Configuration: " + str(configuration))
+            self.sc = pyspark.SparkContext(master=self.get_config_data()["master_url"], appName=self.jobid, conf=configuration)
+        return self.sc        
         
             
     def get_config_data(self):
@@ -100,14 +103,14 @@ class Manager():
         if working_directory != None:
             spark_home_path = os.path.join(working_directory, os.path.basename(spark_home_path))
         master_file = os.path.join(spark_home_path, "conf/masters")
-        print master_file
+        #print master_file
         counter = 0
         while os.path.exists(master_file) == False and counter < 600:
             logging.debug("Looking for %s" % master_file)
             time.sleep(1)
             counter = counter + 1
 
-        print "Open master file: %s" % master_file
+        logging.debug("Open master file: %s" % master_file)
         with open(master_file, 'r') as f:
             master = f.read().strip()
         f.closed

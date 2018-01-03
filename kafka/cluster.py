@@ -16,7 +16,7 @@ class Manager():
         self.myjob = None  # SAGA Job
         self.local_id = None  # Local Resource Manager ID (e.g. SLURM id)
         try:
-            os.makedirs(self.working_directory)
+            os.makedirs(os.path.join(self.working_directory, 'config'))
         except:
             pass
 
@@ -67,8 +67,8 @@ class Manager():
             #print "Starting Spark bootstrap job ..."
             # run the job (submit the job to PBS)
             self.myjob.run()
-            #id = self.myjob.get_id()
-            self.local_id = id[id.index("]-[")+3: len(id)-1]
+            full_id = self.myjob.get_id()
+            self.local_id = full_id[full_id.index("]-[")+3: len(full_id)-1]
             print "**** Job: " + str(self.local_id) + " State : %s" % (self.myjob.get_state())
             #print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
             #self.print_pilot_streaming_job_id(myjob)
@@ -81,9 +81,8 @@ class Manager():
             state = self.myjob.get_state()
             logging.debug("**** Job: " + str(self.local_id) + " State: %s" % (state))
             if state=="Running":
-                logging.debug("looking for spark startup state at: %s"%self.working_directory)
-                if os.path.exists(os.path.join(self.working_directory, "spark_started")):
-                    self.get_config_data(id, self.working_directory)
+                logging.debug("looking for Kafka startup state at: %s"%self.working_directory)
+                if os.path.exists(os.path.join(self.working_directory, "kafka_started")):
                     break
             elif state == "Failed":
                 break
@@ -95,10 +94,13 @@ class Manager():
         
             
     def get_config_data(self):
+        self.wait()
         conf = os.path.join(self.working_directory, "config")
+        print "look for configs in: " + conf
         broker_config_dirs = [i if os.path.isdir(os.path.join(conf, i)) and i.find("broker-") >= 0 else None for i in
                               os.listdir(conf)]
         broker_config_dirs = filter(lambda a: a != None, broker_config_dirs)
+        print str(broker_config_dirs)
 
         kafka_config ={}
         for broker in broker_config_dirs:
@@ -111,7 +113,7 @@ class Manager():
                         #print line.strip().replace("=", ": ")
                         line_comp = line.split("=")
                         kafka_config[line_comp[0].strip()]=line_comp[1].strip()
-
+        print str(kafka_config)
         details = {"master_url":kafka_config["zookeeper.connect"],
                    "details" : kafka_config}
         return details
