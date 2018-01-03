@@ -14,6 +14,7 @@ import spark.cluster
 import spark.bootstrap_spark
 import pyspark
 
+
 class PilotAPIException(Exception):
     pass
 
@@ -49,7 +50,6 @@ class PilotComputeDescription(dict):
 
     def __getattr__(self, attr):
         return self[attr]
-
 
         #############################################################################
 
@@ -112,7 +112,7 @@ class PilotCompute(object):
 
     def get_details(self):
         return self.details
-    
+
     def get_context(self):
         return self.cluster_manager.get_context()
 
@@ -193,8 +193,8 @@ class PilotComputeService(object):
         :param pilotcompute_description: dictionary containing detail about the spark cluster to launch
         :return: Pilot
         """
-        #import commandline.main
-        #spark_cluster = commandline.main.PilotStreamingCLI()
+        # import commandline.main
+        # spark_cluster = commandline.main.PilotStreamingCLI()
 
         if pilotcompute_description.has_key("resource"):
             resource_url = pilotcompute_description["resource"]
@@ -229,7 +229,6 @@ class PilotComputeService(object):
             raise PilotAPIException("Invalid Pilot Compute Description: type not specified")
             type = pilotcompute_description["type"]
 
-            
         manager = None
         if type == "spark":
             jobid = "spark-" + str(uuid.uuid1())
@@ -241,7 +240,7 @@ class PilotComputeService(object):
             jobid = "dask-" + str(uuid.uuid1())
             manager = dask.cluster.Manager(jobid, working_directory)
         else:
-            raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s"%type)
+            raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s" % type)
 
         batch_job = manager.submit_job(
             resource_url=resource_url,
@@ -255,8 +254,6 @@ class PilotComputeService(object):
         details = manager.get_config_data()
         pilot = PilotCompute(batch_job, details, cluster_manager=manager)
         return pilot
-    
-    
 
     @classmethod
     def __connected_yarn_spark_cluster(self, pilotcompute_description):
@@ -328,4 +325,3 @@ class PilotComputeService(object):
             "web_ui_url": "http://%s:8080" % master,
         }
         return details
-
