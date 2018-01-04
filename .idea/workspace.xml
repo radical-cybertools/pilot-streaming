@@ -2,11 +2,61 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1254de8c-5a74-4637-aa37-ad529ca33370" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/dask/cluster.py" afterPath="$PROJECT_DIR$/dask/cluster.py" />
-      <change beforePath="$PROJECT_DIR$/kafka/cluster.py" afterPath="$PROJECT_DIR$/kafka/cluster.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pilot/plugins/__init__.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop1/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/commandline/main.py" afterPath="$PROJECT_DIR$/commandline/main.py" />
+      <change beforePath="$PROJECT_DIR$/dask/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/dask/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/dask/bootstrap_dask.py" afterPath="$PROJECT_DIR$/pilot/plugins/dask/bootstrap_dask.py" />
+      <change beforePath="$PROJECT_DIR$/dask/cluster.py" afterPath="$PROJECT_DIR$/pilot/plugins/dask/cluster.py" />
+      <change beforePath="$PROJECT_DIR$/flink/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/flink/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/flink/bootstrap_flink.py" afterPath="$PROJECT_DIR$/pilot/plugins/flink/bootstrap_flink.py" />
+      <change beforePath="$PROJECT_DIR$/flink/configs/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/flink/configs/default/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/flink/configs/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/flink/configs/default/flink-conf.yaml" afterPath="$PROJECT_DIR$/pilot/plugins/flink/configs/default/flink-conf.yaml" />
+      <change beforePath="$PROJECT_DIR$/hadoop1/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/flink/configs/default/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/hadoop1/bootstrap_hadoop.py" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop1/bootstrap_hadoop.py" />
+      <change beforePath="$PROJECT_DIR$/hadoop1/launcher.py" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop1/launcher.py" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/bootstrap_hadoop2.py" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/bootstrap_hadoop2.py" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/default/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/default/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/default/core-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/default/core-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/default/hdfs-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/default/hdfs-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/default/mapred-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/default/mapred-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/default/yarn-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/default/yarn-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/gordon_hdfs/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/gordon_hdfs/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/gordon_hdfs/core-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/gordon_hdfs/core-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/gordon_hdfs/hdfs-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/gordon_hdfs/hdfs-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/gordon_hdfs/mapred-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/gordon_hdfs/mapred-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/gordon_hdfs/yarn-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/gordon_hdfs/yarn-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/gordon_lustre/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/gordon_lustre/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/gordon_lustre/core-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/gordon_lustre/core-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/gordon_lustre/hdfs-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/gordon_lustre/hdfs-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/gordon_lustre/mapred-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/gordon_lustre/mapred-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/gordon_lustre/yarn-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/gordon_lustre/yarn-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/stampede_hdfs/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/stampede_hdfs/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/stampede_hdfs/core-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/stampede_hdfs/core-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/stampede_hdfs/hdfs-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/stampede_hdfs/hdfs-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/stampede_hdfs/mapred-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/stampede_hdfs/mapred-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/stampede_hdfs/yarn-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/stampede_hdfs/yarn-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/stampede_lustre/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/stampede_lustre/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/stampede_lustre/core-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/stampede_lustre/core-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/stampede_lustre/hdfs-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/stampede_lustre/hdfs-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/stampede_lustre/mapred-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/stampede_lustre/mapred-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/configs/stampede_lustre/yarn-site.xml" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/configs/stampede_lustre/yarn-site.xml" />
+      <change beforePath="$PROJECT_DIR$/hadoop2/launcher.py" afterPath="$PROJECT_DIR$/pilot/plugins/hadoop2/launcher.py" />
+      <change beforePath="$PROJECT_DIR$/kafka/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/kafka/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/kafka/bootstrap_kafka.py" afterPath="$PROJECT_DIR$/pilot/plugins/kafka/bootstrap_kafka.py" />
+      <change beforePath="$PROJECT_DIR$/kafka/cluster.py" afterPath="$PROJECT_DIR$/pilot/plugins/kafka/cluster.py" />
+      <change beforePath="$PROJECT_DIR$/kafka/configs/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/kafka/configs/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/kafka/configs/default/__init__.py" afterPath="$PROJECT_DIR$/pilot/plugins/kafka/configs/default/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/kafka/configs/default/server.properties" afterPath="$PROJECT_DIR$/pilot/plugins/kafka/configs/default/server.properties" />
+      <change beforePath="$PROJECT_DIR$/kafka/configs/default/zookeeper.properties" afterPath="$PROJECT_DIR$/pilot/plugins/kafka/configs/default/zookeeper.properties" />
       <change beforePath="$PROJECT_DIR$/pilot/streaming.py" afterPath="$PROJECT_DIR$/pilot/streaming.py" />
-      <change beforePath="$PROJECT_DIR$/spark/cluster.py" afterPath="$PROJECT_DIR$/spark/cluster.py" />
+      <change beforePath="$PROJECT_DIR$/spark/__init__.py" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/spark/bootstrap_spark.py" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/spark/cluster.py" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/spark/configs/spark-defaults.conf" afterPath="" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -20,8 +70,8 @@
       <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/commandline/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1590">
-              <caret line="118" column="0" lean-forward="false" selection-start-line="106" selection-start-column="8" selection-end-line="118" selection-end-column="0" />
+            <state relative-caret-position="394">
+              <caret line="140" column="60" lean-forward="false" selection-start-line="140" selection-start-column="52" selection-end-line="140" selection-end-column="60" />
               <folding>
                 <element signature="e#71#82#0" expanded="true" />
               </folding>
@@ -29,14 +79,12 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="streaming.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="streaming.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pilot/streaming.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3675">
-              <caret line="251" column="12" lean-forward="true" selection-start-line="251" selection-start-column="12" selection-end-line="251" selection-end-column="37" />
-              <folding>
-                <element signature="e#286#300#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="210">
+              <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="14" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -62,10 +110,10 @@
         </entry>
       </file>
       <file leaf-file-name="cluster.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/kafka/cluster.py">
+        <entry file="file://$PROJECT_DIR$/pilot/plugins/kafka/cluster.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="465">
-              <caret line="34" column="19" lean-forward="false" selection-start-line="34" selection-start-column="19" selection-end-line="34" selection-end-column="48" />
+              <caret line="34" column="19" lean-forward="false" selection-start-line="34" selection-start-column="19" selection-end-line="34" selection-end-column="19" />
               <folding>
                 <element signature="e#30#50#0" expanded="true" />
               </folding>
@@ -74,31 +122,32 @@
         </entry>
       </file>
       <file leaf-file-name="cluster.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/dask/cluster.py">
+        <entry file="file://$PROJECT_DIR$/pilot/plugins/dask/cluster.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="465">
-              <caret line="35" column="48" lean-forward="false" selection-start-line="35" selection-start-column="48" selection-end-line="35" selection-end-column="48" />
+              <caret line="33" column="48" lean-forward="false" selection-start-line="33" selection-start-column="48" selection-end-line="33" selection-end-column="48" />
               <folding>
-                <element signature="e#30#50#0" expanded="true" />
+                <element signature="e#30#45#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file leaf-file-name="cluster.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/spark/cluster.py">
+        <entry file="file://$PROJECT_DIR$/pilot/plugins/spark/cluster.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="375">
-              <caret line="37" column="48" lean-forward="true" selection-start-line="37" selection-start-column="48" selection-end-line="37" selection-end-column="48" />
+            <state relative-caret-position="510">
+              <caret line="38" column="48" lean-forward="false" selection-start-line="38" selection-start-column="48" selection-end-line="38" selection-end-column="48" />
               <folding>
-                <element signature="e#31#51#0" expanded="true" />
+                <element signature="e#31#46#0" expanded="true" />
+                <marker date="1515031614362" expanded="true" signature="181:484" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file leaf-file-name="bootstrap_spark.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/spark/bootstrap_spark.py">
+        <entry file="file://$PROJECT_DIR$/pilot/plugins/spark/bootstrap_spark.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="3585">
               <caret line="252" column="24" lean-forward="false" selection-start-line="245" selection-start-column="4" selection-end-line="252" selection-end-column="24" />
@@ -120,7 +169,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="hadoop_utils.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="hadoop_utils.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/commandline/hadoop_utils.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="0">
@@ -146,6 +195,7 @@
       <find>scan_dir</find>
       <find>set_env</find>
       <find>hadoop</find>
+      <find>bootstra</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -161,18 +211,19 @@
         <option value="$PROJECT_DIR$/spark/bootstrap_spark.py" />
         <option value="$PROJECT_DIR$/dask/bootstrap_dask.py" />
         <option value="$PROJECT_DIR$/kafka/bootstrap_kafka.py" />
-        <option value="$PROJECT_DIR$/commandline/main.py" />
         <option value="$PROJECT_DIR$/examples/Pilot-Streaming-GettingStarted.ipynb" />
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/spark/spark.py" />
-        <option value="$PROJECT_DIR$/pilot/streaming.py" />
         <option value="$PROJECT_DIR$/kafka/cluster.py" />
         <option value="$PROJECT_DIR$/dask/cluster.py" />
         <option value="$PROJECT_DIR$/spark/cluster.py" />
+        <option value="$PROJECT_DIR$/commandline/hadoop_utils.py" />
+        <option value="$PROJECT_DIR$/commandline/main.py" />
+        <option value="$PROJECT_DIR$/pilot/streaming.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="y" value="23" />
     <option name="width" value="1397" />
     <option name="height" value="1358" />
@@ -200,36 +251,6 @@
               <item name="pilot-streaming" type="b2602c69:ProjectViewProjectNode" />
               <item name="pilot-streaming" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="pilot-streaming" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pilot-streaming" type="462c0819:PsiDirectoryNode" />
-              <item name="commandline" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pilot-streaming" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pilot-streaming" type="462c0819:PsiDirectoryNode" />
-              <item name="dask" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pilot-streaming" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pilot-streaming" type="462c0819:PsiDirectoryNode" />
-              <item name="examples" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pilot-streaming" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pilot-streaming" type="462c0819:PsiDirectoryNode" />
-              <item name="kafka" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pilot-streaming" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pilot-streaming" type="462c0819:PsiDirectoryNode" />
-              <item name="pilot" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pilot-streaming" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pilot-streaming" type="462c0819:PsiDirectoryNode" />
-              <item name="spark" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
@@ -238,14 +259,15 @@
     </panes>
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pilot/plugins" />
+      <recent name="$PROJECT_DIR$/pilot" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/dask" />
       <recent name="$PROJECT_DIR$/kafka" />
       <recent name="$PROJECT_DIR$/pilot" />
       <recent name="$PROJECT_DIR$/spark" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/pilot" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -302,24 +324,24 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1397" height="1358" extended-state="0" />
+    <frame x="0" y="23" width="2560" height="1358" extended-state="6" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.27630636" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15078124" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32858273" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3295129" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17382999" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
@@ -341,7 +363,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dask/bootstrap_dask.py">
+    <entry file="file://$PROJECT_DIR$/pilot/plugins/dask/bootstrap_dask.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="465">
           <caret line="44" column="8" lean-forward="false" selection-start-line="44" selection-start-column="8" selection-end-line="44" selection-end-column="46" />
@@ -503,28 +525,28 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/spark/bootstrap_spark_extension.py" />
-    <entry file="file://$PROJECT_DIR$/dask/bootstrap_dask.py">
+    <entry file="file://$PROJECT_DIR$/pilot/plugins/dask/bootstrap_dask.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2310">
           <caret line="167" column="24" lean-forward="false" selection-start-line="167" selection-start-column="24" selection-end-line="167" selection-end-column="24" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/kafka/configs/default/zookeeper.properties">
+    <entry file="file://$PROJECT_DIR$/pilot/plugins/kafka/configs/default/zookeeper.properties">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/kafka/configs/default/server.properties">
+    <entry file="file://$PROJECT_DIR$/pilot/plugins/kafka/configs/default/server.properties">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/kafka/bootstrap_kafka.py">
+    <entry file="file://$PROJECT_DIR$/pilot/plugins/kafka/bootstrap_kafka.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="5130">
           <caret line="356" column="85" lean-forward="false" selection-start-line="356" selection-start-column="85" selection-end-line="356" selection-end-column="85" />
@@ -540,6 +562,12 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/README.md">
+      <provider editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
           <first_editor relative-caret-position="525">
@@ -549,14 +577,8 @@
           <second_editor />
         </state>
       </provider>
-      <provider editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/spark/bootstrap_spark.py">
+    <entry file="file://$PROJECT_DIR$/pilot/plugins/spark/bootstrap_spark.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3585">
           <caret line="252" column="24" lean-forward="false" selection-start-line="245" selection-start-column="4" selection-end-line="252" selection-end-column="24" />
@@ -565,16 +587,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/spark/spark.py" />
-    <entry file="file://$PROJECT_DIR$/commandline/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1590">
-          <caret line="118" column="0" lean-forward="false" selection-start-line="106" selection-start-column="8" selection-end-line="118" selection-end-column="0" />
-          <folding>
-            <element signature="e#71#82#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pilot/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -583,32 +595,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pilot/streaming.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3675">
-          <caret line="251" column="12" lean-forward="true" selection-start-line="251" selection-start-column="12" selection-end-line="251" selection-end-column="37" />
-          <folding>
-            <element signature="e#286#300#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/kafka/cluster.py">
+    <entry file="file://$PROJECT_DIR$/pilot/plugins/kafka/cluster.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="465">
-          <caret line="34" column="19" lean-forward="false" selection-start-line="34" selection-start-column="19" selection-end-line="34" selection-end-column="48" />
+          <caret line="34" column="19" lean-forward="false" selection-start-line="34" selection-start-column="19" selection-end-line="34" selection-end-column="19" />
           <folding>
             <element signature="e#30#50#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dask/cluster.py">
+    <entry file="file://$PROJECT_DIR$/pilot/plugins/dask/cluster.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="465">
-          <caret line="35" column="48" lean-forward="false" selection-start-line="35" selection-start-column="48" selection-end-line="35" selection-end-column="48" />
+          <caret line="33" column="48" lean-forward="false" selection-start-line="33" selection-start-column="48" selection-end-line="33" selection-end-column="48" />
           <folding>
-            <element signature="e#30#50#0" expanded="true" />
+            <element signature="e#30#45#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -621,12 +623,13 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/spark/cluster.py">
+    <entry file="file://$PROJECT_DIR$/pilot/plugins/spark/cluster.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
-          <caret line="37" column="48" lean-forward="true" selection-start-line="37" selection-start-column="48" selection-end-line="37" selection-end-column="48" />
+        <state relative-caret-position="510">
+          <caret line="38" column="48" lean-forward="false" selection-start-line="38" selection-start-column="48" selection-end-line="38" selection-end-column="48" />
           <folding>
-            <element signature="e#31#51#0" expanded="true" />
+            <element signature="e#31#46#0" expanded="true" />
+            <marker date="1515031614362" expanded="true" signature="181:484" ph="..." />
           </folding>
         </state>
       </provider>
@@ -635,6 +638,24 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/commandline/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="394">
+          <caret line="140" column="60" lean-forward="false" selection-start-line="140" selection-start-column="52" selection-end-line="140" selection-end-column="60" />
+          <folding>
+            <element signature="e#71#82#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pilot/streaming.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="14" />
           <folding />
         </state>
       </provider>

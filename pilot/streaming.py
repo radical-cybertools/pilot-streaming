@@ -5,14 +5,13 @@
 # SPARK_HOME='/usr/local/Cellar/apache-spark/2.2.1/libexec/'
 # Start Spark: /usr/local/Cellar/apache-spark/2.2.1/libexec/sbin/start-all.sh
 
-import os, sys
+import os
 import time
-import findspark
 import uuid
-import spark.cluster
-import spark.bootstrap_spark
-#import dask.cluster
-import kafka.cluster
+import pilot.plugins.spark.cluster
+import pilot.plugins.spark.bootstrap_spark
+import pilot.plugins.dask.cluster
+import pilot.plugins.kafka.cluster
 import pyspark
 
 class PilotAPIException(Exception):
@@ -228,7 +227,7 @@ class PilotComputeService(object):
             raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s"%type)
         elif type == "spark":
             jobid = "spark-" + str(uuid.uuid1())
-            manager = spark.cluster.Manager(jobid, working_directory)
+            manager = pilot.plugins.spark.cluster.Manager(jobid, working_directory)
         elif type == "kafka":
             jobid = "kafka-" + str(uuid.uuid1())
             manager = kafka.cluster.Manager(jobid, working_directory)
@@ -301,7 +300,7 @@ class PilotComputeService(object):
 
     @classmethod
     def get_spark_config_data(cls, working_directory=None):
-        spark_home_path = spark.bootstrap_spark.SPARK_HOME
+        spark_home_path = pilot.plugins.spark.bootstrap_spark.SPARK_HOME
         if working_directory != None:
             spark_home_path = os.path.join(working_directory, os.path.basename(spark_home_path))
         master_file = os.path.join(spark_home_path, "conf/masters")

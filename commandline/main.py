@@ -3,16 +3,13 @@ Command Line Util for using PilotStreaming (via the Pilot-API)
 '''
 import saga
 import argparse
-import sys
 import os
-import pdb
 import pickle
-import hadoop1, hadoop2
 import logging
 import time
 import subprocess
 import re
-import spark.bootstrap_spark
+import pilot.plugins.spark.bootstrap_spark
 import uuid
 
 
@@ -54,7 +51,7 @@ class PilotStreamingCLI(object):
             jd.total_cpu_count = int(number_cores)
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "dask.bootstrap_dask"]
+            arguments = ["-m", "pilot.plugins.dask.bootstrap_dask"]
             logging.debug("Run %s Args: %s" % (executable, str(arguments)))
             jd.executable = executable
             jd.arguments = arguments
@@ -141,7 +138,7 @@ class PilotStreamingCLI(object):
             jd.total_cpu_count = int(number_cores)
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "flink.bootstrap_flink"]
+            arguments = ["-m", "pilot.plugins.flink.bootstrap_flink"]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
             jd.executable  = executable
             jd.arguments   = arguments
@@ -238,9 +235,9 @@ class PilotStreamingCLI(object):
             jd.total_cpu_count = int(number_cores)
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "kafka.bootstrap_kafka"]
+            arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka"]
             if extend_job_id!=None:
-                arguments = ["-m", "kafka.bootstrap_kafka", "-j", extend_job_id]
+                arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
             jd.executable  = executable
             jd.arguments   = arguments
@@ -339,9 +336,9 @@ class PilotStreamingCLI(object):
             jd.total_cpu_count = int(number_cores)
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "spark.bootstrap_spark"]
+            arguments = ["-m", "pilot.plugins.spark.bootstrap_spark"]
             if extend_job_id!=None:
-                arguments = ["-m", "spark.bootstrap_spark", "-j", extend_job_id]
+                arguments = ["-m", "pilot.plugins.spark.bootstrap_spark", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
             jd.executable  = executable
             jd.arguments   = arguments
@@ -389,7 +386,7 @@ class PilotStreamingCLI(object):
 
 
     def get_spark_config_data(self, jobid, working_directory):
-        spark_home_path=spark.bootstrap_spark.SPARK_HOME
+        spark_home_path= pilot.plugins.spark.bootstrap_spark.SPARK_HOME
         # search for spark_home:
         base_work_dir = os.path.join(working_directory)
         spark_home=''.join([i.strip() if os.path.isdir(os.path.join(base_work_dir, i)) and i.find("spark")>=0 else '' for i in os.listdir(base_work_dir)])
@@ -433,7 +430,7 @@ class PilotStreamingCLI(object):
             jd.total_cpu_count = int(number_cores)
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "hadoop2.bootstrap_hadoop2", "-n", config_name]
+            arguments = ["-m", "pilot.plugins.hadoop2.bootstrap_hadoop2", "-n", config_name]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
             jd.executable  = executable
             jd.arguments   = arguments
