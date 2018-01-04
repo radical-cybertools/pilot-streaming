@@ -20,7 +20,7 @@ class Manager():
             pass
 
 
-    # Dask 1.19
+    # Dask 1.20
     def submit_job(self,
                    resource_url="fork://localhost",
                    number_cores=1,
@@ -42,9 +42,9 @@ class Manager():
             jd.total_cpu_count = int(number_cores)
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "dask.bootstrap_dask"]
+            arguments = ["-m", "pilot.plugins.dask.bootstrap_dask"]
             if extend_job_id!=None:
-                arguments = ["-m", "dask.bootstrap_dask", "-j", extend_job_id]
+                arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
             jd.executable  = executable
             jd.arguments   = arguments
@@ -62,17 +62,17 @@ class Manager():
                 jd.wall_time_limit=walltime
 
             # create the job (state: New)
-            myjob = js.create_job(jd)
+            self.myjob = js.create_job(jd)
 
             #print "Starting Spark bootstrap job ..."
             # run the job (submit the job to PBS)
             self.myjob.run()
-            #id = self.myjob.get_id()
-            local_id = id[id.index("]-[")+3: len(id)-1]
+            self.local_id = self.myjob.get_id()
+            self.local_id  = self.local_id[self.local_id.index("]-[")+3: len(self.local_id)-1]
             print "**** Job: " + str(self.local_id) + " State : %s" % (self.myjob.get_state())
             #print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
             #self.print_pilot_streaming_job_id(myjob)
-            return myjob
+            return self.myjob
         except Exception as ex:
             print "An error occurred: %s" % (str(ex))
 
@@ -81,13 +81,12 @@ class Manager():
             state = self.myjob.get_state()
             logging.debug("**** Job: " + str(self.local_id) + " State: %s" % (state))
             if state=="Running":
-                logging.debug("looking for spark startup state at: %s"%self.working_directory)
-                if os.path.exists(os.path.join(self.working_directory, "spark_started")):
-                    self.get_config_data(id, self.working_directory)
+                logging.debug("looking for Dask startup state at: %s"%self.working_directory)
+                if os.path.exists(os.path.join(self.working_directory, "dask_scheduler")):
                     break
             elif state == "Failed":
                 break
-            time.sleep(3)
+            time.sleep(1)
     
     def get_context(self):
         """Returns Dask Client for Schedueler"""
@@ -95,20 +94,22 @@ class Manager():
         
             
     def get_config_data(self):
+        self.wait()
         master_file = os.path.join(self.working_directory, "dask_scheduler")
-        start_file = os.path.join(self.working_directory, "dask_started")
         # print master_file
         master = "localhost"
         counter = 0
-        while not os.path.exists(master_file) and not os.path.exits(start_file) and counter < 600:
+        while os.path.exists(master_file) == False and counter < 600:
             time.sleep(2)
             counter = counter + 1
 
         with open(master_file, 'r') as f:
             master = f.read()
+            
+        master_host = master.split(":")[0]
         details = {
-            "master_url": "tcp://%s:7077" % master,
-            "web_ui_url": "http://%s:8080" % master,
+            "master_url": "tcp://%s:8786" % master_host,
+            "web_ui_url": "http://%s:8787" % master_host,
         }
         return details
 

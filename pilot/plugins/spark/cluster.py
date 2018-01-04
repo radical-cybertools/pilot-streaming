@@ -5,7 +5,7 @@ Spark Cluster Manager
 import saga, os
 import logging
 import time
-import bootstrap_spark
+import pilot.plugins.spark.bootstrap_spark
 import pyspark
 
 
@@ -44,9 +44,9 @@ class Manager():
             jd.total_cpu_count = int(number_cores)
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "spark.bootstrap_spark"]
+            arguments = ["-m", "pilot.plugins.spark.bootstrap_spark"]
             if extend_job_id!=None:
-                arguments = ["-m", "spark.bootstrap_spark", "-j", extend_job_id]
+                arguments = ["-m", "pilot.plugins.spark.bootstrap_spark", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
             jd.executable  = executable
             jd.arguments   = arguments
@@ -85,7 +85,7 @@ class Manager():
             if state=="Running":
                 logging.debug("looking for spark startup state at: %s"%self.working_directory)
                 if os.path.exists(os.path.join(self.working_directory, "spark_started")):
-                    self.get_config_data(id, self.working_directory)
+                    self.get_config_data()
                     break
             elif state == "Failed":
                 break
@@ -99,7 +99,7 @@ class Manager():
         
             
     def get_config_data(self):
-        spark_home_path= bootstrap_spark.SPARK_HOME
+        spark_home_path= pilot.plugins.spark.bootstrap_spark.SPARK_HOME
         working_directory=self.working_directory
         if working_directory != None:
             spark_home_path = os.path.join(working_directory, os.path.basename(spark_home_path))

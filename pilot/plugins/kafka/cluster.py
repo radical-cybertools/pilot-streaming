@@ -43,9 +43,9 @@ class Manager():
             jd.total_cpu_count = int(number_cores)
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "kafka.bootstrap_kafka"]
+            arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka"]
             if extend_job_id!=None:
-                arguments = ["-m", "kafka.bootstrap_kafka", "-j", extend_job_id]
+                arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
             jd.executable  = executable
             jd.arguments   = arguments

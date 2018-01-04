@@ -43,13 +43,16 @@ class DaskBootstrap():
         self.dask_home=dask_home
         self.config_name=config_name
         self.jobid = "dask-"+str(uuid.uuid1())
-        self.job_working_directory = os.path.join(WORKING_DIRECTORY, self.jobid)
+        self.job_working_directory = os.path.join(WORKING_DIRECTORY)
         self.job_conf_dir = os.path.join(self.job_working_directory, "config")
         self.nodes = []
         self.master = ""
         self.dask_process = None
         self.extension_job_id = extension_job_id
-        os.makedirs(self.job_conf_dir)
+        try:
+            os.makedirs(self.job_conf_dir)
+        except:
+            pass
 
 
     
@@ -139,7 +142,7 @@ class DaskBootstrap():
         logging.debug("Dask nodes: " + str(self.nodes))
         self.master = socket.gethostname().split(".")[0]
         with open(os.path.join(WORKING_DIRECTORY, "dask_scheduler"), "w") as master_file:
-            master_file.write(self.master+":8686")
+            master_file.write(self.master+":8786")
 
 
 
@@ -149,7 +152,7 @@ class DaskBootstrap():
         os.system("pkill -9 dask-worker")
         time.sleep(5)
         command = "dask-ssh %s"%(" ".join(self.nodes))
-        logging.debug("Start Dask Cluster" + command)
+        logging.debug("Start Dask Cluster: " + command)
         #status = subprocess.call(command, shell=True)
         self.dask_process = subprocess.Popen(command, shell=True)
         print("Dask started.")
@@ -158,7 +161,7 @@ class DaskBootstrap():
     def check_dask(self):
         try:
             import distributed
-            client = distributed.Client(self.nodes[0]+":8686")
+            client = distributed.Client(self.nodes[0].strip()+":8786")
             print "Found %d workers: %s" % (len(brokers.keys()), str(brokers))
             return client.scheduler_info()
         except:

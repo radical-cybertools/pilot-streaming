@@ -59,7 +59,7 @@ class KafkaBootstrap():
 
     
     def get_server_properties(self, master, hostname, broker_id):
-        module = "kafka.configs." + self.config_name
+        module = "pilot.plugins.kafka.configs." + self.config_name
         print("Access config in module: " + module + " File: server.properties")
         my_data = pkg_resources.resource_string(module, "server.properties")
         my_data = my_data%(broker_id, hostname, hostname, master)

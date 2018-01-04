@@ -76,7 +76,7 @@ class Hadoop2Bootstrap(object):
 
 
     def get_hdfs_site_xml(self, hostname, name_dir):
-        module = "hadoop2.configs." + self.config_name
+        module = "pilot.plugins.hadoop2.configs." + self.config_name
         logging.debug("Access config in module: " + module + " File: hdfs-site.xml")
         my_data = pkg_resources.resource_string(module, "hdfs-site.xml")
         my_data = my_data%(name_dir)
@@ -117,7 +117,7 @@ class Hadoop2Bootstrap(object):
     
     
     def get_mapred_site_xml(self, hostname):
-        module = "hadoop2.configs." + self.config_name
+        module = "pilot.plugins.hadoop2.configs." + self.config_name
         logging.debug("Access config in module: " + module + " File: mapred-site.xml")
         my_data = pkg_resources.resource_string(module, "mapred-site.xml")
         my_data = my_data%(hostname)
@@ -146,7 +146,7 @@ class Hadoop2Bootstrap(object):
     
     
     def get_yarn_site_xml(self, hostname):
-        module = "hadoop2.configs." + self.config_name
+        module = "pilot.plugins.hadoop2.configs." + self.config_name
         logging.debug("Access config in module: " + module)
         my_data = pkg_resources.resource_string(module, "yarn-site.xml")
         my_data = my_data%(hostname)

@@ -103,6 +103,9 @@ class PilotCompute(object):
     def get_details(self):
         return self.details
     
+    def wait(self):
+        self.cluster_manager.wait()
+    
     def get_context(self, configuration=None):
         return self.cluster_manager.get_context(configuration)
 
@@ -151,15 +154,15 @@ class PilotComputeService(object):
         elif pilotcompute_description.has_key("resource"):
             resource_url = pilotcompute_description["resource"]
         if resource_url.startswith("yarn"):
-            pilot = cls.__connected_yarn_spark_cluster(pilotcompute_description)
-            return pilot
+            p = cls.__connected_yarn_spark_cluster(pilotcompute_description)
+            return p
         elif resource_url.startswith("spark"):
             print "Connect to Spark cluster: " + str(resource_url)
-            pilot = cls.__connected_spark_cluster(resource_url, pilotcompute_description)
-            return pilot
+            p = cls.__connected_spark_cluster(resource_url, pilotcompute_description)
+            return p
         else:
-            pilot = cls.__start_cluster(pilotcompute_description)
-            return pilot
+            p = cls.__start_cluster(pilotcompute_description)
+            return p
 
     def cancel(self):
         """ Cancel the PilotComputeService.
@@ -230,10 +233,10 @@ class PilotComputeService(object):
             manager = pilot.plugins.spark.cluster.Manager(jobid, working_directory)
         elif type == "kafka":
             jobid = "kafka-" + str(uuid.uuid1())
-            manager = kafka.cluster.Manager(jobid, working_directory)
+            manager = pilot.plugins.kafka.cluster.Manager(jobid, working_directory)
         elif type == "dask":
             jobid = "dask-" + str(uuid.uuid1())
-            manager = dask.cluster.Manager(jobid, working_directory)
+            manager = pilot.plugins.dask.cluster.Manager(jobid, working_directory)
             
 
         batch_job = manager.submit_job(
@@ -247,8 +250,8 @@ class PilotComputeService(object):
         )
 
         details = manager.get_config_data()
-        pilot = PilotCompute(batch_job, details, cluster_manager=manager)
-        return pilot
+        p = PilotCompute(batch_job, details, cluster_manager=manager)
+        return p
     
     
 
