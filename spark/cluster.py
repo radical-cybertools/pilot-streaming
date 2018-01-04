@@ -31,7 +31,8 @@ class Manager():
                    walltime=None,
                    project=None,
                    config_name="default",
-                   extend_job_id=None
+                   extend_job_id=None,
+                   pilotcompute_description=None
     ):
         try:
             # create a job service for Futuregrid's 'india' PBS cluster

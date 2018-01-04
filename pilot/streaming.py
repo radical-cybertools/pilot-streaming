@@ -248,7 +248,8 @@ class PilotComputeService(object):
             cores_per_node=cores_per_node,
             queue=queue,
             walltime=walltime,
-            project=project
+            project=project,
+            pilotcompute_description=pilotcompute_description
         )
 
         details = manager.get_config_data()
