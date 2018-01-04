@@ -6,6 +6,7 @@ import saga, os, sys
 import logging
 import time
 import bootstrap_dask
+import dask
 import distributed
 
 

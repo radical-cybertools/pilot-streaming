@@ -4,7 +4,6 @@
 # conda install dask distributed
 # SPARK_HOME='/usr/local/Cellar/apache-spark/2.2.1/libexec/'
 # Start Spark: /usr/local/Cellar/apache-spark/2.2.1/libexec/sbin/start-all.sh
-# py4j needs be installed in your virtualenv
 
 import os, sys
 import time
@@ -12,8 +11,9 @@ import findspark
 import uuid
 import spark.cluster
 import spark.bootstrap_spark
+#import dask.cluster
+import kafka.cluster
 import pyspark
-
 
 class PilotAPIException(Exception):
     pass
@@ -51,6 +51,7 @@ class PilotComputeDescription(dict):
     def __getattr__(self, attr):
         return self[attr]
 
+
         #############################################################################
 
 
@@ -82,16 +83,6 @@ class PilotCompute(object):
             Keyword arguments:
             None
         """
-
-        try:
-            if self.details != None and self.details.has_key("spark_home"):
-                command = os.path.join(self.details["spark_home"], "sbin/stop-all.sh")
-                os.system(command)
-        except:
-            pass
-
-        if self.get_spark_context() != None:
-            self.get_spark_context().stop()
         if self.saga_job != None:
             self.saga_job.cancel()
 
@@ -112,9 +103,9 @@ class PilotCompute(object):
 
     def get_details(self):
         return self.details
-
-    def get_context(self):
-        return self.cluster_manager.get_context()
+    
+    def get_context(self, configuration=None):
+        return self.cluster_manager.get_context(configuration)
 
 
 class PilotComputeService(object):
@@ -193,8 +184,8 @@ class PilotComputeService(object):
         :param pilotcompute_description: dictionary containing detail about the spark cluster to launch
         :return: Pilot
         """
-        # import commandline.main
-        # spark_cluster = commandline.main.PilotStreamingCLI()
+        #import commandline.main
+        #spark_cluster = commandline.main.PilotStreamingCLI()
 
         if pilotcompute_description.has_key("resource"):
             resource_url = pilotcompute_description["resource"]
@@ -225,12 +216,17 @@ class PilotComputeService(object):
         if pilotcompute_description.has_key("cores_per_node"):
             cores_per_node = int(pilotcompute_description["cores_per_node"])
 
+        type = None
         if not pilotcompute_description.has_key("type"):
             raise PilotAPIException("Invalid Pilot Compute Description: type not specified")
-            type = pilotcompute_description["type"]
+        
+        type = pilotcompute_description["type"]
 
+            
         manager = None
-        if type == "spark":
+        if type is None:
+            raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s"%type)
+        elif type == "spark":
             jobid = "spark-" + str(uuid.uuid1())
             manager = spark.cluster.Manager(jobid, working_directory)
         elif type == "kafka":
@@ -239,8 +235,7 @@ class PilotComputeService(object):
         elif type == "dask":
             jobid = "dask-" + str(uuid.uuid1())
             manager = dask.cluster.Manager(jobid, working_directory)
-        else:
-            raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s" % type)
+            
 
         batch_job = manager.submit_job(
             resource_url=resource_url,
@@ -255,6 +250,8 @@ class PilotComputeService(object):
         details = manager.get_config_data()
         pilot = PilotCompute(batch_job, details, cluster_manager=manager)
         return pilot
+    
+    
 
     @classmethod
     def __connected_yarn_spark_cluster(self, pilotcompute_description):
@@ -326,3 +323,4 @@ class PilotComputeService(object):
             "web_ui_url": "http://%s:8080" % master,
         }
         return details
+
