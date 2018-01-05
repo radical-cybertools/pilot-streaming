@@ -21,7 +21,7 @@ class Manager():
             pass
 
 
-    # Spark 2.x
+    # Kafka 1.0.x
     def submit_job(self,
                    resource_url="fork://localhost",
                    number_cores=1,
@@ -89,6 +89,9 @@ class Manager():
                 break
             time.sleep(3)
 
+            
+    def get_jobid(self):
+        return self.jobid
 
     def get_context(self):
         pass

@@ -70,7 +70,7 @@ class KafkaBootstrap():
 
 
     def get_zookeeper_properties(self, hostname):
-        module = "kafka.configs." + self.config_name
+        module = "pilot.plugins.kafka.configs." + self.config_name
         logging.debug("Access config in module: " + module + " File: zookeeper.properties")
         my_data = pkg_resources.resource_string(module, "zookeeper.properties")
         return my_data

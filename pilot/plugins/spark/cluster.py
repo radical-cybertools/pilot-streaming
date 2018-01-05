@@ -90,6 +90,9 @@ class Manager():
             elif state == "Failed":
                 break
             time.sleep(3)
+            
+    def get_jobid(self):
+        return self.jobid
     
     def get_context(self, configuration):
         if self.sc is None:

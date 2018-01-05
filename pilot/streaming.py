@@ -88,17 +88,8 @@ class PilotCompute(object):
     def get_state(self):
         self.saga_job.get_state()
 
-    def get_spark_context(self):
-        if self.spark_context == None:
-            self.spark_context = SparkContext(self.details["master_url"],
-                                              "Pilot-Spark",
-                                              sparkHome=SPARK_HOME)
-        return self.spark_context
-
-    def get_spark_sql_context(self):
-        if self.spark_sql_context == None:
-            self.spark_sql_context = SQLContext(self.get_spark_context())
-        return self.spark_sql_context
+    def get_id(self):
+        return self.cluster_manager.get_jobid() 
 
     def get_details(self):
         return self.details
@@ -108,6 +99,13 @@ class PilotCompute(object):
     
     def get_context(self, configuration=None):
         return self.cluster_manager.get_context(configuration)
+    
+    ##############################################################################
+    # Non-API extension methods specific to Spark
+    def get_spark_sql_context(self):
+        if self.spark_sql_context == None:
+            self.spark_sql_context = SQLContext(self.get_spark_context())
+        return self.spark_sql_context
 
 
 class PilotComputeService(object):
@@ -217,6 +215,10 @@ class PilotComputeService(object):
         cores_per_node = 1
         if pilotcompute_description.has_key("cores_per_node"):
             cores_per_node = int(pilotcompute_description["cores_per_node"])
+            
+        parent = None
+        if pilotcompute_description.has_key("parent"):
+            parent = pilotcompute_description["parent"]
 
         type = None
         if not pilotcompute_description.has_key("type"):
@@ -246,6 +248,7 @@ class PilotComputeService(object):
             queue=queue,
             walltime=walltime,
             project=project,
+            extend_job_id=parent, 
             pilotcompute_description=pilotcompute_description
         )
 

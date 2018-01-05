@@ -143,8 +143,10 @@ class DaskBootstrap():
         self.master = socket.gethostname().split(".")[0]
         with open(os.path.join(WORKING_DIRECTORY, "dask_scheduler"), "w") as master_file:
             master_file.write(self.master+":8786")
-
-
+            
+    
+    
+            
 
     def start_dask(self):
         logging.debug("Start Dask")
@@ -176,9 +178,42 @@ class DaskBootstrap():
     def start(self):
         self.configure_dask()
         self.start_dask()
+        
+    ##################################################################################
+    # Extension
 
     def extend(self):
-        pass
+        self.configure_dask_extension()
+        self.start_dask_extension()
+    
+    def start_dask_extension(self):
+        logging.debug("Start Dask Extension")
+        os.system("killall -s 9 dask-scheduler")
+        os.system("pkill -9 dask-worker")
+        time.sleep(5)
+        command = "dask-ssh --scheduler %s %s"%(self.master, " ".join(self.nodes))
+        logging.debug("Start Dask Cluster Extension: " + command)
+        #status = subprocess.call(command, shell=True)
+        self.dask_process = subprocess.Popen(command, shell=True)
+        print("Dask started.")
+    
+    def configure_dask_extension(self):
+        logging.debug("Dask Instance Configuration Directory: " + self.job_conf_dir)
+        self.nodes = self.get_nodelist_from_resourcemanager()
+        logging.debug("Dask nodes: " + str(self.nodes))
+        self.master = self.find_parent_dask_scheduler()
+        with open(os.path.join(WORKING_DIRECTORY, "dask_scheduler"), "w") as master_file:
+            master_file.write(self.master+":8786")
+
+    def find_parent_dask_scheduler(self):
+        path_to_parent_dask_job = os.path.join(os.getcwd(), "..", self.extension_job_id, "dask_scheduler")
+        print "Master of Parent Cluster: %s" % path_to_parent_dask_job
+        dask_scheduler = None
+        with open(path_to_parent_dask_job, "r") as config:
+            dask_scheduler = config.read().strip().split(":")[0] #remove port
+
+        logging.debug("Parent Dask Scheduler: %s"%dask_scheduler)
+        return dask_scheduler
         
     def stop(self):
         self.stop_dask()
@@ -228,7 +263,7 @@ if __name__ == "__main__" :
     #initialize object for managing dask clusters
     dask = DaskBootstrap(WORKING_DIRECTORY, None, None, options.jobid)
     if options.jobid is not None and options.jobid != "None":
-        logging.debug("Extend SPARK Cluster with PS ID: %s" % options.jobid)
+        logging.debug("Extend Dask Cluster with PS ID: %s" % options.jobid)
         dask.extend()
     elif options.start:
         dask.start()

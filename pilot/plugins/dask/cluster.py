@@ -92,7 +92,9 @@ class Manager():
         """Returns Dask Client for Schedueler"""
         pass
         
-            
+    def get_jobid(self):
+        return self.jobid
+    
     def get_config_data(self):
         self.wait()
         master_file = os.path.join(self.working_directory, "dask_scheduler")
