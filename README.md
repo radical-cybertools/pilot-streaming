@@ -30,10 +30,12 @@ Anaconda is the preferred distribution
 Requirement (in case a manual installation is required):
 
 The best way to utilize Pilot-Streaming is Anaconda, which provides an easy way to install
-important dependencies (such as PySpark and Dask).
+important dependencies (such as PySpark and Dask). Make sure the PySpark version is compabitible 
+with the Pilot-Streaming version (currently 2.2.1).
+
+    conda install pyspark -c conda-forge 
+    conda install pykafka paramiko distributed 
     
-    conda install pykafka paramiko distributed pyspark
-    conda install -c conda-forge findspark
     pip install --upgrade saga-python
 
 Try to run a local Hadoop (e.g. for development and testing)
