@@ -5,7 +5,7 @@ Dask Cluster Manager
 import saga, os
 import logging
 import time
-
+import distributed
 
 class Manager():
 
@@ -82,21 +82,32 @@ class Manager():
             logging.debug("**** Job: " + str(self.local_id) + " State: %s" % (state))
             if state=="Running":
                 logging.debug("looking for Dask startup state at: %s"%self.working_directory)
-                if os.path.exists(os.path.join(self.working_directory, "dask_scheduler")):
-                    break
+                if self.is_scheduler_started():
+                    for i in range(3):
+                        try:
+                            print "init distributed client"
+                            c=self.get_context()
+                            c.scheduler_info()
+                            return
+                        except IOError as e:
+                            time.sleep(0.5)
             elif state == "Failed":
                 break
             time.sleep(1)
     
     def get_context(self):
         """Returns Dask Client for Schedueler"""
-        pass
+        details=self.get_config_data()
+        client = distributed.Client(details["master_url"])
+        return client
+        
         
     def get_jobid(self):
         return self.jobid
     
     def get_config_data(self):
-        self.wait()
+        if not self.is_scheduler_started():
+            return None
         master_file = os.path.join(self.working_directory, "dask_scheduler")
         # print master_file
         master = "localhost"
@@ -120,3 +131,6 @@ class Manager():
         details = self.get_config_data()
         print "Dask Scheduler: %s"%details["master_url"]
 
+        
+    def is_scheduler_started(self):
+        return os.path.exists(os.path.join(self.working_directory, "dask_scheduler"))
