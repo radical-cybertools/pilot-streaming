@@ -131,7 +131,8 @@ class DaskBootstrap():
         elif (os.environ.get("SLURM_NODELIST") != None):
             nodes = DaskBootstrap.get_slurm_allocated_nodes()
         else:
-            nodes = DaskBootstrap.get_sge_allocated_nodes()
+            nodes = DaskBootstrap.get_sge_allocated_nodes()        
+        nodes =[i.strip() for i in nodes] # remove white spaces from host names
         return nodes
 
 
@@ -140,7 +141,7 @@ class DaskBootstrap():
         logging.debug("Dask Instance Configuration Directory: " + self.job_conf_dir)
         self.nodes = self.get_nodelist_from_resourcemanager()
         logging.debug("Dask nodes: " + str(self.nodes))
-        self.master = socket.gethostname().split(".")[0]
+        self.master = self.nodes[0] #socket.gethostname().split(".")[0]
         with open(os.path.join(WORKING_DIRECTORY, "dask_scheduler"), "w") as master_file:
             master_file.write(self.master+":8786")
             
