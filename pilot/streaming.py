@@ -92,7 +92,7 @@ class PilotCompute(object):
         return self.cluster_manager.get_jobid() 
 
     def get_details(self):
-        return self.details
+        return self.cluster_manager.get_config_data()
     
     def wait(self):
         self.cluster_manager.wait()

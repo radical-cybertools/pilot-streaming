@@ -107,6 +107,7 @@ class Manager():
     
     def get_config_data(self):
         if not self.is_scheduler_started():
+            logging.debug("Scheduler not started")
             return None
         master_file = os.path.join(self.working_directory, "dask_scheduler")
         # print master_file
@@ -133,4 +134,5 @@ class Manager():
 
         
     def is_scheduler_started(self):
+        logging.debug("Results of scheduler startup file check: %s"%str(os.path.exists(os.path.join(self.working_directory, "dask_scheduler"))))
         return os.path.exists(os.path.join(self.working_directory, "dask_scheduler"))
