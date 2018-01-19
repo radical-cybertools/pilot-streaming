@@ -53,6 +53,8 @@ class KafkaBootstrap():
         self.broker_config_files = {}
         try:
             os.makedirs(self.job_conf_dir)
+            os.system("rm -rf /tmp/zookeeper")
+            os.system("rm -rf /tmp/kafka-logs")
         except:
             pass
 
