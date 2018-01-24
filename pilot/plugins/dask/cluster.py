@@ -87,7 +87,7 @@ class Manager():
                 if self.is_scheduler_started():
                     for i in range(3):
                         try:
-                            print "init distributed client"
+                            #print "init distributed client"
                             c=self.get_context()
                             c.scheduler_info()
                             return
