@@ -19,19 +19,17 @@ class ClusterManager():
                 raise e
         return
 
-    def get_metrics(self, blocking=False):
-        dowhile = True
-        while blocking or dowhile:  # do-while
-            dowhile = False
-            for line in Pygtail(self.monitor_url)
-                line_split = line.split(',')  
+    def get_metrics(self):
 
-                self.schedulingDelay = float(line_split[2])
-                self.processingDelay = float(line_split[3])
-                self.totalDelay = float(line_split[4])
-                self.numberRecords = float(line_split[5])
-                self.streaming_window = float(line_split[6])
-                self._predict()
+        for line in tailer.follow(open(self.monitor_url)):  # file should exist
+            line_split = line.split(',')
+            self.schedulingDelay = float(line_split[2])
+            self.processingDelay = float(line_split[3])
+            self.totalDelay = float(line_split[4])
+            self.numberRecords = float(line_split[5])
+            self.streaming_window = float(line_split[6])
+            self._predict()
+
         return
 
 
@@ -46,13 +44,13 @@ class ClusterManager():
             pass
 
 
-     def run(self,blocking):  
-        cmd = self.get_metrics(blocking=blocking) 
+     def run(self):  
+        cmd = self.get_metrics() 
         check_output(cmd, shell=True)
         
         
-    def run_in_background(self,blocking):  
-        cmd = self.get_metrics(blocking=blocking)
+    def run_in_background(self):  
+        cmd = self.get_metrics()
         self.manager_process = subprocess.Popen(cmd, shell=True)
 
     def cancel(self):
@@ -97,6 +95,19 @@ class Classifiers():
 #    manager.run()
 #    manager.cancel()
 
+
+ # dowhile = True
+ #        while blocking or dowhile:  # do-while
+ #            dowhile = False
+ #            for line in Pygtail(self.monitor_url)
+ #                line_split = line.split(',')  
+
+ #                self.schedulingDelay = float(line_split[2])
+ #                self.processingDelay = float(line_split[3])
+ #                self.totalDelay = float(line_split[4])
+ #                self.numberRecords = float(line_split[5])
+ #                self.streaming_window = float(line_split[6])
+ #                self._predict()
 
         
 
