@@ -19,9 +19,10 @@ class ClusterManager():
                 raise e
         return
 
-    def get_metrics(self):
-
-        while True:  
+    def get_metrics(self, blocking=False):
+        dowhile = True
+        while blocking or dowhile:  # do-while
+            dowhile = False
             for line in Pygtail(self.monitor_url)
                 line_split = line.split(',')  
 
@@ -30,11 +31,11 @@ class ClusterManager():
                 self.totalDelay = float(line_split[4])
                 self.numberRecords = float(line_split[5])
                 self.streaming_window = float(line_split[6])
-                self.predict()
+                self._predict()
         return
 
 
-    def predict(self):
+    def _predict(self):
         # this is a naive classifier
         aclassifier = Classifiers(self.SchedulingDelay, self.processingDelay,
             self.streaming_window, self.numberRecords)
@@ -45,13 +46,13 @@ class ClusterManager():
             pass
 
 
-     def run(self):  
-        cmd = self.get_metrics() 
+     def run(self,blocking):  
+        cmd = self.get_metrics(blocking=blocking) 
         check_output(cmd, shell=True)
         
         
-    def run_in_background(self):  
-        cmd = self.get_metrics()
+    def run_in_background(self,blocking):  
+        cmd = self.get_metrics(blocking=blocking)
         self.manager_process = subprocess.Popen(cmd, shell=True)
 
     def cancel(self):
