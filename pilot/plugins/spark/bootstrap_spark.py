@@ -178,6 +178,7 @@ class SparkBootstrap(object):
             slave_file.close()
             logging.debug("Spark cluster nodes: " + str(nodes))
 
+            
     def start_spark(self):
         logging.debug("Start Spark")
         self.set_env()
@@ -185,6 +186,26 @@ class SparkBootstrap(object):
         logging.debug("Execute: %s"%start_command)
         #os.system(". ~/.bashrc & " + start_command)
         status = subprocess.call(start_command, shell=True)
+        print("SPARK started, please set SPARK_CONF_DIR to:\nexport SPARK_CONF_DIR=%s"%self.job_conf_dir)
+
+        
+        
+    def start_spark_srun(self):
+        logging.debug("Start Spark SRUN")
+        number_nodes = len(self.get_nodelist_from_resourcemanager())
+        start_command = "srun  -O -n %d -N %d killall java"%(number_nodes, number_nodes)
+        print start_command
+        status = subprocess.call(start_command, shell=True)
+        self.set_env()
+        start_command = os.path.join(SPARK_HOME, "sbin/start-master.sh")
+        logging.debug("Execute: %s"%start_command)
+        status = subprocess.call(start_command, shell=True)
+        
+        # Start Workers via srun
+        start_command = "srun  -O -n %d -N %d %s spark://%s:7077"%(number_nodes, number_nodes, os.path.join(SPARK_HOME, "sbin/start-slave.sh"), self.master)
+        print "Start Worker Command: " + start_command
+        status = subprocess.call(start_command, shell=True)
+        
         print("SPARK started, please set SPARK_CONF_DIR to:\nexport SPARK_CONF_DIR=%s"%self.job_conf_dir)
 
 
@@ -201,8 +222,12 @@ class SparkBootstrap(object):
         else:
             logging.debug("Existing SPARK Conf dir? %s"%os.environ["SPARK_CONF_DIR"])
             self.job_conf_dir=os.environ["SPARK_CONF_DIR"]
-
-        self.start_spark()
+                                                                                
+        if socket.gethostname().startswith("mpp2"):
+            print "LRZ SLURM Modus"
+            self.start_spark_srun()                                                                  
+        else:
+            self.start_spark()
 
     def stop(self):
         if os.environ.has_key("SPARK_CONF_DIR") and os.path.exists(os.environ["SPARK_CONF_DIR"])==True:
