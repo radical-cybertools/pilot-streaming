@@ -289,17 +289,19 @@ class SparkBootstrap(object):
         os.system("pkill -9 java")
 
     def check_spark(self):
-        url = "http://" + self.master + ":8080"
-        matches = []
-        response = urllib.urlopen(url)
-        data = response.read()
-        #matches=re.findall("(?<=>)worker-[0-9\\-.]*", data, re.DOTALL)
-        matches=re.search("(?<=Alive\ Workers:</strong>\ )[0-9]*(?=</li>)", data, re.DOTALL)
-        n = 0
-        if matches: n=int(matches.group(0))
-        return n
-        #print matches
-        #return matches
+        try:
+            url = "http://" + self.master + ":8080"
+            matches = []
+            response = urllib.urlopen(url)
+            data = response.read()
+            #matches=re.findall("(?<=>)worker-[0-9\\-.]*", data, re.DOTALL)
+            matches=re.search("(?<=Alive\ Workers:</strong>\ )[0-9]*(?=</li>)", data, re.DOTALL)
+            n = 0
+            if matches: n=int(matches.group(0))
+            return n
+        except:
+            pass
+        return 0
 
 #########################################################
 #  main                                                 #
