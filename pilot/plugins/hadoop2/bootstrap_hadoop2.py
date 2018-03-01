@@ -17,7 +17,7 @@ import pkg_resources
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-VERSION="2.7.1"
+VERSION="2.7.5"
 HADOOP_DOWNLOAD_URL = "http://apache.osuosl.org/hadoop/common/hadoop-"+ VERSION + "/hadoop-"+ VERSION + ".tar.gz"
 WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 
@@ -360,7 +360,7 @@ if __name__ == "__main__" :
     parser.add_option("-c", "--clean", action="store_true", dest="clean",
                   help="clean HDFS datanodes after termination")
 
-    parser.add_option("-n", "--config_name", action="store", type="string", dest="config_name")
+    parser.add_option("-n", "--config_name", action="store", type="string", dest="config_name", default="default")
 
     (options, args) = parser.parse_args()
     config_name=options.config_name
@@ -375,6 +375,8 @@ if __name__ == "__main__" :
 
         download_destination = os.path.join(WORKING_DIRECTORY,"hadoop.tar.gz")
         if os.path.exists(download_destination)==False:
+            import socket
+            socket.setdefaulttimeout(120)
             logging.debug("Download: %s to %s"%(HADOOP_DOWNLOAD_URL, download_destination))
             opener = urllib.FancyURLopener({})
             opener.retrieve(HADOOP_DOWNLOAD_URL, download_destination);
