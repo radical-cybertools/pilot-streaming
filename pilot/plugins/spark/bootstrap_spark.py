@@ -18,8 +18,11 @@ from optparse import OptionParser
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-VERSION="2.2.1"
+VERSION="2.3.0"
+
 SPARK_DOWNLOAD_URL = "http://apache.mirrors.tds.net/spark/spark-"+ VERSION + "/spark-" + VERSION+"-bin-hadoop2.7.tgz"
+#SPARK_DOWNLOAD_URL = "http://www.gtlib.gatech.edu/pub/apache/spark/spark-"+ VERSION + "/spark-" + VERSION+"-bin-hadoop2.7.tgz"
+
 WORKING_DIRECTORY = os.path.join(os.getcwd())
 
 # For using an existing installation
@@ -182,6 +185,13 @@ class SparkBootstrap(object):
     def start_spark(self):
         logging.debug("Start Spark")
         self.set_env()
+        try:
+            start_command = "srun  -O -n %d -N %d /usr/bin/killall -9 java"%(number_nodes, number_nodes)
+            print start_command
+            status = subprocess.call(start_command, shell=True)
+        except:
+            pass
+        
         start_command = os.path.join(SPARK_HOME, "sbin/start-all.sh")
         logging.debug("Execute: %s"%start_command)
         #os.system(". ~/.bashrc & " + start_command)
@@ -340,6 +350,8 @@ if __name__ == "__main__" :
 
         download_destination = os.path.join(WORKING_DIRECTORY,"spark.tar.gz")
         if os.path.exists(download_destination)==False:
+            import socket
+            socket.setdefaulttimeout(120)
             logging.debug("Download: %s to %s"%(SPARK_DOWNLOAD_URL, download_destination))
             opener = urllib.FancyURLopener({})
             opener.retrieve(SPARK_DOWNLOAD_URL, download_destination);
