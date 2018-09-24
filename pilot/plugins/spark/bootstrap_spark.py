@@ -20,8 +20,7 @@ logging.basicConfig(level=logging.DEBUG)
 # For automatic Download and Installation
 VERSION="2.3.0"
 
-SPARK_DOWNLOAD_URL = "http://apache.mirrors.tds.net/spark/spark-"+ VERSION + "/spark-" + VERSION+"-bin-hadoop2.7.tgz"
-#SPARK_DOWNLOAD_URL = "http://www.gtlib.gatech.edu/pub/apache/spark/spark-"+ VERSION + "/spark-" + VERSION+"-bin-hadoop2.7.tgz"
+SPARK_DOWNLOAD_URL = "http://apache.spinellicreations.com/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz" 
 
 WORKING_DIRECTORY = os.path.join(os.getcwd())
 
