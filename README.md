@@ -34,7 +34,8 @@ important dependencies (such as PySpark and Dask). Make sure the PySpark version
 with the Pilot-Streaming version (currently 2.2.1).
 
     conda install pyspark -c conda-forge 
-    conda install pykafka paramiko distributed 
+    conda install -c conda-forge pykafka
+    conda install paramiko distributed 
     
     pip install --upgrade saga-python
 
