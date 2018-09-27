@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.DEBUG)
 # For automatic Download and Installation
 VERSION="2.3.0"
 
-SPARK_DOWNLOAD_URL = "http://apache.spinellicreations.com/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz" 
+SPARK_DOWNLOAD_URL = "http://download.nextag.com/apache/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz" 
 
 WORKING_DIRECTORY = os.path.join(os.getcwd())
 
@@ -37,7 +37,7 @@ STOP=False
 # Spark Configuration
 # https://spark.apache.org/docs/latest/spark-standalone.html
 #
-# SPARK_MASTER_IP	Bind the master to a specific IP address, for example a public one.
+# SPARK_MASTER_HOST 	Bind the master to a specific IP address, for example a public one.
 # SPARK_MASTER_PORT	Start the master on a different port (default: 7077).
 # SPARK_MASTER_WEBUI_PORT	Port for the master web UI (default: 8080).
 # SPARK_MASTER_OPTS	Configuration properties that apply only to the master in the form "-Dx=y" (default: none). See below for a list of possible options.
@@ -271,10 +271,10 @@ class SparkBootstrap(object):
 
         #logging.debug("Export SPARK_CONF_DIR to %s"%self.job_conf_dir)
         #os.environ["SPARK_CONF_DIR"]=self.job_conf_dir
-        #os.environ["SPARK_MASTER_IP"]=socket.gethostname().split(".")[0]
-        os.environ["SPARK_MASTER_IP"]=master_ip
+        #os.environ["SPARK_MASTER_HOST"]=socket.gethostname().split(".")[0]
         os.environ["SPARK_MASTER_HOST"]=master_ip
-        print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_IP"])
+        os.environ["SPARK_MASTER_HOST"]=master_ip
+        print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_HOST"])
         os.system("pkill -9 java")
 
     def find_parent_master(self):
@@ -292,9 +292,9 @@ class SparkBootstrap(object):
     def set_env(self):
         logging.debug("Export SPARK_CONF_DIR to %s"%self.job_conf_dir)
         os.environ["SPARK_CONF_DIR"]=self.job_conf_dir
-        #os.environ["SPARK_MASTER_IP"]=socket.gethostname().split(".")[0]
-        os.environ["SPARK_MASTER_IP"]=socket.gethostbyname(socket.gethostname())
-        print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_IP"])
+        #os.environ["SPARK_MASTER_HOST"]=socket.gethostname().split(".")[0]
+        os.environ["SPARK_MASTER_HOST"]=socket.gethostbyname(socket.gethostname())
+        print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_HOST"])
         os.system("pkill -9 java")
 
     def check_spark(self):
