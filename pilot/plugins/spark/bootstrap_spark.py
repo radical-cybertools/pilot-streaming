@@ -18,7 +18,7 @@ from optparse import OptionParser
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-VERSION="2.3.0"
+VERSION="2.3.1"
 
 SPARK_DOWNLOAD_URL = "http://download.nextag.com/apache/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz" 
 
