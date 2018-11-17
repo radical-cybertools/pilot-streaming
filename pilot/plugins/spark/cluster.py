@@ -2,11 +2,14 @@
 Spark Cluster Manager
 """
 
-import saga, os
+#import saga
+import os
 import logging
 import time
 import pilot.plugins.spark.bootstrap_spark
 import pyspark
+
+from pilot.job.slurm import Service, Job
 
 
 class Manager():
@@ -37,34 +40,37 @@ class Manager():
     ):
         try:
             # create a job service for Futuregrid's 'india' PBS cluster
-            js = saga.job.Service(resource_url)
+            js = Service(resource_url)
             # describe our job
-            jd = saga.job.Description()
+            jd = {}
             # resource requirements
-            jd.total_cpu_count = int(number_cores)
+            jd["total_cpu_count"] = int(number_cores)
             # environment, executable & arguments
             executable = "python"
             arguments = ["-m", "pilot.plugins.spark.bootstrap_spark"]
             if extend_job_id!=None:
                 arguments = ["-m", "pilot.plugins.spark.bootstrap_spark", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
-            jd.executable  = executable
-            jd.arguments   = arguments
+            jd["executable"]  = executable
+            jd["arguments"]   = arguments
             # output options
-            jd.output =  os.path.join("spark_job.stdout")
-            jd.error  = os.path.join("spark_job.stderr")
-            jd.working_directory=self.working_directory
-            jd.queue=queue
+            jd["output"] =  os.path.join("spark_job.stdout")
+            jd["error"]  = os.path.join("spark_job.stderr")
+            jd["working_directory"]=self.working_directory
+            jd["queue"]=queue
             if project!=None:
-                jd.project=project
+                jd["project"]=project
             #jd.environment =
             if spmd_variation!=None:
-                jd.spmd_variation=spmd_variation
+                jd["spmd_variation"]=spmd_variation
             if walltime!=None:
-                jd.wall_time_limit=walltime
+                jd["wall_time_limit"]=walltime
 
             # create the job (state: New)
             self.myjob = js.create_job(jd)
+
+            j = js.create_job(jd)
+            j.run()
 
             #print "Starting Spark bootstrap job ..."
             # run the job (submit the job to PBS)

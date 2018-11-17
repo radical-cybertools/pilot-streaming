@@ -6,14 +6,14 @@ import sys
 from setuptools import setup, find_packages
 import subprocess
 
-try:
-    import saga
-except:
-    print "Installing BigJob and SAGA/Python."
+#try:
+#    import saga
+#except:
+#    print "#."
 
-if sys.version_info < (2, 6):
-    sys.stderr.write("BigJob requires Python 2.6 and above. Installation unsuccessful!")
-    sys.exit(1)
+#if sys.version_info < (2, 6):
+#    sys.stderr.write("BigJob requires Python 2.6 and above. Installation unsuccessful!")
+#    sys.exit(1)
 
 VERSION_FILE="VERSION"    
     
