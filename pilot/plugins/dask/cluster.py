@@ -2,13 +2,14 @@
 Dask Cluster Manager
 """
 
-#import saga 
+
 import os
 import logging
 logging.getLogger("tornado.application").setLevel(logging.CRITICAL)
 logging.getLogger("distributed.utils").setLevel(logging.CRITICAL)
 import time
 import distributed
+from pilot.job.slurm import Service, Job
 
 class Manager():
 
@@ -37,44 +38,32 @@ class Manager():
                    pilotcompute_description=None
     ):
         try:
-            # create a job service for Futuregrid's 'india' PBS cluster
-            js = saga.job.Service(resource_url)
-            # describe our job
-            jd = saga.job.Description()
-            # resource requirements
-            jd.total_cpu_count = int(number_cores)
+            # create a job service for SLURM LRMS
+            js = Service(resource_url)
+            
             # environment, executable & arguments
             executable = "python"
             arguments = ["-m", "pilot.plugins.dask.bootstrap_dask"]
             if extend_job_id!=None:
                 arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
-            jd.executable  = executable
-            jd.arguments   = arguments
-            # output options
-            jd.output =  os.path.join("dask_job.stdout")
-            jd.error  = os.path.join("dask_job.stderr")
-            jd.working_directory=self.working_directory
-            jd.queue=queue
-            if project!=None:
-                jd.project=project
-            #jd.environment =
-            if spmd_variation!=None:
-                jd.spmd_variation=spmd_variation
-            if walltime!=None:
-                jd.wall_time_limit=walltime
-
-            # create the job (state: New)
+            
+            jd ={
+                "executable": executable,
+                "arguments": arguments,
+                "working_directory": self.working_directory,
+                "output": "dask_job_%s.stdout"%self.jobid,
+                "error": "dask_job_%s.stderr"%self.jobid,
+                "number_cores": number_cores,
+                "cores_per_node": cores_per_node,
+                "project": project,
+                "queue": queue,
+                "walltime": walltime,
+            }
             self.myjob = js.create_job(jd)
-
-            #print "Starting Spark bootstrap job ..."
-            # run the job (submit the job to PBS)
             self.myjob.run()
             self.local_id = self.myjob.get_id()
-            self.local_id  = self.local_id[self.local_id.index("]-[")+3: len(self.local_id)-1]
             print("**** Job: " + str(self.local_id) + " State : %s" % (self.myjob.get_state()))
-            #print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
-            #self.print_pilot_streaming_job_id(myjob)
             return self.myjob
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))
@@ -107,6 +96,7 @@ class Manager():
         
     def get_jobid(self):
         return self.jobid
+    
     
     def get_config_data(self):
         if not self.is_scheduler_started():

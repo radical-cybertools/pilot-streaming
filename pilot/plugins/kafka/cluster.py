@@ -7,7 +7,7 @@ import logging
 import time
 from . import bootstrap_kafka
 
-
+from pilot.job.slurm import Service, Job
 
 class Manager():
 
@@ -36,44 +36,32 @@ class Manager():
                    pilotcompute_description=None
     ):
         try:
-            # create a job service for Futuregrid's 'india' PBS cluster
-            js = saga.job.Service(resource_url)
-            # describe our job
-            jd = saga.job.Description()
-            # resource requirements
-            jd.total_cpu_count = int(number_cores)
+            # create a job service for SLURM LRMS
+            js = Service(resource_url)
+            
             # environment, executable & arguments
             executable = "python"
             arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka"]
             if extend_job_id!=None:
                 arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
-            jd.executable  = executable
-            jd.arguments   = arguments
-            # output options
-            jd.output =  os.path.join("kafka_job.stdout")
-            jd.error  = os.path.join("kafka_job.stderr")
-            jd.working_directory=self.working_directory
-            jd.queue=queue
-            if project!=None:
-                jd.project=project
-            #jd.environment =
-            if spmd_variation!=None:
-                jd.spmd_variation=spmd_variation
-            if walltime!=None:
-                jd.wall_time_limit=walltime
-
-            # create the job (state: New)
+            
+            jd ={
+                "executable": executable,
+                "arguments": arguments,
+                "working_directory": self.working_directory,
+                "output": "kafka_job_%s.stdout"%self.jobid,
+                "error": "kafka_job_%s.stderr"%self.jobid,
+                "number_cores": number_cores,
+                "cores_per_node": cores_per_node,
+                "project": project,
+                "queue": queue,
+                "walltime": walltime,
+            }
             self.myjob = js.create_job(jd)
-
-            #print "Starting Spark bootstrap job ..."
-            # run the job (submit the job to PBS)
             self.myjob.run()
-            full_id = self.myjob.get_id()
-            self.local_id = full_id[full_id.index("]-[")+3: len(full_id)-1]
+            self.local_id = self.myjob.get_id()
             print("**** Job: " + str(self.local_id) + " State : %s" % (self.myjob.get_state()))
-            #print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
-            #self.print_pilot_streaming_job_id(myjob)
             return self.myjob
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))
