@@ -39,7 +39,7 @@ class Manager():
                    pilotcompute_description=None
     ):
         try:
-            # create a job service for Futuregrid's 'india' PBS cluster
+            # create a job service 
             js = Service(resource_url)
             
             executable = "python"
@@ -65,7 +65,6 @@ class Manager():
             logging.debug("Job State: " + self.myjob.get_state())
             self.local_id = self.myjob.get_id() #id[id.index("]-[")+3: len(id)-1]
             print("**** Job: " + str(self.local_id) + " State : %s" % (self.myjob.get_state()))
-            #print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
             #self.print_pilot_streaming_job_id(myjob)
             return self.myjob
         except Exception as ex:
