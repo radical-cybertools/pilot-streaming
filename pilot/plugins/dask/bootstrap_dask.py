@@ -2,7 +2,7 @@
 """ Dask Bootstrap Script (based on Dask Distributed 1.20.2 release) """
 import os, sys
 import pdb
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import subprocess
 import logging
 import uuid
@@ -58,7 +58,7 @@ class DaskBootstrap():
     
     def get_dask_properties(self, master, hostname, broker_id):
         module = "dask.configs." + self.config_name
-        print("Access config in module: " + module + " File: das.properties")
+        print(("Access config in module: " + module + " File: das.properties"))
         my_data = pkg_resources.resource_string(module, "dask.properties")
         #my_data = my_data%(broker_id, hostname, hostname, master)
         #my_data = os.path.expandvars(my_data)
@@ -73,7 +73,7 @@ class DaskBootstrap():
     ## Get Node List from Resource Management System
     @staticmethod
     def get_pbs_allocated_nodes():
-        print "Init PBS"
+        print("Init PBS")
         pbs_node_file = os.environ.get("PBS_NODEFILE")    
         if pbs_node_file == None:
             return ["localhost"]
@@ -98,7 +98,7 @@ class DaskBootstrap():
             columns = i.split()                
             try:
                 for j in range(0, int(columns[1])):
-                    print("add host: " + columns[0].strip())
+                    print(("add host: " + columns[0].strip()))
                     nodes.append(columns[0]+"\n")
             except:
                     pass
@@ -112,7 +112,7 @@ class DaskBootstrap():
         if hosts == None:
             return ["localhost"]
 
-        print "***** Hosts: " + str(hosts) 
+        print("***** Hosts: " + str(hosts)) 
         hosts=hostlist.expand_hostlist(hosts)
         number_cpus_per_node = 1
         if os.environ.get("SLURM_CPUS_ON_NODE")!=None:
@@ -165,7 +165,7 @@ class DaskBootstrap():
         try:
             import distributed
             client = distributed.Client(self.nodes[0].strip()+":8786")
-            print "Found %d workers: %s" % (len(brokers.keys()), str(brokers))
+            print("Found %d workers: %s" % (len(list(brokers.keys())), str(brokers)))
             return client.scheduler_info()
         except:
             pass
@@ -208,7 +208,7 @@ class DaskBootstrap():
 
     def find_parent_dask_scheduler(self):
         path_to_parent_dask_job = os.path.join(os.getcwd(), "..", self.extension_job_id, "dask_scheduler")
-        print "Master of Parent Cluster: %s" % path_to_parent_dask_job
+        print("Master of Parent Cluster: %s" % path_to_parent_dask_job)
         dask_scheduler = None
         with open(path_to_parent_dask_job, "r") as config:
             dask_scheduler = config.read().strip().split(":")[0] #remove port
@@ -246,7 +246,7 @@ if __name__ == "__main__" :
     
     node_list = DaskBootstrap.get_nodelist_from_resourcemanager()
     number_nodes = len(node_list)
-    print "nodes: %s"%str(node_list)
+    print("nodes: %s"%str(node_list))
     run_timestamp=datetime.datetime.now()
     performance_trace_filename = "dask_performance_" + run_timestamp.strftime("%Y%m%d-%H%M%S") + ".csv"
     dask_config_filename = "dask_config_" + run_timestamp.strftime("%Y%m%d-%H%M%S")
@@ -259,7 +259,7 @@ if __name__ == "__main__" :
     try:
         import distributed
     except:
-        print "No Dask Distributed found. Please install Dask Distributed!"
+        print("No Dask Distributed found. Please install Dask Distributed!")
 
     #initialize object for managing dask clusters
     dask = DaskBootstrap(WORKING_DIRECTORY, None, None, options.jobid)
@@ -287,7 +287,7 @@ if __name__ == "__main__" :
             shutil.rmtree(directory)
         sys.exit(0)
     
-    print "Finished launching of Dask Cluster - Sleeping now"
+    print("Finished launching of Dask Cluster - Sleeping now")
 
     while not STOP:
         logging.debug("stop: " + str(STOP))

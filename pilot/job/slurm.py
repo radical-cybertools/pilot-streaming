@@ -57,26 +57,46 @@ class Job(object):
         
         # slurm+ssh:// URL for local resource manager endpoint for submission
         self.resource_url = resource_url
-
         
         logger.debug("Pilot-Streaming SLURM: Parsing job description")
         
         self.pilot_compute_description = {}
-        if 'queue' in job_description: self.pilot_compute_description['queue'] = job_description['queue']
-        if 'project' in job_description: self.pilot_compute_description['project'] = job_description['project']
+        if 'queue' in job_description: 
+            self.pilot_compute_description['queue'] = job_description['queue']
+        
+        logging.debug("Queue: %s"%self.pilot_compute_description['queue'])
+        
+        if 'project' in job_description: 
+            self.pilot_compute_description['project'] = job_description['project']
+        
         self.pilot_compute_description['working_directory'] = os.getcwd()
         if 'working_directory' in job_description: 
             self.pilot_compute_description['working_directory'] = job_description['working_directory']
+        
+        self.pilot_compute_description['output'] = os.path.join(self.pilot_compute_description['working_directory'], "ps-%s.stdout"%self.job_uuid_short)
+        if 'output' in job_description: 
+            self.pilot_compute_description['output'] = job_description['output']
+        
+        self.pilot_compute_description['error'] = os.path.join(self.pilot_compute_description['working_directory'], "ps-%s.stderr"%self.job_uuid_short)
+        if 'error' in job_description: 
+            self.pilot_compute_description['error'] = job_description['error']
+        
         if 'walltime' in job_description: 
             self.pilot_compute_description['walltime'] = job_description['walltime']
 
-        self.pilot_compute_description['number_cores']=48
-        if 'number_cores' in job_description: 
-            self.pilot_compute_description['number_cores'] = job_description['number_cores']
-            
+        
+        #if 'number_cores' in job_description: 
+        #    self.pilot_compute_description['number_cores'] = job_description['number_cores']
+
+        self.pilot_compute_description['cores_per_node']=48
+        if 'cores_per_node' in job_description: 
+            self.pilot_compute_description['cores_per_node'] = int(job_description['cores_per_node'])
+     
         self.pilot_compute_description['number_of_nodes'] = 1
         if 'number_of_nodes' in job_description: 
-            self.pilot_compute_description['number_of_nodes'] = job_description['number_of_nodes']
+            self.pilot_compute_description['number_of_nodes'] = int(job_description['number_of_nodes'])
+            
+        self.pilot_compute_description['number_cores']=self.pilot_compute_description['cores_per_node'] * self.pilot_compute_description['number_of_nodes']
 
         self.working_directory = self.pilot_compute_description["working_directory"]
         ### convert walltime in minutes to SLURM representation of time ###
@@ -107,8 +127,8 @@ class Job(object):
                 tmp.write("\n")
                 tmp.write("#SBATCH -A %s\n"%str(self.pilot_compute_description["project"]))
                 tmp.write("\n")
-                tmp.write("#SBATCH -o %s/stdout-pilotstreaming-spark.txt\n"%self.pilot_compute_description["working_directory"])
-                tmp.write("#SBATCH -e %s/stderr-pilotstreaming-spark.txt\n"%self.pilot_compute_description["working_directory"])
+                tmp.write("#SBATCH -o %s\n"%self.pilot_compute_description["output"])
+                tmp.write("#SBATCH -e %s\n"%self.pilot_compute_description["error"])
                 tmp.write("#SBATCH -p %s\n"%self.pilot_compute_description["queue"])
                 tmp.write("cd %s\n"%self.pilot_compute_description["working_directory"])
                 tmp.write("%s\n"%self.command)
@@ -137,7 +157,9 @@ class Job(object):
         self.job_id=self.get_local_job_id(outstr)
         if self.job_id == None or self.job_id == "":
             raise Exception("Pilot-Streaming Submission via slurm+ssh:// failed")
-    
+        
+    def get_id(self):
+        return self.job_id
 
     def get_state(self):
         start_command=("%s %s %s"%("squeue", "-j", self.job_id ))

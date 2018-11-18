@@ -32,12 +32,12 @@ def main():
         # create the job (state: New)
         myjob = js.create_job(jd)
 
-        print "Starting Hadoop bootstrap job...\n"
+        print("Starting Hadoop bootstrap job...\n")
         # run the job (submit the job to PBS)
         myjob.run()
         jobid = myjob.get_id()
-        print "**** Job ID    : %s" % (jobid)
-        print "**** Job State : %s" % (myjob.get_state())
+        print("**** Job ID    : %s" % (jobid))
+        print("**** Job State : %s" % (myjob.get_state()))
 
         while True:
             state = myjob.get_state()
@@ -49,8 +49,8 @@ def main():
 
 
 
-    except Exception, ex:
-        print "An error occured: %s" % (str(ex))
+    except Exception as ex:
+        print("An error occured: %s" % (str(ex)))
 
 
 def get_hadoop_config_data(jobid):
@@ -62,13 +62,13 @@ def get_hadoop_config_data(jobid):
             hosts = i[i.find("=")+1:].strip()
 
     hadoop_home=os.path.join(os.getcwd(), "work/hadoop-1.0.0")
-    print "HADOOP installation directory: %s"%hadoop_home
-    print "Allocated Resources for Hadoop cluster: " + hosts 
-    print "HDFS Web Interface: http://%s:50070"% hosts[:hosts.find("/")]   
-    print "\nTo use Hadoop set HADOOP_CONF_DIR: "
-    print "export HADOOP_CONF_DIR=%s"%(os.path.join(os.getcwd(), "work", get_most_current_job(), "conf")) 
-    print "%s/bin/hadoop dfsadmin -report"%hadoop_home
-    print ""
+    print("HADOOP installation directory: %s"%hadoop_home)
+    print("Allocated Resources for Hadoop cluster: " + hosts) 
+    print("HDFS Web Interface: http://%s:50070"% hosts[:hosts.find("/")])   
+    print("\nTo use Hadoop set HADOOP_CONF_DIR: ")
+    print("export HADOOP_CONF_DIR=%s"%(os.path.join(os.getcwd(), "work", get_most_current_job(), "conf"))) 
+    print("%s/bin/hadoop dfsadmin -report"%hadoop_home)
+    print("")
 
 def get_most_current_job():
     dir = "work"

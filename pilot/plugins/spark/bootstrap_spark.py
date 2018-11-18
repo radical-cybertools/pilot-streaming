@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-""" Spark Bootstrap Script (based on Spark 2.2 release) """
+""" Spark Bootstrap Script (based on Spark 2.x release) """
 import os, sys
 import pdb
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import subprocess
 import logging
 import re
@@ -79,7 +79,7 @@ class SparkBootstrap(object):
     ###################################################################################################### 
     @staticmethod
     def get_pbs_allocated_nodes():
-        print "Init PBS"
+        print("Init PBS")
         pbs_node_file = os.environ.get("PBS_NODEFILE")    
         if pbs_node_file == None:
             return ["localhost"]
@@ -93,7 +93,7 @@ class SparkBootstrap(object):
 
     @staticmethod
     def get_sge_allocated_nodes():
-        print "Init SGE"
+        print("Init SGE")
         sge_node_file = os.environ.get("PE_HOSTFILE")    
         if sge_node_file == None:
             #return [socket.gethostname()]
@@ -107,7 +107,7 @@ class SparkBootstrap(object):
             columns = i.split()                
             try:
                 for j in range(0, int(columns[1])):
-                    print("add host: " + columns[0].strip())
+                    print(("add host: " + columns[0].strip()))
                     nodes.append(columns[0]+"\n")
             except:
                     pass
@@ -122,7 +122,7 @@ class SparkBootstrap(object):
             self.init_local()
             return
 
-        print "***** Hosts: " + str(hosts) 
+        print("***** Hosts: " + str(hosts)) 
         hosts=hostlist.expand_hostlist(hosts)
         number_cpus_per_node = 1
         if os.environ.get("SLURM_CPUS_ON_NODE") != None:
@@ -188,7 +188,7 @@ class SparkBootstrap(object):
         self.set_env()
         try:
             start_command = "srun  -O -n %d -N %d /usr/bin/killall -9 java"%(number_nodes, number_nodes)
-            print start_command
+            print(start_command)
             status = subprocess.call(start_command, shell=True)
         except:
             pass
@@ -197,7 +197,7 @@ class SparkBootstrap(object):
         logging.debug("Execute: %s"%start_command)
         #os.system(". ~/.bashrc & " + start_command)
         status = subprocess.call(start_command, shell=True)
-        print("SPARK started, please set SPARK_CONF_DIR to:\nexport SPARK_CONF_DIR=%s"%self.job_conf_dir)
+        print(("SPARK started, please set SPARK_CONF_DIR to:\nexport SPARK_CONF_DIR=%s"%self.job_conf_dir))
 
         
         
@@ -205,7 +205,7 @@ class SparkBootstrap(object):
         logging.debug("Start Spark SRUN")
         number_nodes = len(self.get_nodelist_from_resourcemanager())
         start_command = "srun  -O -n %d -N %d killall java"%(number_nodes, number_nodes)
-        print start_command
+        print(start_command)
         status = subprocess.call(start_command, shell=True)
         self.set_env()
         start_command = os.path.join(SPARK_HOME, "sbin/start-master.sh")
@@ -214,10 +214,10 @@ class SparkBootstrap(object):
         
         # Start Workers via srun
         start_command = "srun  -O -n %d -N %d %s spark://%s:7077"%(number_nodes, number_nodes, os.path.join(SPARK_HOME, "sbin/start-slave.sh"), self.master)
-        print "Start Worker Command: " + start_command
+        print("Start Worker Command: " + start_command)
         status = subprocess.call(start_command, shell=True)
         
-        print("SPARK started, please set SPARK_CONF_DIR to:\nexport SPARK_CONF_DIR=%s"%self.job_conf_dir)
+        print(("SPARK started, please set SPARK_CONF_DIR to:\nexport SPARK_CONF_DIR=%s"%self.job_conf_dir))
 
 
     def stop_spark(self):
@@ -228,20 +228,20 @@ class SparkBootstrap(object):
         os.system(stop_command)
 
     def start(self):
-        if not os.environ.has_key("SPARK_CONF_DIR") or os.path.exists(os.environ["SPARK_CONF_DIR"])==False:
+        if "SPARK_CONF_DIR" not in os.environ or os.path.exists(os.environ["SPARK_CONF_DIR"])==False:
             self.configure_spark()
         else:
             logging.debug("Existing SPARK Conf dir? %s"%os.environ["SPARK_CONF_DIR"])
             self.job_conf_dir=os.environ["SPARK_CONF_DIR"]
                                                                                 
         if socket.gethostname().startswith("mpp2"):
-            print "LRZ SLURM Modus"
+            print("LRZ SLURM Modus")
             self.start_spark_srun()                                                                  
         else:
             self.start_spark()
 
     def stop(self):
-        if os.environ.has_key("SPARK_CONF_DIR") and os.path.exists(os.environ["SPARK_CONF_DIR"])==True:
+        if "SPARK_CONF_DIR" in os.environ and os.path.exists(os.environ["SPARK_CONF_DIR"])==True:
             self.job_conf_dir=os.environ["SPARK_CONF_DIR"]
             self.job_log_dir=os.path.join(self.job_conf_dir, "../log")
         self.stop_spark()
@@ -261,7 +261,7 @@ class SparkBootstrap(object):
         logging.debug("Execute: %s"%start_command)
         #os.system(". ~/.bashrc & " + start_command)
         status = subprocess.call(start_command, shell=True)
-        print("SPARK started, please set SPARK_CONF_DIR to:\nexport SPARK_CONF_DIR=%s"%self.job_conf_dir)
+        print(("SPARK started, please set SPARK_CONF_DIR to:\nexport SPARK_CONF_DIR=%s"%self.job_conf_dir))
 
 
     def set_env_extension(self):
@@ -276,7 +276,7 @@ class SparkBootstrap(object):
         #os.environ["SPARK_MASTER_HOST"]=socket.gethostname().split(".")[0]
         os.environ["SPARK_MASTER_HOST"]=master_ip
         os.environ["SPARK_MASTER_HOST"]=master_ip
-        print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_HOST"])
+        print("Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_HOST"]))
         os.system("pkill -9 java")
 
     def find_parent_master(self):
@@ -285,7 +285,7 @@ class SparkBootstrap(object):
         master_ip = socket.gethostbyname(socket.gethostname())
         with open(os.path.join(path_to_parent_spark_job, "spark_master"), "r") as f:
             master_ip = f.read()
-        print "Master of Parent Cluster: %s"%master_ip
+        print("Master of Parent Cluster: %s"%master_ip)
         return master_ip
 
     ###################################################################################################################
@@ -296,14 +296,14 @@ class SparkBootstrap(object):
         os.environ["SPARK_CONF_DIR"]=self.job_conf_dir
         #os.environ["SPARK_MASTER_HOST"]=socket.gethostname().split(".")[0]
         os.environ["SPARK_MASTER_HOST"]=socket.gethostbyname(socket.gethostname())
-        print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_HOST"])
+        print("Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_HOST"]))
         os.system("pkill -9 java")
 
     def check_spark(self):
         try:
             url = "http://" + self.master + ":8080"
             matches = []
-            response = urllib.urlopen(url)
+            response = urllib.request.urlopen(url)
             data = response.read()
             #matches=re.findall("(?<=>)worker-[0-9\\-.]*", data, re.DOTALL)
             matches=re.search("(?<=Alive\ Workers:</strong>\ )[0-9]*(?=</li>)", data, re.DOTALL)
@@ -335,7 +335,7 @@ if __name__ == "__main__" :
     logging.debug("Bootstrap SPARK on " + socket.gethostname())
     node_list = SparkBootstrap.get_nodelist_from_resourcemanager()
     number_nodes = len(node_list)
-    print "nodes: %s"%str(node_list)
+    print("nodes: %s"%str(node_list))
 
     run_timestamp=datetime.datetime.now()
     performance_trace_filename = "spark_performance_" + run_timestamp.strftime("%Y%m%d-%H%M%S") + ".csv"
@@ -354,7 +354,7 @@ if __name__ == "__main__" :
             import socket
             socket.setdefaulttimeout(120)
             logging.debug("Download: %s to %s"%(SPARK_DOWNLOAD_URL, download_destination))
-            opener = urllib.FancyURLopener({})
+            opener = urllib.request.FancyURLopener({})
             opener.retrieve(SPARK_DOWNLOAD_URL, download_destination);
         else:
             logging.debug("Found existing SPARK binaries at: " + download_destination)
@@ -388,7 +388,7 @@ if __name__ == "__main__" :
             pass
         sys.exit(0)
     
-    print "Finished launching of SPARK Cluster - Sleeping now"
+    print("Finished launching of SPARK Cluster - Sleeping now")
     f = open(os.path.join(WORKING_DIRECTORY, 'spark_started'), 'w')
     f.close()
 

@@ -41,48 +41,35 @@ class Manager():
         try:
             # create a job service for Futuregrid's 'india' PBS cluster
             js = Service(resource_url)
-            # describe our job
-            jd = {}
-            # resource requirements
-            jd["total_cpu_count"] = int(number_cores)
-            # environment, executable & arguments
+            
             executable = "python"
             arguments = ["-m", "pilot.plugins.spark.bootstrap_spark"]
             if extend_job_id!=None:
                 arguments = ["-m", "pilot.plugins.spark.bootstrap_spark", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
-            jd["executable"]  = executable
-            jd["arguments"]   = arguments
-            # output options
-            jd["output"] =  os.path.join("spark_job.stdout")
-            jd["error"]  = os.path.join("spark_job.stderr")
-            jd["working_directory"]=self.working_directory
-            jd["queue"]=queue
-            if project!=None:
-                jd["project"]=project
-            #jd.environment =
-            if spmd_variation!=None:
-                jd["spmd_variation"]=spmd_variation
-            if walltime!=None:
-                jd["wall_time_limit"]=walltime
 
-            # create the job (state: New)
+            jd ={
+                "executable": executable,
+                "arguments": arguments,
+                "working_directory": self.working_directory,
+                "output": "spark_job_%s.stdout"%self.jobid,
+                "error": "spark_job_%s.stderr"%self.jobid,
+                "number_cores": number_cores,
+                "cores_per_node": cores_per_node,
+                "project": project,
+                "queue": queue,
+                "walltime": walltime,
+            }
             self.myjob = js.create_job(jd)
-
-            j = js.create_job(jd)
-            j.run()
-
-            #print "Starting Spark bootstrap job ..."
-            # run the job (submit the job to PBS)
             self.myjob.run()
-            id = self.myjob.get_id()
-            self.local_id = id[id.index("]-[")+3: len(id)-1]
-            print "**** Job: " + str(self.local_id) + " State : %s" % (self.myjob.get_state())
+            logging.debug("Job State: " + self.myjob.get_state())
+            self.local_id = self.myjob.get_id() #id[id.index("]-[")+3: len(id)-1]
+            print("**** Job: " + str(self.local_id) + " State : %s" % (self.myjob.get_state()))
             #print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
             #self.print_pilot_streaming_job_id(myjob)
             return self.myjob
         except Exception as ex:
-            print "An error occurred: %s" % (str(ex))
+            print("An error occurred: %s" % (str(ex)))
 
     def wait(self):
         while True:
@@ -124,7 +111,7 @@ class Manager():
         with open(master_file, 'r') as f:
             master = f.read().strip()
         f.closed
-        print("Create Spark Context for URL: %s" % ("spark://%s:7077" % master))
+        print(("Create Spark Context for URL: %s" % ("spark://%s:7077" % master)))
         details = {
             "spark_home": spark_home_path,
             "master_url": "spark://%s:7077" % master,
@@ -148,9 +135,9 @@ class Manager():
 
         with open(master_file, 'r') as f:
             master = f.read()
-        print "SPARK installation directory: %s"%spark_home_path
-        print "(please allow some time until the SPARK cluster is completely initialized)"
-        print "export PATH=%s/bin:$PATH"%(spark_home_path)
-        print "Spark Web URL: http://" + master + ":8080"
-        print "Spark Submit endpoint: spark://" + master + ":7077"
+        print("SPARK installation directory: %s"%spark_home_path)
+        print("(please allow some time until the SPARK cluster is completely initialized)")
+        print("export PATH=%s/bin:$PATH"%(spark_home_path))
+        print("Spark Web URL: http://" + master + ":8080")
+        print("Spark Submit endpoint: spark://" + master + ":7077")
 

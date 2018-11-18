@@ -2,7 +2,7 @@
 """ Kafka Bootstrap Script (based on Kafka 1.0.0 release) """
 import os, sys
 import pdb
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import subprocess
 import logging
 import uuid
@@ -62,7 +62,7 @@ class KafkaBootstrap():
     
     def get_server_properties(self, master, hostname, broker_id):
         module = "pilot.plugins.kafka.configs." + self.config_name
-        print("Access config in module: " + module + " File: server.properties")
+        print(("Access config in module: " + module + " File: server.properties"))
         my_data = pkg_resources.resource_string(module, "server.properties")
         my_data = my_data%(broker_id, hostname, hostname, master)
         my_data = os.path.expandvars(my_data)
@@ -82,7 +82,7 @@ class KafkaBootstrap():
     ## Get Node List from Resource Management System
     @staticmethod
     def get_pbs_allocated_nodes():
-        print "Init PBS"
+        print("Init PBS")
         pbs_node_file = os.environ.get("PBS_NODEFILE")    
         if pbs_node_file == None:
             return ["localhost"]
@@ -107,7 +107,7 @@ class KafkaBootstrap():
             columns = i.split()                
             try:
                 for j in range(0, int(columns[1])):
-                    print("add host: " + columns[0].strip())
+                    print(("add host: " + columns[0].strip()))
                     nodes.append(columns[0]+"\n")
             except:
                     pass
@@ -121,7 +121,7 @@ class KafkaBootstrap():
         if hosts == None:
             return ["localhost"]
 
-        print "***** Hosts: " + str(hosts) 
+        print("***** Hosts: " + str(hosts)) 
         hosts=hostlist.expand_hostlist(hosts)
         number_cpus_per_node = 1
         if os.environ.get("SLURM_CPUS_ON_NODE")!=None:
@@ -176,14 +176,14 @@ class KafkaBootstrap():
         os.system(". ~/.bashrc & " + start_command)
 
         logging.debug("Start Kafka Cluster")
-        for node in self.broker_config_files.keys():
+        for node in list(self.broker_config_files.keys()):
             config = self.broker_config_files[node] 
             start_command = os.path.join("ssh " + node.strip() + " " + self.kafka_home, "bin/kafka-server-start.sh") + \
                                         " -daemon " + config
             logging.debug("Execute: %s"%start_command)
             os.system(". ~/.bashrc & " + start_command)
 
-        print("Kafka started with configuration: %s"%self.job_conf_dir)
+        print(("Kafka started with configuration: %s"%self.job_conf_dir))
 
 
     def check_kafka(self):
@@ -194,7 +194,7 @@ class KafkaBootstrap():
             brokers = client.brokers
         except:
             pass
-        print "Found %d brokers: %s"%(len(brokers.keys()), str(brokers))
+        print("Found %d brokers: %s"%(len(list(brokers.keys())), str(brokers)))
         return brokers
         
 
@@ -212,14 +212,14 @@ class KafkaBootstrap():
         time.sleep(5)
 
         logging.debug("Start Kafka Cluster")
-        for node in self.broker_config_files.keys():
+        for node in list(self.broker_config_files.keys()):
             config = self.broker_config_files[node]
             start_command = os.path.join("ssh " + node.strip() + " " + self.kafka_home, "bin/kafka-server-start.sh") + \
                                         " -daemon " + config
             logging.debug("Execute: %s"%start_command)
             os.system(". ~/.bashrc & " + start_command)
 
-        print("Kafka started with configuration: %s"%self.job_conf_dir)
+        print(("Kafka started with configuration: %s"%self.job_conf_dir))
 
     def configure_kafka_extension(self):
         logging.debug("Kafka Instance Configuration Directory: " + self.job_conf_dir)
@@ -254,7 +254,7 @@ class KafkaBootstrap():
 
     def find_parent_zookeeper(self):
         path_to_parent_spark_job = os.path.join(os.getcwd(), "..", self.extension_job_id, "config/broker-0/server.properties")
-        print "Master of Parent Cluster: %s" % path_to_parent_spark_job
+        print("Master of Parent Cluster: %s" % path_to_parent_spark_job)
         zk = None
         with open(path_to_parent_spark_job, "r") as config:
             lines = config.readlines()
@@ -316,7 +316,7 @@ if __name__ == "__main__" :
     
     node_list = KafkaBootstrap.get_nodelist_from_resourcemanager()
     number_nodes = len(node_list)
-    print "nodes: %s"%str(node_list)
+    print("nodes: %s"%str(node_list))
     run_timestamp=datetime.datetime.now()
     performance_trace_filename = "kafka_performance_" + run_timestamp.strftime("%Y%m%d-%H%M%S") + ".csv"
     kafka_config_filename = "kafka_config_" + run_timestamp.strftime("%Y%m%d-%H%M%S")  
@@ -343,7 +343,7 @@ if __name__ == "__main__" :
         download_destination =os.path.join(WORKING_DIRECTORY, filename)
         if os.path.exists(download_destination)==False:
             logging.debug("Download: %s to %s" % (KAFKA_DOWNLOAD_URL, download_destination))
-            opener = urllib.FancyURLopener({})
+            opener = urllib.request.FancyURLopener({})
             opener.retrieve(KAFKA_DOWNLOAD_URL, download_destination);
         else:
             logging.debug("Found existing Kafka binaries at: " + download_destination)
@@ -374,7 +374,7 @@ if __name__ == "__main__" :
         number_brokers=0
         while number_brokers!=number_nodes:
             brokers=kafka.check_kafka()
-            number_brokers=len(brokers.values())
+            number_brokers=len(list(brokers.values()))
             logging.debug("Number brokers: %d, number nodes: %d"%(number_brokers,number_nodes))
             time.sleep(1)
         end_start = time.time()
@@ -390,7 +390,7 @@ if __name__ == "__main__" :
             shutil.rmtree(directory)
         sys.exit(0)
     
-    print "Finished launching of Kafka Cluster - Sleeping now"
+    print("Finished launching of Kafka Cluster - Sleeping now")
 
     while STOP==False:
         logging.debug("stop: " + str(STOP))

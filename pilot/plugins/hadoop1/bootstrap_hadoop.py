@@ -2,7 +2,7 @@
 """ Hadoop Bootstrap Script (based on hadoop 0.20.203 release) """
 import os, sys
 import pdb
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import subprocess
 import logging
 import uuid
@@ -139,7 +139,7 @@ class HadoopBootstrap(object):
 
     def start_hadoop(self):
         logging.debug("Start Hadoop")    
-        if not os.environ.has_key("HADOOP_CONF_DIR") or os.path.exists(os.environ["HADOOP_CONF_DIR"])==False:
+        if "HADOOP_CONF_DIR" not in os.environ or os.path.exists(os.environ["HADOOP_CONF_DIR"])==False:
             self.set_env()    
             format_command = os.path.join(HADOOP_HOME, "bin/hadoop") + " --config " + self.job_conf_dir + " namenode -format"
             logging.debug("Execute: %s"%format_command)
@@ -150,7 +150,7 @@ class HadoopBootstrap(object):
         start_command = os.path.join(HADOOP_HOME, "bin/start-all.sh")
         logging.debug("Execute: %s"%start_command)
         os.system(start_command)
-        print("Hadoop started, please set HADOOP_CONF_DIR to:\nexport HADOOP_CONF_DIR=%s"%self.job_conf_dir)
+        print(("Hadoop started, please set HADOOP_CONF_DIR to:\nexport HADOOP_CONF_DIR=%s"%self.job_conf_dir))
         
         
     def stop_hadoop(self):
@@ -162,7 +162,7 @@ class HadoopBootstrap(object):
     
     
     def start(self):
-        if not os.environ.has_key("HADOOP_CONF_DIR") or os.path.exists(os.environ["HADOOP_CONF_DIR"])==False:
+        if "HADOOP_CONF_DIR" not in os.environ or os.path.exists(os.environ["HADOOP_CONF_DIR"])==False:
             self.configure_hadoop()
         else:
             logging.debug("Existing Hadoop Conf dir? %s"%os.environ["HADOOP_CONF_DIR"])
@@ -172,7 +172,7 @@ class HadoopBootstrap(object):
         self.start_hadoop()
         
     def stop(self):
-        if os.environ.has_key("HADOOP_CONF_DIR") and os.path.exists(os.environ["HADOOP_CONF_DIR"])==True:
+        if "HADOOP_CONF_DIR" in os.environ and os.path.exists(os.environ["HADOOP_CONF_DIR"])==True:
             self.job_conf_dir=os.environ["HADOOP_CONF_DIR"]
             self.job_log_dir=os.path.join(self.job_conf_dir, "../log")
         self.stop_hadoop()
@@ -210,7 +210,7 @@ if __name__ == "__main__" :
             os.makedirs(WORKING_DIRECTORY)
         except:
             pass
-        opener = urllib.FancyURLopener({})
+        opener = urllib.request.FancyURLopener({})
         opener.retrieve(HADOOP_DOWNLOAD_URL, os.path.join(WORKING_DIRECTORY,"hadoop.tar.gz"));
     
         logging.debug("Install Hadoop")
@@ -232,7 +232,7 @@ if __name__ == "__main__" :
             shutil.rmtree(dir)
         sys.exit(0)
     
-    print "Finished launching of Hadoop Cluster - Sleeping now"
+    print("Finished launching of Hadoop Cluster - Sleeping now")
     f = open(os.path.join(WORKING_DIRECTORY, 'started'), 'w')
     f.close()
 

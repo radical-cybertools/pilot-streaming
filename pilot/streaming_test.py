@@ -12,5 +12,5 @@ pilot_compute_description = {
 }
 pilot = PilotComputeService.create_pilot(pilot_compute_description)
 
-print str(pilot.get_details())
+print(str(pilot.get_details()))
 #spark_master = pilot.get_details()

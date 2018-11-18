@@ -2,7 +2,7 @@
 """ Hadoop Bootstrap Script (based on Hadoop 2.7.1 release) """
 import os, sys
 import pdb
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import subprocess
 import logging
 import uuid
@@ -55,7 +55,7 @@ class Hadoop2Bootstrap(object):
     
     def get_core_site_xml(self, hostname):
         module = "pilot.plugins.hadoop2.configs." + self.config_name
-        print("Access config in module: " + module + " File: core-site.xml")
+        print(("Access config in module: " + module + " File: core-site.xml"))
         my_data = pkg_resources.resource_string(module, "core-site.xml")
         my_data = my_data%(hostname)
         my_data = os.path.expandvars(my_data)
@@ -199,7 +199,7 @@ class Hadoop2Bootstrap(object):
     
     
     def get_pbs_allocated_nodes(self):
-        print "Init PBS"
+        print("Init PBS")
         pbs_node_file = os.environ.get("PBS_NODEFILE")    
         if pbs_node_file == None:
             return ["localhost"]
@@ -212,7 +212,7 @@ class Hadoop2Bootstrap(object):
 
 
     def get_sge_allocated_nodes(self):
-        print "Init SGE"
+        print("Init SGE")
         sge_node_file = os.environ.get("PE_HOSTFILE")    
         if sge_node_file == None:
             return ["localhost"]
@@ -224,7 +224,7 @@ class Hadoop2Bootstrap(object):
             columns = i.split()                
             try:
                 for j in range(0, int(columns[1])):
-                    print("add host: " + columns[0].strip())
+                    print(("add host: " + columns[0].strip()))
                     nodes.append(columns[0]+"\n")
             except:
                     pass
@@ -237,7 +237,7 @@ class Hadoop2Bootstrap(object):
         hosts = os.environ.get("SLURM_NODELIST") 
         if hosts == None:
             return ["localhost"]
-        print "***** Hosts: " + str(hosts) 
+        print("***** Hosts: " + str(hosts)) 
         hosts=hostlist.expand_hostlist(hosts)
         number_cpus_per_node = 1
         if os.environ.get("SLURM_CPUS_ON_NODE")!=None:
@@ -292,7 +292,7 @@ class Hadoop2Bootstrap(object):
         os.system("killall -s 9 java") 
         os.system("pkill -9 java") 
         time.sleep(5)
-        if not os.environ.has_key("HADOOP_CONF_DIR") or os.path.exists(os.environ["HADOOP_CONF_DIR"])==False:
+        if "HADOOP_CONF_DIR" not in os.environ or os.path.exists(os.environ["HADOOP_CONF_DIR"])==False:
             self.set_env()    
             format_command = os.path.join(HADOOP_HOME, "bin/hadoop") + " --config " + self.job_conf_dir + " namenode -format"
             logging.debug("Execute: %s"%format_command)
@@ -306,7 +306,7 @@ class Hadoop2Bootstrap(object):
         start_command = os.path.join(HADOOP_HOME, "sbin/start-all.sh")
         logging.debug("Execute: %s"%start_command)
         os.system(". ~/.bashrc & " + start_command)
-        print("Hadoop started, please set HADOOP_CONF_DIR to:\nexport HADOOP_CONF_DIR=%s"%self.job_conf_dir)
+        print(("Hadoop started, please set HADOOP_CONF_DIR to:\nexport HADOOP_CONF_DIR=%s"%self.job_conf_dir))
         
         
     def stop_hadoop(self):
@@ -318,7 +318,7 @@ class Hadoop2Bootstrap(object):
     
     
     def start(self):
-        if not os.environ.has_key("HADOOP_CONF_DIR") or os.path.exists(os.environ["HADOOP_CONF_DIR"])==False:
+        if "HADOOP_CONF_DIR" not in os.environ or os.path.exists(os.environ["HADOOP_CONF_DIR"])==False:
             self.configure_hadoop()
         else:
             logging.debug("Existing Hadoop Conf dir? %s"%os.environ["HADOOP_CONF_DIR"])
@@ -328,7 +328,7 @@ class Hadoop2Bootstrap(object):
         self.start_hadoop()
         
     def stop(self):
-        if os.environ.has_key("HADOOP_CONF_DIR") and os.path.exists(os.environ["HADOOP_CONF_DIR"])==True:
+        if "HADOOP_CONF_DIR" in os.environ and os.path.exists(os.environ["HADOOP_CONF_DIR"])==True:
             self.job_conf_dir=os.environ["HADOOP_CONF_DIR"]
             self.job_log_dir=os.path.join(self.job_conf_dir, "../log")
         self.stop_hadoop()
@@ -378,7 +378,7 @@ if __name__ == "__main__" :
             import socket
             socket.setdefaulttimeout(120)
             logging.debug("Download: %s to %s"%(HADOOP_DOWNLOAD_URL, download_destination))
-            opener = urllib.FancyURLopener({})
+            opener = urllib.request.FancyURLopener({})
             opener.retrieve(HADOOP_DOWNLOAD_URL, download_destination);
         else:
             logging.debug("Found existing Hadoop binaries at: " + download_destination)
@@ -398,7 +398,7 @@ if __name__ == "__main__" :
             shutil.rmtree(directory)
         sys.exit(0)
     
-    print "Finished launching of Hadoop Cluster - Sleeping now"
+    print("Finished launching of Hadoop Cluster - Sleeping now")
     f = open(os.path.join(WORKING_DIRECTORY, 'started'), 'w')
     f.close()
 

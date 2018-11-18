@@ -2,7 +2,7 @@
 """ Flink Bootstrap Script (based on Spark 1.1 release) """
 import os, sys
 import pdb
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import subprocess
 import logging
 import re
@@ -27,7 +27,7 @@ WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 
 flink_directory = ("-").join(os.path.basename(FLINK_DOWNLOAD_URL).split("-")[:2])
 FLINK_HOME=os.path.join(os.getcwd(), "work/", flink_directory)
-print "Flink Home: %s"%FLINK_HOME
+print("Flink Home: %s"%FLINK_HOME)
 
 FLINK_CONF_DIR=os.path.join(FLINK_HOME, "conf")
 
@@ -56,7 +56,7 @@ class FlinkBootstrap(object):
     ###################################################################################################### 
     @staticmethod
     def get_pbs_allocated_nodes():
-        print "Init PBS"
+        print("Init PBS")
         pbs_node_file = os.environ.get("PBS_NODEFILE")    
         if pbs_node_file == None:
             return ["localhost"]
@@ -70,7 +70,7 @@ class FlinkBootstrap(object):
 
     @staticmethod
     def get_sge_allocated_nodes():
-        print "Init SGE"
+        print("Init SGE")
         sge_node_file = os.environ.get("PE_HOSTFILE")    
         if sge_node_file == None:
             #return [socket.gethostname()]
@@ -84,7 +84,7 @@ class FlinkBootstrap(object):
             columns = i.split()                
             try:
                 for j in range(0, int(columns[1])):
-                    print("add host: " + columns[0].strip())
+                    print(("add host: " + columns[0].strip()))
                     nodes.append(columns[0]+"\n")
             except:
                     pass
@@ -99,7 +99,7 @@ class FlinkBootstrap(object):
             self.init_local()
             return
 
-        print "***** Hosts: " + str(hosts) 
+        print("***** Hosts: " + str(hosts)) 
         hosts=hostlist.expand_hostlist(hosts)
         number_cpus_per_node = 1
         if os.environ.get("SLURM_CPUS_ON_NODE") != None:
@@ -123,7 +123,7 @@ class FlinkBootstrap(object):
 
     def get_flink_conf_yaml(self, hostname):
         module = "flink.configs.default"
-        print("Access config in module: " + module + " File: flink-conf.yaml")
+        print(("Access config in module: " + module + " File: flink-conf.yaml"))
         my_data = pkg_resources.resource_string(module, "flink-conf.yaml")
         my_data = my_data%(hostname)
         my_data = os.path.expandvars(my_data)
@@ -165,7 +165,7 @@ class FlinkBootstrap(object):
         os.system(start_command)
         #status = subprocess.call(start_command, shell=True)
         #status = subprocess.Popen(start_command, os.P_NOWAIT)
-        print("Flink started, please set FLINK_CONF_DIR to:\nexport FLINK_CONF_DIR=%s"%self.job_conf_dir)
+        print(("Flink started, please set FLINK_CONF_DIR to:\nexport FLINK_CONF_DIR=%s"%self.job_conf_dir))
         
         
     def stop_flink(self):
@@ -177,7 +177,7 @@ class FlinkBootstrap(object):
     
     
     def start(self):
-        if not os.environ.has_key("FLINK_CONF_DIR") or os.path.exists(os.environ["FLINK_CONF_DIR"])==False:
+        if "FLINK_CONF_DIR" not in os.environ or os.path.exists(os.environ["FLINK_CONF_DIR"])==False:
             self.configure_flink()
         else:
             logging.debug("Existing Flink Conf dir? %s"%os.environ["FLINK_CONF_DIR"])
@@ -187,7 +187,7 @@ class FlinkBootstrap(object):
         
 
     def stop(self):
-        if os.environ.has_key("FLINK_CONF_DIR") and os.path.exists(os.environ["FLINK_CONF_DIR"])==True:
+        if "FLINK_CONF_DIR" in os.environ and os.path.exists(os.environ["FLINK_CONF_DIR"])==True:
             self.job_conf_dir=os.environ["FLINK_CONF_DIR"]
             self.job_log_dir=os.path.join(self.job_conf_dir, "../log")
         self.stop_flink()
@@ -198,7 +198,7 @@ class FlinkBootstrap(object):
         os.environ["FLINK_CONF_DIR"]=self.job_conf_dir
         #os.environ["FLINK_MASTER_IP"]=socket.gethostname().split(".")[0]
         os.environ["FLINK_MASTER_IP"]=socket.gethostbyname(socket.gethostname())
-        print "Flink conf dir: %s; MASTER_IP: %s"%(os.environ["FLINK_CONF_DIR"],os.environ["FLINK_MASTER_IP"])
+        print("Flink conf dir: %s; MASTER_IP: %s"%(os.environ["FLINK_CONF_DIR"],os.environ["FLINK_MASTER_IP"]))
         os.system("pkill -9 java")
 
 
@@ -207,7 +207,7 @@ class FlinkBootstrap(object):
         try:
             url = "http://" + self.master + ":8081/overview"
             logging.debug("Check flink at: %s"%url)
-            response = urllib.urlopen(url)
+            response = urllib.request.urlopen(url)
             data = response.read()
             logging.debug(data)
             dict_data = json.loads(data)
@@ -236,7 +236,7 @@ if __name__ == "__main__" :
     logging.debug("Bootstrap Flink on " + socket.gethostname())
     node_list = FlinkBootstrap.get_nodelist_from_resourcemanager()
     number_nodes = len(node_list)
-    print "nodes: %s"%str(node_list)
+    print("nodes: %s"%str(node_list))
 
     try:
         os.makedirs(WORKING_DIRECTORY)
@@ -253,7 +253,7 @@ if __name__ == "__main__" :
         download_destination = os.path.join(WORKING_DIRECTORY,"flink.tar.gz")
         if os.path.exists(download_destination)==False:
             logging.debug("Download: %s to %s" % (FLINK_DOWNLOAD_URL, download_destination))
-            opener = urllib.FancyURLopener({})
+            opener = urllib.request.FancyURLopener({})
             opener.retrieve(FLINK_DOWNLOAD_URL, download_destination);
         else:
             logging.debug("Found existing Flink binaries at: " + download_destination)
@@ -287,7 +287,7 @@ if __name__ == "__main__" :
             shutil.rmtree(directory)
         sys.exit(0)
     
-    print "Finished launching of Flink Cluster - Sleeping now"
+    print("Finished launching of Flink Cluster - Sleeping now")
     f = open(os.path.join(WORKING_DIRECTORY, 'flink_started'), 'w')
     f.close()
 

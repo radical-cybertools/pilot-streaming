@@ -2,7 +2,8 @@
 Dask Cluster Manager
 """
 
-import saga, os
+#import saga 
+import os
 import logging
 logging.getLogger("tornado.application").setLevel(logging.CRITICAL)
 logging.getLogger("distributed.utils").setLevel(logging.CRITICAL)
@@ -71,12 +72,12 @@ class Manager():
             self.myjob.run()
             self.local_id = self.myjob.get_id()
             self.local_id  = self.local_id[self.local_id.index("]-[")+3: len(self.local_id)-1]
-            print "**** Job: " + str(self.local_id) + " State : %s" % (self.myjob.get_state())
+            print("**** Job: " + str(self.local_id) + " State : %s" % (self.myjob.get_state()))
             #print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
             #self.print_pilot_streaming_job_id(myjob)
             return self.myjob
         except Exception as ex:
-            print "An error occurred: %s" % (str(ex))
+            print("An error occurred: %s" % (str(ex)))
 
     def wait(self):
         while True:
@@ -132,7 +133,7 @@ class Manager():
 
     def print_config_data(self):
         details = self.get_config_data()
-        print "Dask Scheduler: %s"%details["master_url"]
+        print("Dask Scheduler: %s"%details["master_url"])
 
         
     def is_scheduler_started(self):

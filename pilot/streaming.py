@@ -147,15 +147,13 @@ class PilotComputeService(object):
         # }
 
         resource_url = "fork://localhost"
-        if pilotcompute_description.has_key("resource"):
-            resource_url = pilotcompute_description["resource"]
-        elif pilotcompute_description.has_key("resource"):
+        if "resource" in pilotcompute_description:
             resource_url = pilotcompute_description["resource"]
         if resource_url.startswith("yarn"):
             p = cls.__connected_yarn_spark_cluster(pilotcompute_description)
             return p
         elif resource_url.startswith("spark"):
-            print "Connect to Spark cluster: " + str(resource_url)
+            print(("Connect to Spark cluster: " + str(resource_url)))
             p = cls.__connected_spark_cluster(resource_url, pilotcompute_description)
             return p
         else:
@@ -187,41 +185,39 @@ class PilotComputeService(object):
         #import commandline.main
         #spark_cluster = commandline.main.PilotStreamingCLI()
 
-        if pilotcompute_description.has_key("resource"):
-            resource_url = pilotcompute_description["resource"]
-        elif pilotcompute_description.has_key("resource"):
+        if "resource" in pilotcompute_description:
             resource_url = pilotcompute_description["resource"]
 
         working_directory = "/tmp"
-        if pilotcompute_description.has_key("working_directory"):
+        if "working_directory" in pilotcompute_description:
             working_directory = pilotcompute_description["working_directory"]
 
         project = None
-        if pilotcompute_description.has_key("project"):
+        if "project" in pilotcompute_description:
             project = pilotcompute_description["project"]
 
         queue = None
-        if pilotcompute_description.has_key("queue"):
+        if "queue" in pilotcompute_description:
             queue = pilotcompute_description["queue"]
 
         walltime = 10
-        if pilotcompute_description.has_key("walltime"):
+        if "walltime" in pilotcompute_description:
             walltime = pilotcompute_description["walltime"]
 
         number_cores = 1
-        if pilotcompute_description.has_key("number_cores"):
+        if "number_cores" in pilotcompute_description:
             number_cores = int(pilotcompute_description["number_cores"])
 
         cores_per_node = 1
-        if pilotcompute_description.has_key("cores_per_node"):
+        if "cores_per_node" in pilotcompute_description:
             cores_per_node = int(pilotcompute_description["cores_per_node"])
             
         parent = None
-        if pilotcompute_description.has_key("parent"):
+        if "parent" in pilotcompute_description:
             parent = pilotcompute_description["parent"]
 
         type = None
-        if not pilotcompute_description.has_key("type"):
+        if "type" not in pilotcompute_description:
             raise PilotAPIException("Invalid Pilot Compute Description: type not specified")
         
         type = pilotcompute_description["type"]
@@ -262,15 +258,15 @@ class PilotComputeService(object):
     def __connected_yarn_spark_cluster(self, pilotcompute_description):
 
         number_cores = 1
-        if pilotcompute_description.has_key("number_cores"):
+        if "number_cores" in pilotcompute_description:
             number_cores = int(pilotcompute_description["number_cores"])
 
         number_of_processes = 1
-        if pilotcompute_description.has_key("number_of_processes"):
+        if "number_of_processes" in pilotcompute_description:
             number_of_processes = int(pilotcompute_description["number_of_processes"])
 
         executor_memory = "1g"
-        if pilotcompute_description.has_key("number_of_processes"):
+        if "number_of_processes" in pilotcompute_description:
             executor_memory = pilotcompute_description["physical_memory_per_process"]
 
         conf = pyspark.SparkConf()
@@ -279,7 +275,7 @@ class PilotComputeService(object):
         conf.set("spark.executor.memory", executor_memory)
         conf.set("spark.executor.cores", number_cores)
         if pilotcompute_description != None:
-            for i in pilotcompute_description.keys():
+            for i in list(pilotcompute_description.keys()):
                 if i.startswith("spark"):
                     conf.set(i, pilotcompute_description[i])
         conf.setAppName("Pilot-Spark")
@@ -294,11 +290,11 @@ class PilotComputeService(object):
         conf = pyspark.SparkConf()
         conf.setAppName("Pilot-Spark")
         if pilot_description != None:
-            for i in pilot_description.keys():
+            for i in list(pilot_description.keys()):
                 if i.startswith("spark"):
                     conf.set(i, pilot_description[i])
         conf.setMaster(resource_url)
-        print(conf.toDebugString())
+        print((conf.toDebugString()))
         sc = pyspark.SparkContext(conf=conf)
         sqlCtx = pyspark.SQLContext(sc)
         pilot = PilotCompute(spark_context=sc, spark_sql_context=sqlCtx)
@@ -310,18 +306,18 @@ class PilotComputeService(object):
         if working_directory != None:
             spark_home_path = os.path.join(working_directory, os.path.basename(spark_home_path))
         master_file = os.path.join(spark_home_path, "conf/masters")
-        print master_file
+        print(master_file)
         counter = 0
         while os.path.exists(master_file) == False and counter < 600:
-            print "Looking for %s" % master_file
+            print(("Looking for %s" % master_file))
             time.sleep(1)
             counter = counter + 1
 
-        print "Open master file: %s" % master_file
+        print(("Open master file: %s" % master_file))
         with open(master_file, 'r') as f:
             master = f.read().strip()
         f.closed
-        print("Create Spark Context for URL: %s" % ("spark://%s:7077" % master))
+        print(("Create Spark Context for URL: %s" % ("spark://%s:7077" % master)))
         details = {
             "spark_home": spark_home_path,
             "master_url": "spark://%s:7077" % master,
