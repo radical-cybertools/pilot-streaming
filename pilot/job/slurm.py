@@ -7,6 +7,7 @@ import pdb
 import logging
 import subprocess
 import math
+import uuid
 from urllib.parse import urlparse
 import tempfile
 
@@ -46,22 +47,36 @@ class Job(object):
         if "arguments" in self.job_description:
             self.command = (("%s %s") % (self.job_description["executable"],
                                                   self.job_description["arguments"]))
+            
+        # Pilot-Streaming Internal UID
+        self.job_uuid = str(uuid.uuid1())
+        self.job_uuid_short =  "ps-%s"%self.job_uuid[:5]
+        
+        # Job ID at local resource manager (SLURM)
         self.job_id = ""
+        
+        # slurm+ssh:// URL for local resource manager endpoint for submission
         self.resource_url = resource_url
-        #self.resource_url.scheme = "ssh"
+
+        
         logger.debug("Pilot-Streaming SLURM: Parsing job description")
+        
         self.pilot_compute_description = {}
         if 'queue' in job_description: self.pilot_compute_description['queue'] = job_description['queue']
         if 'project' in job_description: self.pilot_compute_description['project'] = job_description['project']
         self.pilot_compute_description['working_directory'] = os.getcwd()
-        if 'working_directory' in job_description: self.pilot_compute_description['working_directory'] = job_description['working_directory']
-        if 'walltime' in job_description: self.pilot_compute_description['walltime'] = job_description['walltime']
+        if 'working_directory' in job_description: 
+            self.pilot_compute_description['working_directory'] = job_description['working_directory']
+        if 'walltime' in job_description: 
+            self.pilot_compute_description['walltime'] = job_description['walltime']
 
         self.pilot_compute_description['number_cores']=48
-        if 'number_cores' in job_description: self.pilot_compute_description['number_cores'] = job_description['number_cores']
+        if 'number_cores' in job_description: 
+            self.pilot_compute_description['number_cores'] = job_description['number_cores']
             
         self.pilot_compute_description['number_of_nodes'] = 1
-        if 'number_of_nodes' in job_description: self.pilot_compute_description['number_of_nodes'] = job_description['number_of_nodes']
+        if 'number_of_nodes' in job_description: 
+            self.pilot_compute_description['number_of_nodes'] = job_description['number_of_nodes']
 
         self.working_directory = self.pilot_compute_description["working_directory"]
         ### convert walltime in minutes to SLURM representation of time ###
@@ -72,86 +87,31 @@ class Job(object):
             walltime_slurm = "" + str(hrs) + ":" + str(minu) + ":00"
         self.pilot_compute_description["walltime_slurm"]=walltime_slurm
 
-        logger.debug("Pilot-Streaming SLURM: generate bootstrap script")
-        # sbatch_file.write("python -c XX" + textwrap.dedent(\"\"%s\"\") + "XX")
-
-        self.bootstrap_script = textwrap.dedent("""import sys
-import os
-import urllib
-import sys
-import time
-import textwrap
-
-sbatch_file_name="pilotstreaming_slurm_ssh"
-
-sbatch_file = open(sbatch_file_name, "w")
-sbatch_file.write("#!/bin/bash")
-sbatch_file.write("\\n")
-sbatch_file.write("#SBATCH -n %s")
-sbatch_file.write("\\n")
-sbatch_file.write("#SBATCH -N %s")
-sbatch_file.write("\\n")
-sbatch_file.write("#SBATCH -J pilot-streaming-slurm")
-sbatch_file.write("\\n")
-sbatch_file.write("#SBATCH -t %s")
-sbatch_file.write("\\n")
-sbatch_file.write("#SBATCH -A %s")
-sbatch_file.write("\\n")
-sbatch_file.write("#SBATCH -o %s/stdout-pilotstreaming-spark.txt")
-sbatch_file.write("\\n")
-sbatch_file.write("#SBATCH -e %s/stderr-pilotstreaming-spark.txt")
-sbatch_file.write("\\n")
-sbatch_file.write("#SBATCH -p %s")
-sbatch_file.write("\\n")
-
-sbatch_file.write("cd %s")
-sbatch_file.write("\\n")
-sbatch_file.write("%s")
-sbatch_file.close()
-#os.system( "sbatch  " + sbatch_file_name)
-""") % (str(self.pilot_compute_description["number_cores"]), str(self.pilot_compute_description["number_of_nodes"]),
-        str(walltime_slurm),
-        str(self.pilot_compute_description["project"]), self.pilot_compute_description["working_directory"],
-        self.pilot_compute_description["working_directory"], self.pilot_compute_description["queue"],
-        self.pilot_compute_description["working_directory"], self.command)
-        ### escaping characters
-        self.bootstrap_script = self.bootstrap_script.replace("\"", "\\\"")
-        self.bootstrap_script = self.bootstrap_script.replace("\\\\", "\\\\\\\\\\")
-        self.bootstrap_script = self.bootstrap_script.replace("XX", "\\\\\\\"")
-        self.bootstrap_script = "\"" + self.bootstrap_script + "\""
-        logger.debug(self.bootstrap_script)
-
+       
     def run(self):
         o = urlparse("slurm+ssh://login1.wrangler.tacc.utexas.edu")
         target_host = o.netloc
         start_command=("ssh %s "%target_host)
         tmpf_name = ""
         logger.debug("Submit pilot job to: " + str(self.resource_url))
+        logger.debug("Type Job ID"+str(self.job_uuid_short))
         try:
             fd, tmpf_name = tempfile.mkstemp()
             print(tmpf_name)
             with os.fdopen(fd, 'w') as tmp:
-                tmp.write("#!/bin/bash")
+                tmp.write("#!/bin/bash\n")
+                tmp.write("#SBATCH -n %s\n"%str(self.pilot_compute_description["number_cores"]))
+                tmp.write("#SBATCH -N %s\n"%str(self.pilot_compute_description["number_of_nodes"]))
+                tmp.write("#SBATCH -J %s\n"%self.job_uuid_short)
+                tmp.write("#SBATCH -t %s\n"%str(self.pilot_compute_description["walltime_slurm"]))
                 tmp.write("\n")
-                tmp.write("#SBATCH -n %s"%str(self.pilot_compute_description["number_cores"]))
+                tmp.write("#SBATCH -A %s\n"%str(self.pilot_compute_description["project"]))
                 tmp.write("\n")
-                tmp.write("#SBATCH -N %s"%str(self.pilot_compute_description["number_of_nodes"]))
-                tmp.write("\n")
-                tmp.write("#SBATCH -J pilot-streaming-slurm")
-                tmp.write("\n")
-                tmp.write("#SBATCH -t %s"%str(self.pilot_compute_description["walltime_slurm"]))
-                tmp.write("\n")
-                tmp.write("#SBATCH -A %s"%str(self.pilot_compute_description["project"]))
-                tmp.write("\n")
-                tmp.write("#SBATCH -o %s/stdout-pilotstreaming-spark.txt"%self.pilot_compute_description["working_directory"])
-                tmp.write("\n")
-                tmp.write("#SBATCH -e %s/stderr-pilotstreaming-spark.txt"%self.pilot_compute_description["working_directory"])
-                tmp.write("\n")
-                tmp.write("#SBATCH -p %s"%self.pilot_compute_description["queue"])
-                tmp.write("\n")
-                tmp.write("cd %s"%self.pilot_compute_description["working_directory"])
-                tmp.write("\n")
-                tmp.write("%s"%self.command)
+                tmp.write("#SBATCH -o %s/stdout-pilotstreaming-spark.txt\n"%self.pilot_compute_description["working_directory"])
+                tmp.write("#SBATCH -e %s/stderr-pilotstreaming-spark.txt\n"%self.pilot_compute_description["working_directory"])
+                tmp.write("#SBATCH -p %s\n"%self.pilot_compute_description["queue"])
+                tmp.write("cd %s\n"%self.pilot_compute_description["working_directory"])
+                tmp.write("%s\n"%self.command)
                 tmp.flush()
                 start_command = ("scp %s %s:~/"%(tmpf_name, target_host))
                 status = subprocess.call(start_command, shell=True)
@@ -162,66 +122,51 @@ sbatch_file.close()
         start_command = ("ssh %s "%target_host)
         start_command = start_command + ("sbatch  %s"%os.path.basename(tmpf_name))
         print(("Submission of Job Command: %s"%start_command))
+        outstr = subprocess.check_output(start_command, 
+                                         stderr=subprocess.STDOUT,
+                                         shell=True).decode("utf-8") 
+       
+        
+        
+        start_command = ("ssh %s "%target_host)
+        start_command = start_command + ("rm %s"%os.path.basename(tmpf_name))
+        print(("Cleanup: %s"%start_command))
         status = subprocess.call(start_command, shell=True)
         logger.debug("Pilot-Streaming SLURM: SSH run job finished")
-        #saga_surl = saga.Url(self.resource_url)
-        #sftp_url = "sftp://"
-        #if saga_surl.username != None and saga_surl.username != "":
-        #    sftp_url = sftp_url + str(saga_surl.username) + "@"
-        #sftp_url = sftp_url + saga_surl.host + "/"
-        #outfile = sftp_url + self.working_directory + '/saga_job_submission.out'
-        #logger.debug("BigJob/SLURM: get outfile: " + outfile)
-        #out = saga.filesystem.File(outfile)
-        #out.copy("sftp://localhost/" + os.getcwd() + "/tmpout")
-        #errfile = sftp_url + self.working_directory + '/saga_job_submission.err'
-        #err = saga.filesystem.File(errfile)
-        #err.copy("sftp://localhost/" + os.getcwd() + "/tmperr")
-#
-        #tempfile = open(os.getcwd() + "/tmpout")
-        #outstr = tempfile.read().rstrip()
-        #tempfile.close()
-        #os.remove(os.getcwd() + "/tmpout")
-#
-        #tempfile = open(os.getcwd() + "/tmperr")
-        #errstr = tempfile.read().rstrip()
-        #tempfile.close()
-        #os.remove(os.getcwd() + "/tmperr")
-#
-        #logger.debug("Output - \n" + str(outstr))
-        #if ((outstr).split("\n")[-1]).split()[0] == "Submitted":
-        #    self.job_id = ((outstr).split("\n")[-1]).split()[3]
-        #    logger.debug("SLURM JobID: " + str(self.job_id))
+        logger.debug("Output - \n" + str(outstr))
+        self.job_id=self.get_local_job_id(outstr)
         if self.job_id == None or self.job_id == "":
             raise Exception("Pilot-Streaming Submission via slurm+ssh:// failed")
+    
 
     def get_state(self):
         start_command=("%s %s %s"%("squeue", "-j", self.job_id ))
-        output = subprocess.check_output(start_command, shell=True)
+        output = subprocess.check_output(start_command, shell=True).decode("utf-8") 
+        logging.debug("Query State: %s Output: %s"%(start_command, output))        
+        return self.get_job_status(output)
+        
 
-        #jd = saga.job.Description()#
-        #jd.executable = "squeue"
-        #jd.arguments = ["-j", self.job_id]
-        #jd.output = "jobstate.out"
-        #jd.working_directory = self.working_directory
-        ## connect to the local job service
-        #js = saga.job.service(self.resource_url);
-        ## submit the job
-        #job = js.create_job(jd)
-        #job.run()
-        #job.wait()
-        # print the job's output
-
-        #outfile = 'sftp://' + saga.Url(self.resource_url).host + self.working_directory + '/jobstate.out'
-        #out = saga.filesystem.File(outfile)
-        #out.move("sftp://localhost/" + os.getcwd() + "/tmpstate")
-
-        #tempfile = open(os.getcwd() + "/tmpstate")
-        #output = tempfile.read().rstrip()
-        #tempfile.close()
-        #os.remove(os.getcwd() + "/tmpstate")
-
-        state = output.split("\n")[-1].split()[4]
-
+    def cancel(self):
+        logger.debug("Cancel SLURM job")
+        start_command=("%s %s"%("scancel", self.job_id ))
+        output = subprocess.check_output(start_command, shell=True).decode("utf-8") 
+        logging.debug("Cancel SLURM job: %s Output: %s"%(start_command, output))        
+        return self.get_job_status(output)
+        
+        
+    def get_local_job_id(self, output_string):
+        match=re.search("(?<=batch\\ job\\ )[0-9]*", str(output_string), re.S)
+        if match:
+            self.job_id=match.group(0)
+            logger.debug("Found SLURM Job ID: %s"%self.job_id)
+            return self.job_id
+        
+    def get_job_status(self, output_string):
+        state = "Unknown"
+        try:
+            state = output_string.split("\n")[-2].split()[4]
+        except: 
+            logging.debug("No job with ID %s found"%self.job_id)
         if state.upper() == "R":
             state = "Running"
         elif state.upper() == "CD" or state.upper() == "CF" or state.upper() == "CG":
@@ -231,19 +176,6 @@ sbatch_file.close()
         else:
             state = "Unknown"
         return state
-
-    def cancel(self):
-        logger.debug("Cancel SLURM job")
-        jd = {}
-        jd["executable"] = "scancel"
-        jd.arguments = [self.job_id]
-        # connect to the local job service
-        js = Service(self.resource_url);
-        # submit the job
-        job = js.create_job(jd)
-        job.run()
-        # wait for the job to complete
-        job.wait()
 
 
 if __name__ == "__main__":
@@ -261,4 +193,7 @@ if __name__ == "__main__":
     }
     j = slurm_service.create_job(jd)
     j.run()
-    print(j.get_state())
+    print("Job State: " + j.get_state())
+    j.cancel()
+    print("Job State: " + j.get_state())
+    

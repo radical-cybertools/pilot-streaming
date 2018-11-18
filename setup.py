@@ -20,18 +20,18 @@ VERSION_FILE="VERSION"
 
 def update_version():
     if not os.path.isdir(".git"):
-        print "This does not appear to be a Git repository."
+        print("This does not appear to be a Git repository.")
         return
     try:
         p = subprocess.Popen(["git", "describe",
                               "--tags", "--always"],
                              stdout=subprocess.PIPE)
     except EnvironmentError:
-        print "Unable to run git, not modifying VERSION"
+        print("Unable to run git, not modifying VERSION")
         return
     stdout = p.communicate()[0]
     if p.returncode != 0:
-        print "Unable to run git, not modifying VERSION"
+        print("Unable to run git, not modifying VERSION")
         return
     
     ver = stdout.strip()
@@ -39,7 +39,7 @@ def update_version():
     f = open(fn, "w")
     f.write(ver)
     f.close()
-    print "SAGA-Hadoop VERSION: '%s'" % ver
+    print("Pilot-Streaming VERSION: '%s'" % ver)
 
 
 def get_version():
@@ -82,7 +82,7 @@ setup(name='Pilot-Streaming',
 
       # data files for easy_install
       package_data= {'': ['*.xml', '*.yaml', '*.properties']},
-      install_requires=['uuid', 'radical.utils', 'saga-python', 'pykafka', 'argparse', "python-hostlist", "setuptools-git" ],
+      install_requires=['uuid', 'pykafka', 'argparse', "python-hostlist", "setuptools-git" ],
       entry_points = {
         'console_scripts': ['psm=commandline.main:main',
                             'pilot-streaming=commandline.main:main']
