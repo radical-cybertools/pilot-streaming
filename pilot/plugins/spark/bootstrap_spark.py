@@ -22,7 +22,7 @@ VERSION="2.4.0"
 
 #SPARK_DOWNLOAD_URL = "http://download.nextag.com/apache/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz" 
 
-SPARK_DOWNLOAD_URL = "https://www-us.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz"
+SPARK_DOWNLOAD_URL = "https://www-us.apache.org/dist/spark/spark-%s/spark-%s-bin-hadoop2.7.tgz"%(VERSION, VERSION)
 
 WORKING_DIRECTORY = os.path.join(os.getcwd())
 

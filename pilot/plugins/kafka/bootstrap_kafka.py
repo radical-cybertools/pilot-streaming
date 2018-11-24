@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
 #VERSION="0.10.1.0"
-VERSION="1.0.0"
+VERSION="2.1.0"
 #KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 #KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 KAFKA_DOWNLOAD_URL = "http://apache.mirrors.lucidnetworks.net/kafka/"+ VERSION + "/kafka_2.11-" + VERSION + ".tgz"
@@ -63,7 +63,7 @@ class KafkaBootstrap():
     def get_server_properties(self, master, hostname, broker_id):
         module = "pilot.plugins.kafka.configs." + self.config_name
         print(("Access config in module: " + module + " File: server.properties"))
-        my_data = pkg_resources.resource_string(module, "server.properties")
+        my_data = pkg_resources.resource_string(module, "server.properties").decode("utf-8")
         my_data = my_data%(broker_id, hostname, hostname, master)
         my_data = os.path.expandvars(my_data)
         return my_data
@@ -74,7 +74,7 @@ class KafkaBootstrap():
     def get_zookeeper_properties(self, hostname):
         module = "pilot.plugins.kafka.configs." + self.config_name
         logging.debug("Access config in module: " + module + " File: zookeeper.properties")
-        my_data = pkg_resources.resource_string(module, "zookeeper.properties")
+        my_data = pkg_resources.resource_string(module, "zookeeper.properties").decode("utf-8")
         return my_data
 
 
