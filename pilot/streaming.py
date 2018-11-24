@@ -207,6 +207,10 @@ class PilotComputeService(object):
         number_cores = 1
         if "number_cores" in pilotcompute_description:
             number_cores = int(pilotcompute_description["number_cores"])
+            
+        number_of_nodes=1
+        if "number_of_nodes" in pilotcompute_description:
+            number_of_nodes = int(pilotcompute_description["number_of_nodes"])
 
         cores_per_node = 1
         if "cores_per_node" in pilotcompute_description:
@@ -239,6 +243,7 @@ class PilotComputeService(object):
 
         batch_job = manager.submit_job(
             resource_url=resource_url,
+            number_of_nodes=number_of_nodes,
             number_cores=number_cores,
             cores_per_node=cores_per_node,
             queue=queue,

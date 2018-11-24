@@ -25,6 +25,7 @@ class Manager():
     # Kafka 1.0.x
     def submit_job(self,
                    resource_url="fork://localhost",
+                   number_of_nodes = 1,
                    number_cores=1,
                    cores_per_node=1,
                    spmd_variation=None,
@@ -52,7 +53,7 @@ class Manager():
                 "working_directory": self.working_directory,
                 "output": "kafka_job_%s.stdout"%self.jobid,
                 "error": "kafka_job_%s.stderr"%self.jobid,
-                "number_cores": number_cores,
+                "number_of_nodes": number_of_nodes,
                 "cores_per_node": cores_per_node,
                 "project": project,
                 "queue": queue,

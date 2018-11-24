@@ -63,7 +63,7 @@ class Job(object):
         # slurm+ssh:// URL for local resource manager endpoint for submission
         self.resource_url = resource_url
         
-        logger.debug("Pilot-Streaming SLURM: Parsing job description")
+        logger.debug("Pilot-Streaming SLURM: Parsing job description: %s"%str(job_description))
         
         self.pilot_compute_description = {}
         if 'queue' in job_description: 
@@ -114,7 +114,7 @@ class Job(object):
 
        
     def run(self):
-        o = urlparse("slurm+ssh://login1.wrangler.tacc.utexas.edu")
+        o = urlparse(self.resource_url)
         target_host = o.netloc
         start_command=("ssh %s "%target_host)
         tmpf_name = ""
@@ -156,7 +156,7 @@ class Job(object):
         start_command = ("ssh %s "%target_host)
         start_command = start_command + ("rm %s"%os.path.basename(tmpf_name))
         print(("Cleanup: %s"%start_command))
-        status = subprocess.call(start_command, shell=True)
+        #status = subprocess.call(start_command, shell=True)
         logger.debug("Pilot-Streaming SLURM: SSH run job finished")
         logger.debug("Output - \n" + str(outstr))
         self.job_id=self.get_local_job_id(outstr)
