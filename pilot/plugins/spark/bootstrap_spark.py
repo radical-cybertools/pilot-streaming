@@ -304,7 +304,7 @@ class SparkBootstrap(object):
             url = "http://" + self.master + ":8080"
             matches = []
             response = urllib.request.urlopen(url)
-            data = response.read()
+            data = response.read().decode("utf-8") 
             #matches=re.findall("(?<=>)worker-[0-9\\-.]*", data, re.DOTALL)
             matches=re.search("(?<=Alive\ Workers:</strong>\ )[0-9]*(?=</li>)", data, re.DOTALL)
             n = 0

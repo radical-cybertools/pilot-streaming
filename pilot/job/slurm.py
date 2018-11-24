@@ -42,11 +42,16 @@ class Job(object):
     """Constructor"""
 
     def __init__(self, job_description, resource_url):
+        
         self.job_description = job_description
         self.command = self.job_description["executable"]
         if "arguments" in self.job_description:
-            self.command = (("%s %s") % (self.job_description["executable"],
-                                                  self.job_description["arguments"]))
+            args =  self.job_description["arguments"]
+            if isinstance(self.job_description["arguments"], list):
+                args =  "".join(self.job_description["arguments"])
+        
+        self.command = (("%s %s") % (self.job_description["executable"], args))
+        logging.debug("Command: %s"%self.command)
             
         # Pilot-Streaming Internal UID
         self.job_uuid = str(uuid.uuid1())
