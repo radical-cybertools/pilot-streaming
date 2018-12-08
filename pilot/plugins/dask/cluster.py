@@ -87,6 +87,9 @@ class Manager():
             elif state == "Failed":
                 break
             time.sleep(1)
+            
+    def submit_compute_unit(function_name):
+        pass
     
     def get_context(self):
         """Returns Dask Client for Schedueler"""

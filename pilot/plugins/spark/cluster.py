@@ -84,6 +84,11 @@ class Manager():
                 break
             time.sleep(3)
             
+            
+    def submit_compute_unit(function_name):
+        pass
+        
+                    
     def get_jobid(self):
         return self.jobid
     

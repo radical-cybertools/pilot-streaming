@@ -156,7 +156,7 @@ class Job(object):
         start_command = ("ssh %s "%target_host)
         start_command = start_command + ("rm %s"%os.path.basename(tmpf_name))
         print(("Cleanup: %s"%start_command))
-        #status = subprocess.call(start_command, shell=True)
+        status = subprocess.call(start_command, shell=True)
         logger.debug("Pilot-Streaming SLURM: SSH run job finished")
         logger.debug("Output - \n" + str(outstr))
         self.job_id=self.get_local_job_id(outstr)

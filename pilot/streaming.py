@@ -8,11 +8,15 @@
 import os
 import time
 import uuid
+import pilot.plugins.serverless.cluster
 import pilot.plugins.spark.cluster
 import pilot.plugins.spark.bootstrap_spark
 import pilot.plugins.dask.cluster
 import pilot.plugins.kafka.cluster
+import pilot.plugins.kinesis.cluster
 import pyspark
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 class PilotAPIException(Exception):
     pass
@@ -76,6 +80,7 @@ class PilotCompute(object):
         self.spark_sql_context = spark_sql_context
         self.cluster_manager = cluster_manager
 
+    
     def cancel(self):
         """ Remove the PilotCompute from the PilotCompute Service.
 
@@ -84,9 +89,18 @@ class PilotCompute(object):
         """
         if self.saga_job != None:
             self.saga_job.cancel()
+        try:
+            self.cluster_manager.cancel()
+        except:
+            pass
 
+    def submit(self, function_name):
+        self.cluster_manager.submit_compute_unit(function_name)
+
+            
     def get_state(self):
-        self.saga_job.get_state()
+        if self.saga_job != None:
+            self.saga_job.get_state()
 
     def get_id(self):
         return self.cluster_manager.get_jobid() 
@@ -97,8 +111,12 @@ class PilotCompute(object):
     def wait(self):
         self.cluster_manager.wait()
     
+    
+    
+    
     def get_context(self, configuration=None):
         return self.cluster_manager.get_context(configuration)
+    
     
     ##############################################################################
     # Non-API extension methods specific to Spark
@@ -239,6 +257,12 @@ class PilotComputeService(object):
         elif type == "dask":
             jobid = "dask-" + str(uuid.uuid1())
             manager = pilot.plugins.dask.cluster.Manager(jobid, working_directory)
+        elif type == "kinesis":
+            jobid = "kinesis-" + str(uuid.uuid1())
+            manager = pilot.plugins.kinesis.cluster.Manager(jobid, working_directory)
+        elif type == "lambda":
+            jobid = "lambda-" + str(uuid.uuid1())
+            manager = pilot.plugins.serverless.cluster.Manager(jobid, working_directory)
             
 
         batch_job = manager.submit_job(

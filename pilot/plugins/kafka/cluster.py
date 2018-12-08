@@ -67,6 +67,7 @@ class Manager():
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))
 
+            
     def wait(self):
         while True:
             state = self.myjob.get_state()
@@ -78,11 +79,16 @@ class Manager():
             elif state == "Failed":
                 break
             time.sleep(3)
+            
+            
+    def submit_compute_unit(function_name):
+        pass
 
             
     def get_jobid(self):
         return self.jobid
 
+    
     def get_context(self):
         pass
         
