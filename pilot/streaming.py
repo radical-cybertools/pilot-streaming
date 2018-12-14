@@ -214,6 +214,10 @@ class PilotComputeService(object):
         if "project" in pilotcompute_description:
             project = pilotcompute_description["project"]
 
+        reservation = None
+        if 'reservation' in pilotcompute_description:
+            reservation = pilotcompute_description["reservation"]
+
         queue = None
         if "queue" in pilotcompute_description:
             queue = pilotcompute_description["queue"]
@@ -273,6 +277,7 @@ class PilotComputeService(object):
             queue=queue,
             walltime=walltime,
             project=project,
+            reservation=reservation,
             extend_job_id=parent, 
             pilotcompute_description=pilotcompute_description
         )

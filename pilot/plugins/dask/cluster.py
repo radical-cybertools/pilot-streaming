@@ -34,6 +34,7 @@ class Manager():
                    queue=None,
                    walltime=None,
                    project=None,
+                   reservation=None,
                    config_name="default",
                    extend_job_id=None,
                    pilotcompute_description=None
@@ -58,6 +59,7 @@ class Manager():
                 "number_of_nodes": number_of_nodes,
                 "cores_per_node": cores_per_node,
                 "project": project,
+                "reservation": reservation,
                 "queue": queue,
                 "walltime": walltime,
             }
