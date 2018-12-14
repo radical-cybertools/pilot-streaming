@@ -73,6 +73,9 @@ class Job(object):
         
         if 'project' in job_description: 
             self.pilot_compute_description['project'] = job_description['project']
+
+        if 'reservation' in job_description:
+            self.pilot_compute_description['reservation'] = job_description['reservation']
         
         self.pilot_compute_description['working_directory'] = os.getcwd()
         if 'working_directory' in job_description: 
@@ -131,6 +134,9 @@ class Job(object):
                 tmp.write("#SBATCH -t %s\n"%str(self.pilot_compute_description["walltime_slurm"]))
                 tmp.write("\n")
                 tmp.write("#SBATCH -A %s\n"%str(self.pilot_compute_description["project"]))
+                tmp.write("\n")
+                if self.pilot_compute_description["reservation"] is not None:
+                    tmp.write("#SBATCH --reservation  %s\n"%str(self.pilot_compute_description["reservation"]))
                 tmp.write("\n")
                 tmp.write("#SBATCH -o %s\n"%self.pilot_compute_description["output"])
                 tmp.write("#SBATCH -e %s\n"%self.pilot_compute_description["error"])
