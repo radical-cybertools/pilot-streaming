@@ -30,6 +30,7 @@ class Manager():
                    queue=None, # ignored
                    walltime=None, # ignored
                    project=None, # ignored
+                   reservation=None,
                    config_name=None,
                    extend_job_id=None,
                    pilotcompute_description=None
