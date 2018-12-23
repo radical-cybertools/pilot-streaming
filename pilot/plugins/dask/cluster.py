@@ -88,7 +88,11 @@ class Manager():
                             time.sleep(0.5)
             elif state == "Failed":
                 break
-            time.sleep(1)
+            time.sleep(3)
+            
+    def cancel(self):
+        c=self.get_context()
+        c.run_on_scheduler(lambda dask_scheduler=None: dask_scheduler.close() & sys.exit(0))
             
     def submit_compute_unit(function_name):
         pass

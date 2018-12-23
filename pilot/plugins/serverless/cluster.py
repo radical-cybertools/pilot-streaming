@@ -15,7 +15,9 @@ class Manager():
 
     def __init__(self, jobid, working_directory):
         self.jobid = jobid
-        self.lambda_client = boto3.client('lambda', region_name='us-east-1')            
+        self.lambda_client = boto3.client('lambda', region_name='us-east-1') 
+        self.iam_client = boto3.client('iam')
+        self.s3_client = boto3.client('s3', region_name='us-east-1')
         self.role_arn=""
         self.configuration={}
         
@@ -42,6 +44,13 @@ class Manager():
             self.role_arn = self.create_lambda_iam_role(self.jobid)
             print("created role: " + self.role_arn)
             zipped_code=self.prepare_function(pilotcompute_description["lambda_function"], self.jobid)
+            
+            layers = [] #["arn:aws:lambda:us-east-1:668099181075:layer:AWSLambda-Python37-SciPy1x:2"]
+            if "lambda_layer" in pilotcompute_description:
+                layer_arn=self.create_layer(pilotcompute_description[ "lambda_layer"])
+                layers.append(layer_arn)
+                                    
+            print("Layers: " + str(layers))
             time.sleep(10)
             response = self.lambda_client.create_function(
                                     FunctionName=self.jobid,
@@ -51,6 +60,7 @@ class Manager():
                                     Code={
                                         'ZipFile': zipped_code
                                     },
+                                    Layers=layers,
                                     Description='Managed Lambda Function'
                                     )
             
@@ -98,10 +108,13 @@ class Manager():
     
     def cancel(self):
         self.lambda_client.delete_function(FunctionName=self.jobid)
-        iam_client = boto3.client('iam')
-        iam_client.detach_role_policy(RoleName=iam_role_name, PolicyArn='arn:aws:iam::aws:policy/AmazonKinesisFullAccess')
-        iam_client.detach_role_policy(RoleName=iam_role_name, PolicyArn='arn:aws:iam::aws:policy/CloudWatchLogsFullAccess')
-        iam_client.delete_role(RoleName=self.jobid)
+        print("Delete Bucket: %s"%self.jobid)
+        bucket = boto3.resource('s3').Bucket(self.jobid)
+        bucket.objects.all().delete()
+        bucket.delete()
+        self.iam_client.detach_role_policy(RoleName=iam_role_name, PolicyArn='arn:aws:iam::aws:policy/AmazonKinesisFullAccess')
+        self.iam_client.detach_role_policy(RoleName=iam_role_name, PolicyArn='arn:aws:iam::aws:policy/CloudWatchLogsFullAccess')
+        self.iam_client.delete_role(RoleName=self.jobid)
             
     
     def get_config_data(self):
@@ -110,6 +123,23 @@ class Manager():
     
     def print_config_data(self):
         print("Lambda: %s"%self.stream_arn)
+        
+        
+    def create_layer(self, zipfile):
+        filename = os.path.basename(zipfile)
+        layername = filename.split(".")[0]
+        self.s3_client.create_bucket(ACL='private', Bucket=self.jobid)
+        self.s3_client.upload_file(zipfile, self.jobid, filename)
+        response = self.lambda_client.publish_layer_version(
+                                                        LayerName=layername,
+                                                        Content={
+                                                                'S3Bucket': self.jobid,
+                                                                'S3Key': filename
+                                                                },
+                                                        CompatibleRuntimes=['python3.7']
+                                                        )
+        #print("Create Layer Responese: %s"%str(response))
+        return response["LayerVersionArn"]
 
         
     def prepare_function(self, function_ref, file_basename):
@@ -129,7 +159,6 @@ class Manager():
     
     
     def create_lambda_iam_role(self, rolename):
-        iam_client = boto3.client('iam')
         role_policy_document = {
           "Version": "2012-10-17",
           "Statement": [
@@ -143,16 +172,16 @@ class Manager():
             }
           ]
         }
-        iam_client.create_role(
+        self.iam_client.create_role(
           RoleName=rolename,
           AssumeRolePolicyDocument=json.dumps(role_policy_document),
         )
-        role = iam_client.get_role(RoleName=rolename)
-        response = iam_client.attach_role_policy(
+        role = self.iam_client.get_role(RoleName=rolename)
+        response = self.iam_client.attach_role_policy(
             RoleName=rolename,
             PolicyArn='arn:aws:iam::aws:policy/AmazonKinesisFullAccess'
         )
-        response = iam_client.attach_role_policy(
+        response = self.iam_client.attach_role_policy(
             RoleName=rolename,
             PolicyArn='arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
         )
