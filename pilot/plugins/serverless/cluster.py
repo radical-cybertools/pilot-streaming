@@ -61,6 +61,7 @@ class Manager():
                                         'ZipFile': zipped_code
                                     },
                                     Layers=layers,
+                                    Timeout=900,
                                     Description='Managed Lambda Function'
                                     )
             
@@ -185,4 +186,11 @@ class Manager():
             RoleName=rolename,
             PolicyArn='arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
         )
+        response = self.iam_client.attach_role_policy(
+            RoleName=rolename,
+            PolicyArn='arn:aws:iam::aws:policy/AmazonS3FullAccess'
+        )
+
+        
+        
         return role['Role']['Arn']
