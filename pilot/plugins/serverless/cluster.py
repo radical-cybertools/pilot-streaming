@@ -2,7 +2,7 @@
 Lambda Manager
 """
 
-import os
+import os, sys
 import logging
 import time
 import boto3 
@@ -10,6 +10,7 @@ import json
 import stat
 import inspect
 import zipfile
+import traceback
 
 class Manager():
 
@@ -49,6 +50,11 @@ class Manager():
             if "lambda_layer" in pilotcompute_description:
                 layer_arn=self.create_layer(pilotcompute_description[ "lambda_layer"])
                 layers.append(layer_arn)
+            
+            lambda_memory = 128 
+            if "lambda_memory" in pilotcompute_description:
+                lambda_memory=pilotcompute_description[ "lambda_memory"]
+                
                                     
             print("Layers: " + str(layers))
             time.sleep(10)
@@ -62,26 +68,34 @@ class Manager():
                                     },
                                     Layers=layers,
                                     Timeout=900,
+                                    MemorySize=lambda_memory,
                                     Description='Managed Lambda Function'
                                     )
             
             response=self.lambda_client.get_function(FunctionName=self.jobid)
             self.configuration=response[ 'Configuration']
             
-            print("Create mapping from %s to %s"%(pilotcompute_description["lambda_input_data"], self.jobid))
-            response = self.lambda_client.create_event_source_mapping(
-                EventSourceArn=pilotcompute_description["lambda_input_data"],
-                FunctionName=self.jobid,
-                Enabled=True,
-                BatchSize=1,
-                StartingPosition='LATEST'
-                )
+            if "lambda_input_data" in pilotcompute_description:
+                print("Create mapping from %s to %s"%(pilotcompute_description["lambda_input_data"], self.jobid))
+                response = self.lambda_client.create_event_source_mapping(
+                    EventSourceArn=pilotcompute_description["lambda_input_data"],
+                    FunctionName=self.jobid,
+                    Enabled=True,
+                    BatchSize=1,
+                    StartingPosition='LATEST'
+                    )
             
             response=self.lambda_client.get_function(FunctionName=self.jobid)
             self.configuration=response[ 'Configuration']
             print("Created lambda: %s"%self.jobid)
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print("*** print_tb:")
+            traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+            print("*** print_exception:")
+            # exc_type below is ignored on 3.5 and later
+            traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
             
 
     def wait(self):
