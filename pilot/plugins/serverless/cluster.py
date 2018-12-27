@@ -55,6 +55,10 @@ class Manager():
             if "lambda_memory" in pilotcompute_description:
                 lambda_memory=pilotcompute_description[ "lambda_memory"]
                 
+            lambda_batchsize = 1 
+            if "lambda_batchsize" in pilotcompute_description:
+                lambda_batchsize=pilotcompute_description[ "lambda_batchsize"]
+                
                                     
             print("Layers: " + str(layers))
             time.sleep(10)
@@ -81,7 +85,7 @@ class Manager():
                     EventSourceArn=pilotcompute_description["lambda_input_data"],
                     FunctionName=self.jobid,
                     Enabled=True,
-                    BatchSize=1,
+                    BatchSize=lambda_batchsize,
                     StartingPosition='LATEST'
                     )
             
