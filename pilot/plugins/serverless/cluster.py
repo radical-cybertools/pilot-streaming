@@ -59,6 +59,10 @@ class Manager():
             if "lambda_batchsize" in pilotcompute_description:
                 lambda_batchsize=pilotcompute_description[ "lambda_batchsize"]
                 
+            lambda_environment = {}
+            if "lambda_environment" in pilotcompute_description:
+                lambda_environment=pilotcompute_description[ "lambda_environment"]
+                
                                     
             print("Layers: " + str(layers))
             time.sleep(10)
@@ -73,6 +77,7 @@ class Manager():
                                     Layers=layers,
                                     Timeout=900,
                                     MemorySize=lambda_memory,
+                                    Environment={'Variables':lambda_environment},
                                     Description='Managed Lambda Function'
                                     )
             
@@ -118,7 +123,7 @@ class Manager():
                                         )
         
     def get_jobid(self):
-        return self.stream_arn
+        return self.jobid
     
     
     def get_context(self, configuration):
