@@ -98,10 +98,13 @@ class Manager():
         pass
     
     def get_context(self):
-        """Returns Dask Client for Schedueler"""
+        """Returns Dask Client for Scheduler"""
         details=self.get_config_data()
-        client = distributed.Client(details["master_url"])
-        return client
+        if details is not None:
+            print("Connect to Dask: %s"%details["master_url"])
+            client = distributed.Client(details["master_url"])
+            return client
+        return None
         
         
     def get_jobid(self):
