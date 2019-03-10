@@ -238,6 +238,10 @@ class PilotComputeService(object):
         if "cores_per_node" in pilotcompute_description:
             cores_per_node = int(pilotcompute_description["cores_per_node"])
             
+        config_name="default"
+        if "config_name" in pilotcompute_description:
+            config_name = int(pilotcompute_description["config_name"])
+            
         parent = None
         if "parent" in pilotcompute_description:
             parent = pilotcompute_description["parent"]
@@ -278,6 +282,7 @@ class PilotComputeService(object):
             walltime=walltime,
             project=project,
             reservation=reservation,
+            config_name=config_name,
             extend_job_id=parent, 
             pilotcompute_description=pilotcompute_description
         )
