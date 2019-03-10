@@ -43,7 +43,7 @@ class Manager():
             
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-n", config_name]
+            arguments = ["-m ", "pilot.plugins.kafka.bootstrap_kafka", " -n ", config_name]
             if extend_job_id!=None:
                 arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))

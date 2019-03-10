@@ -240,7 +240,7 @@ class PilotComputeService(object):
             
         config_name="default"
         if "config_name" in pilotcompute_description:
-            config_name = int(pilotcompute_description["config_name"])
+            config_name = pilotcompute_description["config_name"]
             
         parent = None
         if "parent" in pilotcompute_description:

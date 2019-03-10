@@ -73,7 +73,7 @@ class Job(object):
 
         # Submit job
         working_directory = os.getcwd()
-        if self.pilot_compute_description.has_key("working_directory"):
+        if "working_directory" in self.pilot_compute_description:
             working_directory=self.pilot_compute_description["working_directory"]
 
         TRIAL_MAX=3
@@ -144,9 +144,9 @@ class Job(object):
     # private methods
     def __print_traceback(self):
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        print "*** print_tb:"
+        print("*** print_tb:")
         traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-        print "*** print_exception:"
+        print("*** print_exception:")
         traceback.print_exception(exc_type, exc_value, exc_traceback,
                                   limit=2, file=sys.stdout)
 
@@ -156,4 +156,4 @@ if __name__ == "__main__":
     local_service = Service("subprocess://localhost")
     j = local_service.create_job("test")
     j.run()
-    print j.get_state()
+    print(j.get_state())
