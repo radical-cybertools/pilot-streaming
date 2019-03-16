@@ -45,7 +45,8 @@ class Manager():
             
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "pilot.plugins.dask.bootstrap_dask"]
+            arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ", str(cores_per_node)]
+            
             if extend_job_id!=None:
                 arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))

@@ -51,7 +51,7 @@ class Job(object):
         if "arguments" in self.job_description:
             args =  self.job_description["arguments"]
             if isinstance(self.job_description["arguments"], list):
-                args =  "".join(self.job_description["arguments"])
+                args =  " ".join(self.job_description["arguments"])
         
         self.command = (("%s %s") % (self.job_description["executable"], args))
         logging.debug("Command: %s"%self.command)
