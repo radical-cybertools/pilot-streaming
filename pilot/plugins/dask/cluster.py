@@ -9,12 +9,19 @@ logging.getLogger("tornado.application").setLevel(logging.CRITICAL)
 logging.getLogger("distributed.utils").setLevel(logging.CRITICAL)
 import time
 import distributed
-from pilot.job.slurm import Service, Job
+import  pilot.job.slurm
+import  pilot.job.ec2
+
+from urllib.parse import urlparse
+
+#from pilot.job.slurm import Service, Job
+#from pilot.job.ec2 import Service, Job
 
 class Manager():
 
     def __init__(self, jobid, working_directory):
         self.jobid = jobid
+        print("{}{}".format(self.jobid, working_directory))
         self.working_directory = os.path.join(working_directory, jobid)
         self.myjob = None  # SAGA Job
         self.local_id = None  # Local Resource Manager ID (e.g. SLURM id)
@@ -37,11 +44,19 @@ class Manager():
                    reservation=None,
                    config_name="default",
                    extend_job_id=None,
-                   pilotcompute_description=None
+                   pilot_compute_description=None
     ):
         try:
-            # create a job service for SLURM LRMS
-            js = Service(resource_url)
+            # create a job service for SLURM LRMS or EC2 Cloud
+            url_schema = urlparse(resource_url).scheme
+            js = None
+            if url_schema.startswith("slurm"):
+                js = pilot.job.slurm.Service(resource_url)
+            elif url_schema.startswith("ec2"):
+                js = pilot.job.ec2.Service(resource_url)    
+            else:
+                print("Unsupported URL Schema: %s "%resource_url)
+                return
             
             # environment, executable & arguments
             executable = "python"
@@ -63,6 +78,7 @@ class Manager():
                 "reservation": reservation,
                 "queue": queue,
                 "walltime": walltime,
+                "pilot_compute_description" : pilot_compute_description
             }
             self.myjob = js.create_job(jd)
             self.myjob.run()
@@ -76,14 +92,14 @@ class Manager():
         while True:
             state = self.myjob.get_state()
             logging.debug("**** Job: " + str(self.local_id) + " State: %s" % (state))
-            if state=="Running":
+            if state.lower()=="running":
                 logging.debug("looking for Dask startup state at: %s"%self.working_directory)
                 if self.is_scheduler_started():
                     for i in range(3):
                         try:
-                            #print "init distributed client"
+                            print("init distributed client")
                             c=self.get_context()
-                            c.scheduler_info()
+                            print(str(c.scheduler_info()))
                             return
                         except IOError as e:
                             time.sleep(0.5)
@@ -98,7 +114,7 @@ class Manager():
     def submit_compute_unit(function_name):
         pass
     
-    def get_context(self):
+    def get_context(self, configuration=None):
         """Returns Dask Client for Scheduler"""
         details=self.get_config_data()
         if details is not None:

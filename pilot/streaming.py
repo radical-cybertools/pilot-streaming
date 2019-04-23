@@ -209,6 +209,8 @@ class PilotComputeService(object):
         working_directory = "/tmp"
         if "working_directory" in pilotcompute_description:
             working_directory = pilotcompute_description["working_directory"]
+        
+        print("Working Directory: {}".format(working_directory))
 
         project = None
         if "project" in pilotcompute_description:
@@ -284,7 +286,7 @@ class PilotComputeService(object):
             reservation=reservation,
             config_name=config_name,
             extend_job_id=parent, 
-            pilotcompute_description=pilotcompute_description
+            pilot_compute_description=pilotcompute_description
         )
 
         details = manager.get_config_data()

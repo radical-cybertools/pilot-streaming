@@ -31,7 +31,7 @@ class Manager():
                    reservation=None,
                    config_name=None,
                    extend_job_id=None,
-                   pilotcompute_description=None
+                   pilot_compute_description=None
     ):
         try:
             
