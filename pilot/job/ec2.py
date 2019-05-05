@@ -75,6 +75,16 @@ class Job(object):
         self.job_id = ""
         
     def run_ec2_instances(self):
+        print(str(self.pilot_compute_description))
+        InstanceMarketOptions = None
+        if "ec2_spot" in self.pilot_compute_description and self.pilot_compute_description["ec2_spot"]=="True":
+            print("Create Spot Request")
+            InstanceMarketOptions = {'MarketType': 'spot',
+                                        'SpotOptions': {                                                
+                                                'SpotInstanceType': 'one-time',
+                                                'InstanceInterruptionBehavior': 'terminate'
+                                                }
+                                    }
         self.ec2_instances = self.ec2_client.create_instances(ImageId=self.pilot_compute_description["ec2_image_id"],
                                             InstanceType=self.pilot_compute_description["ec2_instance_type"],
                                             KeyName=self.pilot_compute_description["ec2_ssh_keyname"],
@@ -87,6 +97,7 @@ class Job(object):
                                                                 'DeviceIndex': 0,
                                                                 'SubnetId': self.pilot_compute_description["ec2_subnet_id"],
                                                                 'Groups': [self.pilot_compute_description["ec2_security_group"]]}],
+                                            InstanceMarketOptions = InstanceMarketOptions,
                                             BlockDeviceMappings=[{
                                                         'DeviceName': '/dev/xvda',
                                                         'Ebs': {'VolumeSize': 30,
@@ -98,7 +109,7 @@ class Job(object):
             """TODO Move Dask specific stuff into Dask plugin"""
             self.wait_for_running()
             print("Run Dask")
-            time.sleep(20)
+            time.sleep(30)
             self.run_dask()           
 
 
@@ -119,19 +130,47 @@ class Job(object):
         self.wait_for_running()
         return self
         
+    def wait_for_ssh(self, node):
+        for i in range(6):
+            command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} /bin/echo 1".format(self.pilot_compute_description["ec2_ssh_keyfile"],
+                                                self.pilot_compute_description["ec2_ssh_username"], 
+                                                node)
+            print("Host: {} Command: {}".format(node, command))
+            output = subprocess.check_output(command, shell=True, cwd=self.working_directory)
+            print(output.decode("utf-8"))
+            if output.decode("utf-8").startswith("1"):
+                print("Test successful")
+                return
+            time.sleep(10)
         
+    
     def run_dask(self):
         """TODO Move Dask specific stuff into Dask plugin"""
         nodes = self.get_node_list()
+        ## Update Mini Apps
+        for i in nodes:
+            self.wait_for_ssh(i)
+            command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} pip install --upgrade git+ssh://git@github.com/radical-cybertools/streaming-miniapps.git".format(self.pilot_compute_description["ec2_ssh_keyfile"],
+                                                self.pilot_compute_description["ec2_ssh_username"], 
+                                                i)
+            print("Host: {} Command: {}".format(i, command))
+            install_process = subprocess.Popen(command, shell=True, cwd=self.working_directory)
+            install_process.wait()
+        
+        ## Run Dask
         command = "dask-ssh --ssh-private-key %s --ssh-username %s --remote-dask-worker distributed.cli.dask_worker %s"%(self.pilot_compute_description["ec2_ssh_keyfile"],
                                  self.pilot_compute_description["ec2_ssh_username"],                                                        " ".join(nodes))
         if "cores_per_node" in self.pilot_compute_description:
             command = "dask-ssh --ssh-private-key %s --ssh-username %s --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s"%(self.pilot_compute_description["ec2_ssh_keyfile"], self.pilot_compute_description["ec2_ssh_username"],  str(self.pilot_compute_description["cores_per_node"]), " ".join(nodes))
         print("Start Dask Cluster: " + command)
         #status = subprocess.call(command, shell=True)
-        self.dask_process = subprocess.Popen(command, shell=True, cwd=self.working_directory)
-        with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
-            master_file.write(nodes[0]+":8786")
+        for i in range(3):
+            self.dask_process = subprocess.Popen(command, shell=True, cwd=self.working_directory, close_fds=True)
+            time.sleep(10)
+            if self.dask_process.poll!=None:
+                with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
+                    master_file.write(nodes[0]+":8786")
+                break
         
 
     def wait_for_running(self):
