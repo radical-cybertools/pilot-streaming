@@ -96,15 +96,17 @@ class Manager():
             if state.lower()=="running":
                 logging.debug("looking for Dask startup state at: %s"%self.working_directory)
                 if self.is_scheduler_started():
-                    for i in range(3):
+                    for i in range(5):
                         try:
                             print("init distributed client")
                             c=self.get_context()
-                            c.scheduler_info()
-                            c.close()
+                            #c.scheduler_info()
                             print(str(c.scheduler_info()))
+                            c.close()
+                            
                             return
                         except IOError as e:
+                            print("Dask Client Connect Attempt {} failed".format(i))
                             time.sleep(5)
             elif state == "Failed":
                 break
