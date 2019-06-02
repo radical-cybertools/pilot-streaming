@@ -31,7 +31,7 @@ class Manager():
                    reservation=None,
                    config_name=None,
                    extend_job_id=None,
-                   pilotcompute_description=None
+                   pilot_compute_description=None
     ):
         try:
             
@@ -53,7 +53,8 @@ class Manager():
     
     
     def cancel(self):
-         self.kinesis_client.delete_stream(StreamName=self.jobid)
+        print("Delete stream: %s"%self.jobid)
+        self.kinesis_client.delete_stream(StreamName=self.jobid)
     
     
     def submit_compute_unit(function_name):

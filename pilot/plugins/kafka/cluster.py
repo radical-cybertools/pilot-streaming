@@ -35,7 +35,7 @@ class Manager():
                    reservation = None,
                    config_name="default",
                    extend_job_id=None,
-                   pilotcompute_description=None
+                   pilot_compute_description=None
     ):
         try:
             # create a job service for SLURM LRMS

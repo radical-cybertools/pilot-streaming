@@ -44,12 +44,24 @@ class Manager():
                    pilotcompute_description=None
     ):
         try:
-
+            print(str(pilot_compute_description))
+            InstanceMarketOptions = None
+            if pilotcompute_description.has_key("ec2_spot") and pilotcompute_description["ec2_spot"]=="True":
+                print("Create Spot Request")
+                InstanceMarketOptions = {'MarketType': 'spot',
+                                            'SpotOptions': {                                                
+                                                    'SpotInstanceType': 'one-time',
+                                                    'BlockDurationMinutes': 180,
+                                                    'InstanceInterruptionBehavior': 'terminate'
+                                                    }
+                                        }
+            
             self.ec2_instances = ec2_client.create_instances(ImageId=pilotcompute_description["ec2_image_id"],
                                             InstanceType=pilotcompute_description["ec2_instance_type"],
                                             KeyName=pilotcompute_description["ec2_ssh_keyname"],
                                             SubnetId=pilotcompute_description["ec2_subnet_id"],
                                             SecurityGroupIds=[pilotcompute_description["ec2_security_group"]],
+                                            InstanceMarketOptions = InstanceMarketOptions,
                                             TagSpecifications=[{'ResourceType': 'instance',
                                                                 'Tags': [{"Key":"Name", 
                                                                           "Value":pilotcompute_description["ec2_name"]}]}],
