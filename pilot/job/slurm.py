@@ -184,8 +184,9 @@ class Job(object):
             try:
                 output = subprocess.check_output(start_command, stderr=subprocess.STDOUT, shell=True).decode("utf-8") 
                 logging.debug("Query State: %s Output: %s"%(start_command, output))        
-                signal.signal(signal.SIGCHLD, signal.SIG_IGN) 
-                return self.get_job_status(output)
+                #signal.signal(signal.SIGCHLD, signal.SIG_IGN) 
+                status = self.get_job_status(output)
+                return status
             except:
                 logging.debug("Error check for Job Status. Backoff polling")        
                 time.sleep(10)

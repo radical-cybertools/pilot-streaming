@@ -84,12 +84,13 @@ class Manager():
                             #print "init distributed client"
                             c=self.get_context()
                             c.scheduler_info()
+                            c.close()
                             return
                         except IOError as e:
-                            time.sleep(0.5)
+                            time.sleep(5)
             elif state == "Failed":
                 break
-            time.sleep(3)
+            time.sleep(6)
             
     def cancel(self):
         c=self.get_context()
