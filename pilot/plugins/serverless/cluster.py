@@ -39,29 +39,29 @@ class Manager():
                    pilot_compute_description=None
     ):
         try:
-            if "lambda_function" not in pilotcompute_description and "lambda_input_data" not in pilotcompute_description:
+            if "lambda_function" not in pilot_compute_description and "lambda_input_data" not in pilot_compute_description:
                 raise Exception("Please specify lambda_function and lambda_input_data in you Pilot-Job Description!") 
            
             self.role_arn = self.create_lambda_iam_role(self.jobid)
             print("created role: " + self.role_arn)
-            zipped_code=self.prepare_function(pilotcompute_description["lambda_function"], self.jobid)
+            zipped_code=self.prepare_function(pilot_compute_description["lambda_function"], self.jobid)
             
             layers = [] #["arn:aws:lambda:us-east-1:668099181075:layer:AWSLambda-Python37-SciPy1x:2"]
-            if "lambda_layer" in pilotcompute_description:
-                layer_arn=self.create_layer(pilotcompute_description[ "lambda_layer"])
+            if "lambda_layer" in pilot_compute_description:
+                layer_arn=self.create_layer(pilot_compute_description[ "lambda_layer"])
                 layers.append(layer_arn)
             
             lambda_memory = 128 
-            if "lambda_memory" in pilotcompute_description:
-                lambda_memory=pilotcompute_description[ "lambda_memory"]
+            if "lambda_memory" in pilot_compute_description:
+                lambda_memory=pilot_compute_description[ "lambda_memory"]
                 
             lambda_batchsize = 1 
-            if "lambda_batchsize" in pilotcompute_description:
-                lambda_batchsize=pilotcompute_description[ "lambda_batchsize"]
+            if "lambda_batchsize" in pilot_compute_description:
+                lambda_batchsize=pilot_compute_description[ "lambda_batchsize"]
                 
             lambda_environment = {}
-            if "lambda_environment" in pilotcompute_description:
-                lambda_environment=pilotcompute_description[ "lambda_environment"]
+            if "lambda_environment" in pilot_compute_description:
+                lambda_environment=pilot_compute_description[ "lambda_environment"]
                 
                                     
             print("Layers: " + str(layers))
@@ -70,7 +70,7 @@ class Manager():
                                     FunctionName=self.jobid,
                                     Runtime='python3.7',
                                     Role=self.role_arn,
-                                    Handler=self.jobid+'.' + pilotcompute_description["lambda_function"].__name__,
+                                    Handler=self.jobid+'.' + pilot_compute_description["lambda_function"].__name__,
                                     Code={
                                         'ZipFile': zipped_code
                                     },
@@ -84,10 +84,10 @@ class Manager():
             response=self.lambda_client.get_function(FunctionName=self.jobid)
             self.configuration=response[ 'Configuration']
             
-            if "lambda_input_data" in pilotcompute_description:
-                print("Create mapping from %s to %s"%(pilotcompute_description["lambda_input_data"], self.jobid))
+            if "lambda_input_data" in pilot_compute_description:
+                print("Create mapping from %s to %s"%(pilot_compute_description["lambda_input_data"], self.jobid))
                 response = self.lambda_client.create_event_source_mapping(
-                    EventSourceArn=pilotcompute_description["lambda_input_data"],
+                    EventSourceArn=pilot_compute_description["lambda_input_data"],
                     FunctionName=self.jobid,
                     Enabled=True,
                     BatchSize=lambda_batchsize,

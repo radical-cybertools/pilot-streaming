@@ -3,6 +3,7 @@
 import boto3
 boto3.setup_default_session(profile_name='dev')
 import os
+import math
 import uuid
 import time
 import traceback
@@ -131,17 +132,21 @@ class Job(object):
         return self
         
     def wait_for_ssh(self, node):
-        for i in range(6):
-            command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} /bin/echo 1".format(self.pilot_compute_description["ec2_ssh_keyfile"],
-                                                self.pilot_compute_description["ec2_ssh_username"], 
-                                                node)
-            print("Host: {} Command: {}".format(node, command))
-            output = subprocess.check_output(command, shell=True, cwd=self.working_directory)
-            print(output.decode("utf-8"))
-            if output.decode("utf-8").startswith("1"):
-                print("Test successful")
-                return
-            time.sleep(10)
+        for i in range(10):
+            try:
+                command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} /bin/echo 1".format(self.pilot_compute_description["ec2_ssh_keyfile"],
+                                                    self.pilot_compute_description["ec2_ssh_username"], 
+                                                    node)
+                print("Host: {} Command: {}".format(node, command))
+                output = subprocess.check_output(command, shell=True, cwd=self.working_directory)
+                print(output.decode("utf-8"))
+                if output.decode("utf-8").startswith("1"):
+                    print("Test successful")
+                    return
+            except:
+                pass
+            time.sleep(math.pow(2,i))
+
         
     
     def run_dask(self):
