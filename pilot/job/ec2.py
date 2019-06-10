@@ -86,7 +86,7 @@ class Job(object):
                                                 'InstanceInterruptionBehavior': 'terminate'
                                                 }
                                     }
-        self.ec2_instances = self.ec2_client.create_instances(ImageId=self.pilot_compute_description["ec2_image_id"],
+            self.ec2_instances = self.ec2_client.create_instances(ImageId=self.pilot_compute_description["ec2_image_id"],
                                             InstanceType=self.pilot_compute_description["ec2_instance_type"],
                                             KeyName=self.pilot_compute_description["ec2_ssh_keyname"],
                                             #SubnetId=ec2_description["ec2_subnet_id"],
@@ -105,7 +105,27 @@ class Job(object):
                                                                 'VolumeType': 'gp2'}}],
                                             MinCount=self.pilot_compute_description["number_cores"], 
                                             MaxCount=self.pilot_compute_description["number_cores"])
-        
+        else:
+            print("No Spot Request")
+            self.ec2_instances = self.ec2_client.create_instances(ImageId=self.pilot_compute_description["ec2_image_id"],
+                                            InstanceType=self.pilot_compute_description["ec2_instance_type"],
+                                            KeyName=self.pilot_compute_description["ec2_ssh_keyname"],
+                                            #SubnetId=ec2_description["ec2_subnet_id"],
+                                            #SecurityGroupIds=[ec2_description["ec2_security_group"]],
+                                            TagSpecifications=[{'ResourceType': 'instance',
+                                                                'Tags': [{"Key":"Name", 
+                                                                          "Value":self.pilot_compute_description["ec2_name"]}]}],
+                                            NetworkInterfaces=[{'AssociatePublicIpAddress': True, 
+                                                                'DeviceIndex': 0,
+                                                                'SubnetId': self.pilot_compute_description["ec2_subnet_id"],
+                                                                'Groups': [self.pilot_compute_description["ec2_security_group"]]}],
+                                            BlockDeviceMappings=[{
+                                                        'DeviceName': '/dev/xvda',
+                                                        'Ebs': {'VolumeSize': 30,
+                                                                'VolumeType': 'gp2'}}],
+                                            MinCount=self.pilot_compute_description["number_cores"], 
+                                            MaxCount=self.pilot_compute_description["number_cores"])
+        print("Finished creating Instance")
         if "type" in self.pilot_compute_description and self.pilot_compute_description["type"] == "dask":
             """TODO Move Dask specific stuff into Dask plugin"""
             self.wait_for_running()
