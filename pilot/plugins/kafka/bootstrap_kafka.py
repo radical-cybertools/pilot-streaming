@@ -66,7 +66,7 @@ class KafkaBootstrap():
         module = "pilot.plugins.kafka.configs." + self.config_name
         print(("Access config in module: " + module + " File: server.properties"))
         my_data = pkg_resources.resource_string(module, "server.properties").decode("utf-8")
-        my_data = my_data%(broker_id, hostname, hostname, master)
+        my_data = my_data%(broker_id, hostname, hostname, broker_id, master)
         my_data = os.path.expandvars(my_data)
         return my_data
 
