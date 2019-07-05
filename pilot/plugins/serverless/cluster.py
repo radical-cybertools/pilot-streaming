@@ -59,6 +59,10 @@ class Manager():
             if "lambda_batchsize" in pilot_compute_description:
                 lambda_batchsize=pilot_compute_description[ "lambda_batchsize"]
                 
+            lambda_concurrency = None 
+            if "lambda_concurrency" in pilot_compute_description:
+                lambda_concurrency=pilot_compute_description[ "lambda_concurrency"]
+                
             lambda_environment = {}
             if "lambda_environment" in pilot_compute_description:
                 lambda_environment=pilot_compute_description[ "lambda_environment"]
