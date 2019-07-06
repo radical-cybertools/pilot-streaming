@@ -62,6 +62,9 @@ class Manager():
             # environment, executable & arguments
             executable = "python"
             arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ", str(cores_per_node)]
+            if "dask_cores" in pilot_compute_description:
+                arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ", 
+                             str(pilot_compute_description["dask_cores"])]
             
             if extend_job_id!=None:
                 arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", "-j", extend_job_id]
