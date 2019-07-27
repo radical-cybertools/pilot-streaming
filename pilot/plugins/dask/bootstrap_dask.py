@@ -50,7 +50,7 @@ class DaskBootstrap():
         self.dask_process = None
         self.extension_job_id = extension_job_id
         self.cores_per_node=cores_per_node
-        self.dask_memory_limit=110e9 
+        self.dask_memory_limit=100e9 
         try:
             os.makedirs(self.job_conf_dir)
         except:
