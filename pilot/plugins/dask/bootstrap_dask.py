@@ -43,13 +43,14 @@ class DaskBootstrap():
         self.dask_home=dask_home
         self.config_name=config_name
         self.jobid = "dask-"+str(uuid.uuid1())
-        self.job_working_directory = os.path.join(WORKING_DIRECTORY)
+        self.job_working_directory = os.path.join(WORKING_DIRECTORY) 
         self.job_conf_dir = os.path.join(self.job_working_directory, "config")
         self.nodes = []
         self.master = ""
         self.dask_process = None
         self.extension_job_id = extension_job_id
         self.cores_per_node=cores_per_node
+        self.dask_memory_limit=110e9 
         try:
             os.makedirs(self.job_conf_dir)
         except:
@@ -153,8 +154,8 @@ class DaskBootstrap():
         os.system("pkill -9 dask-worker")
         time.sleep(5)
         command = "dask-ssh --remote-dask-worker distributed.cli.dask_worker %s"%(" ".join(self.nodes))
-        if self.cores_per_node is not None:
-            command = "dask-ssh --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s"%(str(self.cores_per_node), " ".join(self.nodes))
+        if self.cores_per_node is not None and self.dask_memory_limit is not None:
+                command = "dask-ssh --nthreads %s --memory-limit %d --remote-dask-worker distributed.cli.dask_worker %s"%(str(self.cores_per_node), self.dask_memory_limit, " ".join(self.nodes))
         logging.debug("Start Dask Cluster: " + command)
         #status = subprocess.call(command, shell=True)
         self.dask_process = subprocess.Popen(command, shell=True)
