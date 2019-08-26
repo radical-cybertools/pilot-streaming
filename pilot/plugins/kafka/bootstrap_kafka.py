@@ -66,7 +66,9 @@ class KafkaBootstrap():
         module = "pilot.plugins.kafka.configs." + self.config_name
         print(("Access config in module: " + module + " File: server.properties"))
         my_data = pkg_resources.resource_string(module, "server.properties").decode("utf-8")
-        my_data = my_data%(broker_id, hostname, hostname, broker_id, master)
+        #print(my_data)
+        # have at least 4 Kafka log directories containing broker id in config template
+        my_data = my_data%(broker_id, hostname, hostname, broker_id, broker_id, broker_id, broker_id, master)
         my_data = os.path.expandvars(my_data)
         return my_data
 
