@@ -31,21 +31,28 @@ Requirement (in case a manual installation is required):
 
 The best way to utilize Pilot-Streaming is Anaconda, which provides an easy way to install
 important dependencies (such as PySpark and Dask). Make sure the PySpark version is compabitible 
-with the Pilot-Streaming version (currently 2.2.1).
+with the Pilot-Streaming version (currently 2.4.4).
 
     conda install pyspark -c conda-forge 
     conda install -c conda-forge pykafka
     conda install paramiko distributed 
     
-    pip install --upgrade saga-python
 
-Try to run a local Hadoop (e.g. for development and testing)
-	
-	
+To install Pilot-Streaming type:
+
+## Installation
+
     pip install --upgrade .
-    psm --resource fork://localhost
+    
+ or 
+   
+    python setup.py install
     
     
+
+## Running
+
+
 Try to run a Hadoop cluster inside a PBS/Torque job:
 
     psm --resource pbs+ssh://india.futuregrid.org --number_cores 8
