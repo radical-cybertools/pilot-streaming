@@ -32,9 +32,9 @@ The best way to utilize Pilot-Streaming is Anaconda, which provides an easy way 
 important dependencies (such as PySpark and Dask). Make sure the PySpark version is compabitible 
 with the Pilot-Streaming version (currently 2.4.4).
 
-    conda install pyspark -c conda-forge 
-    conda install -c conda-forge pykafka
+
     conda install paramiko distributed 
+    conda install -c conda-forge boto3  pykafka pyspark  dask distributed python-confluent-kafka pexpect redis-py 
     
 
 To install Pilot-Streaming type:
