@@ -25,8 +25,7 @@ Requirements:
 Anaconda is the preferred distribution
 
 
-# Usage
-
+## Installation
 Requirement (in case a manual installation is required):
 
 The best way to utilize Pilot-Streaming is Anaconda, which provides an easy way to install
@@ -40,11 +39,9 @@ with the Pilot-Streaming version (currently 2.4.4).
 
 To install Pilot-Streaming type:
 
-## Installation
-
     pip install --upgrade .
     
- or 
+or (if pip issues, e.g. on Stampede2)
    
     python setup.py install
     
