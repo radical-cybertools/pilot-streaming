@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import boto3
-boto3.setup_default_session(profile_name='dev')
+#boto3.setup_default_session(profile_name='dev')
 import os
 import math
 import uuid
@@ -21,14 +21,12 @@ class State:
     DONE="done"
 
 
-
 class Service(object):
     """ Plugin for Amazon EC2 and EUCA
 
         Manages endpoint in the form of:
 
             ec2+ssh://<EC2 Endpoint>
-            euca+ssh://<EUCA Endpoint>
     """
     def __init__(self, resource_url, pilot_compute_description=None):
         """Constructor"""
@@ -53,11 +51,8 @@ class Service(object):
 class Job(object):
     """ Plugin for Amazon EC2
 
-        Starts VM and executes BJ agent on this VM
+        Starts EC2 VM and executes Dask agent on this VM
 
-
-        Eucalyptus on FutureGrid uses a self-signed certificate, which 1) needs to be added to boto configuration
-        or 2) certificate validation needs to be disabled.
     """
 
     def __init__(self, job_description, resource_url, pilot_compute_description):
@@ -68,12 +63,12 @@ class Job(object):
         self.pilot_compute_description = pilot_compute_description
 
         self.id="pilotstreaming-" + str(uuid.uuid1())
-        self.subprocess_handle=None
+        self.job_id = self.id
         self.job_timestamp=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         #self.job_output = open("pilotstreaming_agent_output_"+self.job_timestamp+".log", "w")
         #self.job_error = open("pilotstreaming_agent_output__agent_error_"+self.job_timestamp+".log", "w")
         self.ec2_client = boto3.resource('ec2', region_name='us-east-1')
-        self.job_id = ""
+        self.job_id = self.id
         
     def run_ec2_instances(self):
         print(str(self.pilot_compute_description))
@@ -137,7 +132,7 @@ class Job(object):
     def run(self):
         """ Start VMs """
         # Submit job
-        print("Run EC2 VMs")
+        print("Start EC2 VMs")
         self.working_directory = os.getcwd()
         if "working_directory" in self.job_description:
             self.working_directory=self.job_description["working_directory"]

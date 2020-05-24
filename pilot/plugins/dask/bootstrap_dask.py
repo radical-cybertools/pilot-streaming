@@ -61,15 +61,11 @@ class DaskBootstrap():
     
     def get_dask_properties(self, master, hostname, broker_id):
         module = "dask.configs." + self.config_name
-        print(("Access config in module: " + module + " File: das.properties"))
+        print(("Access config in module: " + module + " File: dask.properties"))
         my_data = pkg_resources.resource_string(module, "dask.properties")
         #my_data = my_data%(broker_id, hostname, hostname, master)
         #my_data = os.path.expandvars(my_data)
         #return my_data
-
-
-
-
 
 
     #######################################################################################

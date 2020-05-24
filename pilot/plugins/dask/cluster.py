@@ -1,7 +1,9 @@
 """
 Dask Cluster Manager
-"""
 
+Supports launch via SLURM, EC2/SSH, SSH
+
+"""
 
 import os
 import sys
@@ -10,13 +12,15 @@ logging.getLogger("tornado.application").setLevel(logging.CRITICAL)
 logging.getLogger("distributed.utils").setLevel(logging.CRITICAL)
 import time
 import distributed
+
+
+# Resource Managers supported by Dask Pilot-Streaming Plugin
 import  pilot.job.slurm
 import  pilot.job.ec2
+import  pilot.job.ssh
 
 from urllib.parse import urlparse
 
-#from pilot.job.slurm import Service, Job
-#from pilot.job.ec2 import Service, Job
 
 class Manager():
 
@@ -55,11 +59,14 @@ class Manager():
                 js = pilot.job.slurm.Service(resource_url)
             elif url_schema.startswith("ec2"):
                 js = pilot.job.ec2.Service(resource_url)    
+            elif url_schema.startswith("ssh"):
+                js = pilot.job.ssh.Service(resource_url)                    
             else:
                 print("Unsupported URL Schema: %s "%resource_url)
                 return
             
             # environment, executable & arguments
+            # NOT used yet - hardcoded in EC2 / SSH plugin
             executable = "python"
             arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ", str(cores_per_node)]
             if "dask_cores" in pilot_compute_description:
@@ -87,7 +94,7 @@ class Manager():
             self.myjob = js.create_job(jd)
             self.myjob.run()
             self.local_id = self.myjob.get_id()
-            print("**** Job: " + str(self.local_id) + " State : %s" % (self.myjob.get_state()))
+            print("**** Job: " + str(self.local_id) + " State: %s" % (self.myjob.get_state()))
             return self.myjob
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))

@@ -248,29 +248,28 @@ class PilotComputeService(object):
         if "parent" in pilotcompute_description:
             parent = pilotcompute_description["parent"]
 
-        type = None
+        framework_type = None
         if "type" not in pilotcompute_description:
             raise PilotAPIException("Invalid Pilot Compute Description: type not specified")
         
-        type = pilotcompute_description["type"]
-
+        framework_type = pilotcompute_description["type"]
             
         manager = None
-        if type is None:
-            raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s"%type)
-        elif type == "spark":
+        if framework_type is None:
+            raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s"%framework_type)
+        elif framework_type == "spark":
             jobid = "spark-" + str(uuid.uuid1())
             manager = pilot.plugins.spark.cluster.Manager(jobid, working_directory)
-        elif type == "kafka":
+        elif framework_type == "kafka":
             jobid = "kafka-" + str(uuid.uuid1())
             manager = pilot.plugins.kafka.cluster.Manager(jobid, working_directory)
-        elif type == "dask":
+        elif framework_type == "dask":
             jobid = "dask-" + str(uuid.uuid1())
             manager = pilot.plugins.dask.cluster.Manager(jobid, working_directory)
-        elif type == "kinesis":
+        elif framework_type == "kinesis":
             jobid = "kinesis-" + str(uuid.uuid1())
             manager = pilot.plugins.kinesis.cluster.Manager(jobid, working_directory)
-        elif type == "lambda":
+        elif framework_type == "lambda":
             jobid = "lambda-" + str(uuid.uuid1())
             manager = pilot.plugins.serverless.cluster.Manager(jobid, working_directory)
             
@@ -293,7 +292,7 @@ class PilotComputeService(object):
         p = PilotCompute(batch_job, details, cluster_manager=manager)
         return p
     
-    
+    ###############################################################################################
 
     @classmethod
     def __connected_yarn_spark_cluster(self, pilotcompute_description):

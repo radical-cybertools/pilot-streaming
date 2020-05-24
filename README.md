@@ -4,16 +4,9 @@ Last Updated: 03/24/2019
 
 # Overview:
 
- Pilot-Streaming is a tool to manage Streaming environment 
- consisting of Kafka, Spark Streaming, Flink and Dask on HPC systems. 
- It is based on the [SAGA-Hadoop](http://github.com/drelu/saga-hadoop) tool and extends 
- it for streaming.
-
-Currently supported SAGA adaptors:
-
-- Fork
-- Torque
-
+ Pilot-Streaming is a tool to manage Streaming environments, e.g., Kafka, Spark Streaming, Flink and Dask on HPC systems. Further, it is able to deploy auxiliary components 
+ for HPC/Cloud-based streaming to edge resources (via SSH access).
+ 
 Requirements:
 
 	* PBS/Torque cluster
