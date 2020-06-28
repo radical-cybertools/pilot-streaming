@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" Spark Bootstrap Script (based on Spark 2.x release) """
+""" Spark Bootstrap Script (based on Spark 2.x/3.x releases) """
 import os, sys
 import pdb
 import urllib.request, urllib.parse, urllib.error
@@ -18,11 +18,14 @@ from optparse import OptionParser
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-VERSION="2.4.4"
-
+#VERSION="2.4.4"
 #SPARK_DOWNLOAD_URL = "http://download.nextag.com/apache/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz" 
+#SPARK_DOWNLOAD_URL = "https://www-us.apache.org/dist/spark/spark-%s/spark-%s-bin-hadoop2.7.tgz"%(VERSION, VERSION)
 
+VERSION="3.0.0"
+#SPARK_DOWNLOAD_URL = "https://www.apache.org/dyn/closer.lua/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz"
 SPARK_DOWNLOAD_URL = "https://www-us.apache.org/dist/spark/spark-%s/spark-%s-bin-hadoop2.7.tgz"%(VERSION, VERSION)
+
 
 WORKING_DIRECTORY = os.path.join(os.getcwd())
 
