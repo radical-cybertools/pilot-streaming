@@ -38,17 +38,20 @@ def handler(signum, frame):
 class DaskBootstrap():
 
 
-    def __init__(self, working_directory, dask_home, config_name="default", extension_job_id=None):
+    def __init__(self, working_directory, dask_home, config_name="default", extension_job_id=None, cores_per_node=None):
         self.working_directory=working_directory
         self.dask_home=dask_home
         self.config_name=config_name
         self.jobid = "dask-"+str(uuid.uuid1())
-        self.job_working_directory = os.path.join(WORKING_DIRECTORY)
+        self.job_working_directory = os.path.join(WORKING_DIRECTORY) 
         self.job_conf_dir = os.path.join(self.job_working_directory, "config")
         self.nodes = []
         self.master = ""
         self.dask_process = None
         self.extension_job_id = extension_job_id
+        self.cores_per_node=cores_per_node
+        self.dask_memory_limit=92e9    #Stampede
+        #self.dask_memory_limit=110e9 #Wrangler
         try:
             os.makedirs(self.job_conf_dir)
         except:
@@ -58,15 +61,11 @@ class DaskBootstrap():
     
     def get_dask_properties(self, master, hostname, broker_id):
         module = "dask.configs." + self.config_name
-        print(("Access config in module: " + module + " File: das.properties"))
+        print(("Access config in module: " + module + " File: dask.properties"))
         my_data = pkg_resources.resource_string(module, "dask.properties")
         #my_data = my_data%(broker_id, hostname, hostname, master)
         #my_data = os.path.expandvars(my_data)
         #return my_data
-
-
-
-
 
 
     #######################################################################################
@@ -145,16 +144,15 @@ class DaskBootstrap():
         with open(os.path.join(WORKING_DIRECTORY, "dask_scheduler"), "w") as master_file:
             master_file.write(self.master+":8786")
             
-    
-    
-            
 
     def start_dask(self):
         logging.debug("Start Dask")
         os.system("killall -s 9 dask-scheduler")
         os.system("pkill -9 dask-worker")
         time.sleep(5)
-        command = "dask-ssh %s"%(" ".join(self.nodes))
+        command = "dask-ssh --remote-dask-worker distributed.cli.dask_worker %s"%(" ".join(self.nodes))
+        if self.cores_per_node is not None and self.dask_memory_limit is not None:
+                command = "dask-ssh --nthreads %s --memory-limit %d --remote-dask-worker distributed.cli.dask_worker %s"%(str(self.cores_per_node), self.dask_memory_limit, " ".join(self.nodes))
         logging.debug("Start Dask Cluster: " + command)
         #status = subprocess.call(command, shell=True)
         self.dask_process = subprocess.Popen(command, shell=True)
@@ -241,6 +239,8 @@ if __name__ == "__main__" :
                       help="Job ID of Dask Cluster to Extend")
     parser.add_option("-c", "--clean", action="store_true", dest="clean",
                   help="clean Dask")
+    parser.add_option("-p", "--cores-per-node", type="string", action="store", dest="cores_per_node", default=None,
+                  help="Core Per Node")
 
     parser.add_option("-n", "--config_name", action="store", type="string", dest="config_name", default="default")
     
@@ -262,7 +262,7 @@ if __name__ == "__main__" :
         print("No Dask Distributed found. Please install Dask Distributed!")
 
     #initialize object for managing dask clusters
-    dask = DaskBootstrap(WORKING_DIRECTORY, None, None, options.jobid)
+    dask = DaskBootstrap(WORKING_DIRECTORY, None, None, options.jobid, options.cores_per_node)
     if options.jobid is not None and options.jobid != "None":
         logging.debug("Extend Dask Cluster with PS ID: %s" % options.jobid)
         dask.extend()

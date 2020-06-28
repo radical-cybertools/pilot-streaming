@@ -61,19 +61,18 @@ class Job(object):
         self.resource_url = saga.Url(str(resource_url))
         self.pilot_compute_description = pilot_compute_description
 
-        self.id="bigjob-" + str(uuid.uuid1())
+        self.id="pilot-streaming-ec2" + str(uuid.uuid1())
         self.subprocess_handle=None
         self.job_timestamp=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        self.job_output = open("bigjob_agent_output_"+self.job_timestamp+".log", "w")
-        self.job_error = open("bigjob_agent_error_"+self.job_timestamp+".log", "w")
+        self.job_output = open("pilotstreaming_agent_ec2_output_"+self.job_timestamp+".log", "w")
+        self.job_error = open("pilotstreaming_agent_ec2_output__agent_error_"+self.job_timestamp+".log", "w")
 
 
     def run(self):
-        """ Start VM and start BJ agent via SSH on VM """
-
+        """ Start VMs"""
         # Submit job
         working_directory = os.getcwd()
-        if self.pilot_compute_description.has_key("working_directory"):
+        if "working_directory" in self.pilot_compute_description:
             working_directory=self.pilot_compute_description["working_directory"]
 
         TRIAL_MAX=3
@@ -144,9 +143,9 @@ class Job(object):
     # private methods
     def __print_traceback(self):
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        print "*** print_tb:"
+        print("*** print_tb:")
         traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-        print "*** print_exception:"
+        print("*** print_exception:")
         traceback.print_exception(exc_type, exc_value, exc_traceback,
                                   limit=2, file=sys.stdout)
 
@@ -156,4 +155,4 @@ if __name__ == "__main__":
     local_service = Service("subprocess://localhost")
     j = local_service.create_job("test")
     j.run()
-    print j.get_state()
+    print(j.get_state())

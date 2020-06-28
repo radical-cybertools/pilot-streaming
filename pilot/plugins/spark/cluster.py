@@ -38,7 +38,7 @@ class Manager():
                    config_name="default",
                    reservation = None,
                    extend_job_id=None,
-                   pilotcompute_description=None
+                   pilot_compute_description=None
     ):
         try:
             # create a job service 

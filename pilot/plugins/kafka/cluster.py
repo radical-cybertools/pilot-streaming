@@ -35,7 +35,7 @@ class Manager():
                    reservation = None,
                    config_name="default",
                    extend_job_id=None,
-                   pilotcompute_description=None
+                   pilot_compute_description=None
     ):
         try:
             # create a job service for SLURM LRMS
@@ -43,7 +43,7 @@ class Manager():
             
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka"]
+            arguments = ["-m ", "pilot.plugins.kafka.bootstrap_kafka", " -n ", config_name]
             if extend_job_id!=None:
                 arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))

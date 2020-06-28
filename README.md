@@ -1,19 +1,12 @@
 # Pilot-Streaming
 
-Last Updated: 03/18/2018
+Last Updated: 03/24/2019
 
 # Overview:
 
- Pilot-Streaming is a tool to manage Streaming environment 
- consisting of Kafka, Spark Streaming, Flink and Dask on HPC systems. 
- It is based on the [SAGA-Hadoop](http://github.com/drelu/saga-hadoop) tool and extends 
- it for streaming.
-
-Currently supported SAGA adaptors:
-
-- Fork
-- Torque
-
+ Pilot-Streaming is a tool to manage Streaming environments, e.g., Kafka, Spark Streaming, Flink and Dask on HPC systems. Further, it is able to deploy auxiliary components 
+ for HPC/Cloud-based streaming to edge resources (via SSH access).
+ 
 Requirements:
 
 	* PBS/Torque cluster
@@ -25,27 +18,31 @@ Requirements:
 Anaconda is the preferred distribution
 
 
-# Usage
-
+## Installation
 Requirement (in case a manual installation is required):
 
 The best way to utilize Pilot-Streaming is Anaconda, which provides an easy way to install
 important dependencies (such as PySpark and Dask). Make sure the PySpark version is compabitible 
-with the Pilot-Streaming version (currently 2.2.1).
+with the Pilot-Streaming version (currently 2.4.4).
 
-    conda install pyspark -c conda-forge 
-    conda install -c conda-forge pykafka
+
     conda install paramiko distributed 
+    conda install -c conda-forge boto3  pykafka pyspark  dask distributed python-confluent-kafka pexpect redis-py 
     
-    pip install --upgrade saga-python
 
-Try to run a local Hadoop (e.g. for development and testing)
-	
-	
+To install Pilot-Streaming type:
+
     pip install --upgrade .
-    psm --resource fork://localhost
+    
+or (if pip issues, e.g. on Stampede2)
+   
+    python setup.py install
     
     
+
+## Running
+
+
 Try to run a Hadoop cluster inside a PBS/Torque job:
 
     psm --resource pbs+ssh://india.futuregrid.org --number_cores 8

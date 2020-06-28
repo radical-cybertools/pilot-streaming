@@ -10,6 +10,9 @@ import math
 import uuid
 from urllib.parse import urlparse
 import tempfile
+import time
+import signal 
+
 
 logging.basicConfig(datefmt='%m/%d/%Y %I:%M:%S %p',
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -48,7 +51,7 @@ class Job(object):
         if "arguments" in self.job_description:
             args =  self.job_description["arguments"]
             if isinstance(self.job_description["arguments"], list):
-                args =  "".join(self.job_description["arguments"])
+                args =  " ".join(self.job_description["arguments"])
         
         self.command = (("%s %s") % (self.job_description["executable"], args))
         logging.debug("Command: %s"%self.command)
@@ -62,6 +65,9 @@ class Job(object):
         
         # slurm+ssh:// URL for local resource manager endpoint for submission
         self.resource_url = resource_url
+        
+        o = urlparse(self.resource_url)
+        self.target_host = o.netloc
         
         logger.debug("Pilot-Streaming SLURM: Parsing job description: %s"%str(job_description))
         
@@ -174,9 +180,16 @@ class Job(object):
 
     def get_state(self):
         start_command=("%s %s %s"%("squeue", "-j", self.job_id ))
-        output = subprocess.check_output(start_command, shell=True).decode("utf-8") 
-        logging.debug("Query State: %s Output: %s"%(start_command, output))        
-        return self.get_job_status(output)
+        for i in range(3):
+            try:
+                output = subprocess.check_output(start_command, stderr=subprocess.STDOUT, shell=True).decode("utf-8") 
+                logging.debug("Query State: %s Output: %s"%(start_command, output))        
+                #signal.signal(signal.SIGCHLD, signal.SIG_IGN) 
+                status = self.get_job_status(output)
+                return status
+            except:
+                logging.debug("Error check for Job Status. Backoff polling")        
+                time.sleep(10)
         
 
     def cancel(self):
@@ -207,7 +220,7 @@ class Job(object):
         elif state.upper() == "PD":
             state = "Queue"
         else:
-            state = "Unknown"
+            state = "Unknown" 
         return state
 
 

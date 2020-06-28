@@ -119,7 +119,7 @@ class Job(object):
                                           path=path)
         else:
             aws_region = None
-            if self.pilot_compute_description.has_key("region"):
+            if "region" in self.pilot_compute_description:
                 region =  self.pilot_compute_description["region"]
                 logger.debug("Connect to region: %s"%(str(region)))
                 aws_region = boto.ec2.get_region(region,  
@@ -230,9 +230,9 @@ class Job(object):
     # private methods
     def __print_traceback(self):
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        print "*** print_tb:"
+        print("*** print_tb:")
         traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-        print "*** print_exception:"
+        print("*** print_exception:")
         traceback.print_exception(exc_type, exc_value, exc_traceback,
                               limit=2, file=sys.stdout)
     
@@ -260,4 +260,4 @@ if __name__ == "__main__":
     ec2_service = Service("ec2+ssh://aws.amazon.com")
     j = ec2_service.create_job(hadoop_cloud_description)
     j.run()
-    print j.get_state()
+    print(j.get_state())

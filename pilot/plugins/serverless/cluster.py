@@ -2,7 +2,7 @@
 Lambda Manager
 """
 
-import os
+import os, sys
 import logging
 import time
 import boto3 
@@ -10,12 +10,15 @@ import json
 import stat
 import inspect
 import zipfile
+import traceback
 
 class Manager():
 
     def __init__(self, jobid, working_directory):
         self.jobid = jobid
-        self.lambda_client = boto3.client('lambda', region_name='us-east-1')            
+        self.lambda_client = boto3.client('lambda', region_name='us-east-1') 
+        self.iam_client = boto3.client('iam')
+        self.s3_client = boto3.client('s3', region_name='us-east-1')
         self.role_arn=""
         self.configuration={}
         
@@ -33,44 +36,79 @@ class Manager():
                    reservation=None,
                    config_name=None,
                    extend_job_id=None,
-                   pilotcompute_description=None
+                   pilot_compute_description=None
     ):
         try:
-            if "lambda_function" not in pilotcompute_description and "lambda_input_data" not in pilotcompute_description:
+            if "lambda_function" not in pilot_compute_description and "lambda_input_data" not in pilot_compute_description:
                 raise Exception("Please specify lambda_function and lambda_input_data in you Pilot-Job Description!") 
            
             self.role_arn = self.create_lambda_iam_role(self.jobid)
             print("created role: " + self.role_arn)
-            zipped_code=self.prepare_function(pilotcompute_description["lambda_function"], self.jobid)
+            zipped_code=self.prepare_function(pilot_compute_description["lambda_function"], self.jobid)
+            
+            layers = [] #["arn:aws:lambda:us-east-1:668099181075:layer:AWSLambda-Python37-SciPy1x:2"]
+            if "lambda_layer" in pilot_compute_description:
+                layer_arn=self.create_layer(pilot_compute_description[ "lambda_layer"])
+                layers.append(layer_arn)
+            
+            lambda_memory = 128 
+            if "lambda_memory" in pilot_compute_description:
+                lambda_memory=pilot_compute_description[ "lambda_memory"]
+                
+            lambda_batchsize = 1 
+            if "lambda_batchsize" in pilot_compute_description:
+                lambda_batchsize=pilot_compute_description[ "lambda_batchsize"]
+                
+            lambda_concurrency = None 
+            if "lambda_concurrency" in pilot_compute_description:
+                lambda_concurrency=pilot_compute_description[ "lambda_concurrency"]
+                
+            lambda_environment = {}
+            if "lambda_environment" in pilot_compute_description:
+                lambda_environment=pilot_compute_description[ "lambda_environment"]
+                
+                                    
+            print("Layers: " + str(layers))
             time.sleep(10)
             response = self.lambda_client.create_function(
                                     FunctionName=self.jobid,
                                     Runtime='python3.7',
                                     Role=self.role_arn,
-                                    Handler=self.jobid+'.' + pilotcompute_description["lambda_function"].__name__,
+                                    Handler=self.jobid+'.' + pilot_compute_description["lambda_function"].__name__,
                                     Code={
                                         'ZipFile': zipped_code
                                     },
+                                    Layers=layers,
+                                    Timeout=900,
+                                    MemorySize=lambda_memory,
+                                    Environment={'Variables':lambda_environment},
                                     Description='Managed Lambda Function'
                                     )
             
             response=self.lambda_client.get_function(FunctionName=self.jobid)
             self.configuration=response[ 'Configuration']
             
-            print("Create mapping from %s to %s"%(pilotcompute_description["lambda_input_data"], self.jobid))
-            response = self.lambda_client.create_event_source_mapping(
-                EventSourceArn=pilotcompute_description["lambda_input_data"],
-                FunctionName=self.jobid,
-                Enabled=True,
-                BatchSize=1,
-                StartingPosition='LATEST'
-                )
+            if "lambda_input_data" in pilot_compute_description:
+                print("Create mapping from %s to %s"%(pilot_compute_description["lambda_input_data"], self.jobid))
+                response = self.lambda_client.create_event_source_mapping(
+                    EventSourceArn=pilot_compute_description["lambda_input_data"],
+                    FunctionName=self.jobid,
+                    Enabled=True,
+                    BatchSize=lambda_batchsize,
+                    StartingPosition='LATEST'
+                    )
             
             response=self.lambda_client.get_function(FunctionName=self.jobid)
             self.configuration=response[ 'Configuration']
             print("Created lambda: %s"%self.jobid)
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print("*** print_tb:")
+            traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+            print("*** print_exception:")
+            # exc_type below is ignored on 3.5 and later
+            traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
             
 
     def wait(self):
@@ -89,7 +127,7 @@ class Manager():
                                         )
         
     def get_jobid(self):
-        return self.stream_arn
+        return self.jobid
     
     
     def get_context(self, configuration):
@@ -98,10 +136,13 @@ class Manager():
     
     def cancel(self):
         self.lambda_client.delete_function(FunctionName=self.jobid)
-        iam_client = boto3.client('iam')
-        iam_client.detach_role_policy(RoleName=iam_role_name, PolicyArn='arn:aws:iam::aws:policy/AmazonKinesisFullAccess')
-        iam_client.detach_role_policy(RoleName=iam_role_name, PolicyArn='arn:aws:iam::aws:policy/CloudWatchLogsFullAccess')
-        iam_client.delete_role(RoleName=self.jobid)
+        print("Delete Bucket: %s"%self.jobid)
+        bucket = boto3.resource('s3').Bucket(self.jobid)
+        bucket.objects.all().delete()
+        bucket.delete()
+        self.iam_client.detach_role_policy(RoleName=iam_role_name, PolicyArn='arn:aws:iam::aws:policy/AmazonKinesisFullAccess')
+        self.iam_client.detach_role_policy(RoleName=iam_role_name, PolicyArn='arn:aws:iam::aws:policy/CloudWatchLogsFullAccess')
+        self.iam_client.delete_role(RoleName=self.jobid)
             
     
     def get_config_data(self):
@@ -110,6 +151,23 @@ class Manager():
     
     def print_config_data(self):
         print("Lambda: %s"%self.stream_arn)
+        
+        
+    def create_layer(self, zipfile):
+        filename = os.path.basename(zipfile)
+        layername = filename.split(".")[0]
+        self.s3_client.create_bucket(ACL='private', Bucket=self.jobid)
+        self.s3_client.upload_file(zipfile, self.jobid, filename)
+        response = self.lambda_client.publish_layer_version(
+                                                        LayerName=layername,
+                                                        Content={
+                                                                'S3Bucket': self.jobid,
+                                                                'S3Key': filename
+                                                                },
+                                                        CompatibleRuntimes=['python3.7']
+                                                        )
+        #print("Create Layer Responese: %s"%str(response))
+        return response["LayerVersionArn"]
 
         
     def prepare_function(self, function_ref, file_basename):
@@ -129,7 +187,6 @@ class Manager():
     
     
     def create_lambda_iam_role(self, rolename):
-        iam_client = boto3.client('iam')
         role_policy_document = {
           "Version": "2012-10-17",
           "Statement": [
@@ -143,17 +200,24 @@ class Manager():
             }
           ]
         }
-        iam_client.create_role(
+        self.iam_client.create_role(
           RoleName=rolename,
           AssumeRolePolicyDocument=json.dumps(role_policy_document),
         )
-        role = iam_client.get_role(RoleName=rolename)
-        response = iam_client.attach_role_policy(
+        role = self.iam_client.get_role(RoleName=rolename)
+        response = self.iam_client.attach_role_policy(
             RoleName=rolename,
             PolicyArn='arn:aws:iam::aws:policy/AmazonKinesisFullAccess'
         )
-        response = iam_client.attach_role_policy(
+        response = self.iam_client.attach_role_policy(
             RoleName=rolename,
             PolicyArn='arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
         )
+        response = self.iam_client.attach_role_policy(
+            RoleName=rolename,
+            PolicyArn='arn:aws:iam::aws:policy/AmazonS3FullAccess'
+        )
+
+        
+        
         return role['Role']['Arn']

@@ -209,6 +209,8 @@ class PilotComputeService(object):
         working_directory = "/tmp"
         if "working_directory" in pilotcompute_description:
             working_directory = pilotcompute_description["working_directory"]
+        
+        print("Working Directory: {}".format(working_directory))
 
         project = None
         if "project" in pilotcompute_description:
@@ -238,33 +240,36 @@ class PilotComputeService(object):
         if "cores_per_node" in pilotcompute_description:
             cores_per_node = int(pilotcompute_description["cores_per_node"])
             
+        config_name="default"
+        if "config_name" in pilotcompute_description:
+            config_name = pilotcompute_description["config_name"]
+            
         parent = None
         if "parent" in pilotcompute_description:
             parent = pilotcompute_description["parent"]
 
-        type = None
+        framework_type = None
         if "type" not in pilotcompute_description:
             raise PilotAPIException("Invalid Pilot Compute Description: type not specified")
         
-        type = pilotcompute_description["type"]
-
+        framework_type = pilotcompute_description["type"]
             
         manager = None
-        if type is None:
-            raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s"%type)
-        elif type == "spark":
+        if framework_type is None:
+            raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s"%framework_type)
+        elif framework_type == "spark":
             jobid = "spark-" + str(uuid.uuid1())
             manager = pilot.plugins.spark.cluster.Manager(jobid, working_directory)
-        elif type == "kafka":
+        elif framework_type == "kafka":
             jobid = "kafka-" + str(uuid.uuid1())
             manager = pilot.plugins.kafka.cluster.Manager(jobid, working_directory)
-        elif type == "dask":
+        elif framework_type == "dask":
             jobid = "dask-" + str(uuid.uuid1())
             manager = pilot.plugins.dask.cluster.Manager(jobid, working_directory)
-        elif type == "kinesis":
+        elif framework_type == "kinesis":
             jobid = "kinesis-" + str(uuid.uuid1())
             manager = pilot.plugins.kinesis.cluster.Manager(jobid, working_directory)
-        elif type == "lambda":
+        elif framework_type == "lambda":
             jobid = "lambda-" + str(uuid.uuid1())
             manager = pilot.plugins.serverless.cluster.Manager(jobid, working_directory)
             
@@ -278,15 +283,16 @@ class PilotComputeService(object):
             walltime=walltime,
             project=project,
             reservation=reservation,
+            config_name=config_name,
             extend_job_id=parent, 
-            pilotcompute_description=pilotcompute_description
+            pilot_compute_description=pilotcompute_description
         )
 
         details = manager.get_config_data()
         p = PilotCompute(batch_job, details, cluster_manager=manager)
         return p
     
-    
+    ###############################################################################################
 
     @classmethod
     def __connected_yarn_spark_cluster(self, pilotcompute_description):

@@ -1,20 +1,32 @@
 """
 Dask Cluster Manager
+
+Supports launch via SLURM, EC2/SSH, SSH
+
 """
 
-
 import os
+import sys
 import logging
 logging.getLogger("tornado.application").setLevel(logging.CRITICAL)
 logging.getLogger("distributed.utils").setLevel(logging.CRITICAL)
 import time
 import distributed
-from pilot.job.slurm import Service, Job
+
+
+# Resource Managers supported by Dask Pilot-Streaming Plugin
+import  pilot.job.slurm
+import  pilot.job.ec2
+import  pilot.job.ssh
+
+from urllib.parse import urlparse
+
 
 class Manager():
 
     def __init__(self, jobid, working_directory):
         self.jobid = jobid
+        print("{}{}".format(self.jobid, working_directory))
         self.working_directory = os.path.join(working_directory, jobid)
         self.myjob = None  # SAGA Job
         self.local_id = None  # Local Resource Manager ID (e.g. SLURM id)
@@ -37,15 +49,30 @@ class Manager():
                    reservation=None,
                    config_name="default",
                    extend_job_id=None,
-                   pilotcompute_description=None
+                   pilot_compute_description=None
     ):
         try:
-            # create a job service for SLURM LRMS
-            js = Service(resource_url)
+            # create a job service for SLURM LRMS or EC2 Cloud
+            url_schema = urlparse(resource_url).scheme
+            js = None
+            if url_schema.startswith("slurm"):
+                js = pilot.job.slurm.Service(resource_url)
+            elif url_schema.startswith("ec2"):
+                js = pilot.job.ec2.Service(resource_url)    
+            elif url_schema.startswith("ssh"):
+                js = pilot.job.ssh.Service(resource_url)                    
+            else:
+                print("Unsupported URL Schema: %s "%resource_url)
+                return
             
             # environment, executable & arguments
+            # NOT used yet - hardcoded in EC2 / SSH plugin
             executable = "python"
-            arguments = ["-m", "pilot.plugins.dask.bootstrap_dask"]
+            arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ", str(cores_per_node)]
+            if "dask_cores" in pilot_compute_description:
+                arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ", 
+                             str(pilot_compute_description["dask_cores"])]
+            
             if extend_job_id!=None:
                 arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", "-j", extend_job_id]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
@@ -62,11 +89,12 @@ class Manager():
                 "reservation": reservation,
                 "queue": queue,
                 "walltime": walltime,
+                "pilot_compute_description" : pilot_compute_description
             }
             self.myjob = js.create_job(jd)
             self.myjob.run()
             self.local_id = self.myjob.get_id()
-            print("**** Job: " + str(self.local_id) + " State : %s" % (self.myjob.get_state()))
+            print("**** Job: " + str(self.local_id) + " State: %s" % (self.myjob.get_state()))
             return self.myjob
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))
@@ -75,29 +103,40 @@ class Manager():
         while True:
             state = self.myjob.get_state()
             logging.debug("**** Job: " + str(self.local_id) + " State: %s" % (state))
-            if state=="Running":
+            if state.lower()=="running":
                 logging.debug("looking for Dask startup state at: %s"%self.working_directory)
                 if self.is_scheduler_started():
-                    for i in range(3):
+                    for i in range(5):
                         try:
-                            #print "init distributed client"
+                            print("init distributed client")
                             c=self.get_context()
-                            c.scheduler_info()
+                            #c.scheduler_info()
+                            print(str(c.scheduler_info()))
+                            c.close()
+                            
                             return
                         except IOError as e:
-                            time.sleep(0.5)
+                            print("Dask Client Connect Attempt {} failed".format(i))
+                            time.sleep(5)
             elif state == "Failed":
                 break
-            time.sleep(1)
+            time.sleep(6)
+            
+    def cancel(self):
+        c=self.get_context()
+        c.run_on_scheduler(lambda dask_scheduler=None: dask_scheduler.close() & sys.exit(0))
             
     def submit_compute_unit(function_name):
         pass
     
-    def get_context(self):
-        """Returns Dask Client for Schedueler"""
+    def get_context(self, configuration=None):
+        """Returns Dask Client for Scheduler"""
         details=self.get_config_data()
-        client = distributed.Client(details["master_url"])
-        return client
+        if details is not None:
+            print("Connect to Dask: %s"%details["master_url"])
+            client = distributed.Client(details["master_url"])
+            return client
+        return None
         
         
     def get_jobid(self):
