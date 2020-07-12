@@ -83,9 +83,6 @@ class PilotCompute(object):
     
     def cancel(self):
         """ Remove the PilotCompute from the PilotCompute Service.
-
-            Keyword arguments:
-            None
         """
         if self.saga_job != None:
             self.saga_job.cancel()

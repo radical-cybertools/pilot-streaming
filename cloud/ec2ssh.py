@@ -108,7 +108,7 @@ class Job(object):
             if self.resource_url.scheme == "euca+ssh":
                 region = RegionInfo(name="eucalyptus", endpoint=host)
             elif self.resource_url.scheme == "nova+ssh":
-                region = RegionInfo(name="openstack", endpoint=host)
+                region = RegionInfo(name="pilot-edge", endpoint=host)
             logger.debug("Access Key: %s Secret: %s"%(self.pilot_compute_description["access_key_id"],
                                                       self.pilot_compute_description["secret_access_key"]))
             self.ec2_conn = EC2Connection(aws_access_key_id=self.pilot_compute_description["access_key_id"],
