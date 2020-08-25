@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
+import datetime
+import logging
 import os
-import uuid
+import subprocess
+import sys
 import time
 import traceback
-import sys
-import subprocess
-import datetime
+import uuid
 from urllib.parse import urlparse
-import logging
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger()
@@ -86,24 +86,13 @@ class Job(object):
         trials = 0
         while trials < TRIAL_MAX:
             try:
-                args = []
-                args.extend(["ssh", self.host, "/bin/date"])
-                logger.debug("Execute: " + str(args))
-                self.subprocess_handle = subprocess.Popen(args=args,
-                                                          stdout=self.job_output,
-                                                          stderr=self.job_error,
-                                                          cwd=self.working_directory,
-                                                          shell=False)
-                if self.subprocess_handle.poll() != None and self.subprocess_handle.poll() != 0:
-                    logger.warning("Submission failed.")
+                running = self.check_vm_running()
+                if not running:
                     trials = trials + 1
                     time.sleep(30)
                     continue
                 else:
-                    logger.debug("Test Job succeeded")
-                    self.run_dask()
                     break
-
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 logger.warning("Submission failed: " + str(exc_value))
@@ -114,98 +103,124 @@ class Job(object):
                     raise Exception("Submission of agent failed.")
 
         logger.debug("Job State : %s" % (self.get_state()))
-        self.run_dask()
+        # self.run_dask()
 
-    def wait_for_running(self):
+    def check_vm_running(self):
+        args = []
+        args.extend(["ssh", self.host, "/bin/date"])
+        logger.debug("Execute: " + str(args))
+        subprocess_handle = subprocess.Popen(args=args,
+                                             stdout=self.job_output,
+                                             stderr=self.job_error,
+                                             cwd=self.working_directory,
+                                             shell=False)
+        running = False
+        if subprocess_handle.poll() is not None and subprocess_handle.poll() != 0:
+            logger.warning("Submission failed.")
+        else:
+            logger.debug("Test Job succeeded")
+            running = True
+        subprocess_handle.kill()
+        return running
+
+    def wait_for_running(self, node):
         pass
 
-    def run_dask(self):
-        """TODO Move Dask specific stuff into Dask plugin"""
-        nodes = self.get_node_list()
-        ## Update Mini Apps
-        for i in nodes:
-            self.wait_for_ssh(i)
-            command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} pip install --upgrade git+ssh://git@github.com/radical-cybertools/streaming-miniapps.git".format(
-                self.pilot_compute_description["ec2_ssh_keyfile"],
-                self.pilot_compute_description["ec2_ssh_username"],
-                i)
-            print("Host: {} Command: {}".format(i, command))
-            install_process = subprocess.Popen(command, shell=True, cwd=self.working_directory)
-            install_process.wait()
-
-        ## Run Dask
-        command = "dask-ssh --ssh-private-key %s --ssh-username %s --remote-dask-worker distributed.cli.dask_worker %s" % (
-            self.pilot_compute_description["ec2_ssh_keyfile"],
-            self.pilot_compute_description["ec2_ssh_username"], " ".join(nodes))
-        if "cores_per_node" in self.pilot_compute_description:
-            command = "dask-ssh --ssh-private-key %s --ssh-username %s --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s" % (
-                self.pilot_compute_description["ec2_ssh_keyfile"], self.pilot_compute_description["ec2_ssh_username"],
-                str(self.pilot_compute_description["cores_per_node"]), " ".join(nodes))
-        print("Start Dask Cluster: " + command)
-        # status = subprocess.call(command, shell=True)
-        for i in range(3):
-            self.dask_process = subprocess.Popen(command, shell=True, cwd=self.working_directory, close_fds=True)
-            time.sleep(10)
-            if self.dask_process.poll != None:
-                with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
-                    master_file.write(nodes[0] + ":8786")
-                break
+    # def run_dask(self):
+    #     """TODO Move Dask specific stuff into Dask plugin"""
+    #     nodes = self.get_node_list()
+    #     ## Update Mini Apps
+    #     for i in nodes:
+    #         self.wait_for_running(i)
+    #         command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} pip install --upgrade git+ssh://git@github.com/radical-cybertools/streaming-miniapps.git".format(
+    #             self.pilot_compute_description["ec2_ssh_keyfile"],
+    #             self.pilot_compute_description["ec2_ssh_username"],
+    #             i)
+    #         print("Host: {} Command: {}".format(i, command))
+    #         install_process = subprocess.Popen(command, shell=True, cwd=self.working_directory)
+    #         install_process.wait()
+    #
+    #     ## Run Dask
+    #     command = "dask-ssh --ssh-private-key %s --ssh-username %s --remote-dask-worker distributed.cli.dask_worker %s" % (
+    #         self.pilot_compute_description["ec2_ssh_keyfile"],
+    #         self.pilot_compute_description["ec2_ssh_username"], " ".join(nodes))
+    #     if "cores_per_node" in self.pilot_compute_description:
+    #         command = "dask-ssh --ssh-private-key %s --ssh-username %s --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s" % (
+    #             self.pilot_compute_description["ec2_ssh_keyfile"], self.pilot_compute_description["ec2_ssh_username"],
+    #             str(self.pilot_compute_description["cores_per_node"]), " ".join(nodes))
+    #     print("Start Dask Cluster: " + command)
+    #     # status = subprocess.call(command, shell=True)
+    #     for i in range(3):
+    #         self.dask_process = subprocess.Popen(command, shell=True, cwd=self.working_directory, close_fds=True)
+    #         time.sleep(10)
+    #         if self.dask_process.poll != None:
+    #             with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
+    #                 master_file.write(nodes[0] + ":8786")
+    #             break
 
     def get_id(self):
         return self.job_id
 
     def get_state(self):
-        result = State.UNKNOWN
         try:
-            if self.dask_process != None:
-                rc = self.dask_process.poll()
-                if rc == None:
-                    result = State.RUNNING
-                elif rc != 0:
-                    result = State.FAILED
-                elif rc == 0:
-                    result = State.DONE
+            running = self.check_vm_running()
+            if running:
+                return State.RUNNING
+            else:
+                return State.UNKNOWN
+            # result = State.UNKNOWN
+            # try:
+            #     if self.dask_process != None:
+            #         rc = self.dask_process.poll()
+            #         if rc == None:
+            #             result = State.RUNNING
+            #         elif rc != 0:
+            #             result = State.FAILED
+            #         elif rc == 0:
+            #             result = State.DONE
         except:
             logger.warning("Instance not reachable/active yet...")
-        return result
 
     def cancel(self):
         if self.subprocess_handle != None: self.subprocess_handle.terminate()
         self.job_output.close()
         self.job_error.close()
 
-    def run_dask(self):
-        """TODO Move Dask specific stuff into Dask plugin"""
-        ## Update Mini Apps
-        # for i in nodes:
-        #    self.wait_for_ssh(i)
-        #    command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} pip install --upgrade git+ssh://git@github.com/radical-cybertools/streaming-miniapps.git".format(self.pilot_compute_description["ec2_ssh_keyfile"],
-        #                                        self.pilot_compute_description["ec2_ssh_username"], 
-        #                                        i)
-        #    print("Host: {} Command: {}".format(i, command))
-        #    install_process = subprocess.Popen(command, shell=True, cwd=self.working_directory)
-        #    install_process.wait()
+    def get_node_list(self):
+        return ["localhost"]  # not yet available on manager side for slurm
 
-        ## Run Dask
-        # command = "dask-ssh --remote-dask-worker distributed.cli.dask_worker %s"%(self.host)
-        command = "ssh %s dask-ssh %s" % (self.host, "localhost")
-        if "cores_per_node" in self.pilot_compute_description:
-            # command = "dask-ssh --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s"%\
-            command = "ssh %s dask-ssh --nthreads %s %s" % \
-                      (self.host, str(self.pilot_compute_description["cores_per_node"]), "localhost")
-        print("Start Dask Cluster: {0}".format(command))
-        # status = subprocess.call(command, shell=True)
-        for i in range(3):
-            self.dask_process = subprocess.Popen(command, shell=True,
-                                                 cwd=self.working_directory,
-                                                 stdout=self.job_output,
-                                                 stderr=self.job_error,
-                                                 close_fds=True)
-            time.sleep(10)
-            if self.dask_process.poll != None:
-                with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
-                    master_file.write(self.host + ":8786")
-                break
+    # def run_dask(self):
+    #     """TODO Move Dask specific stuff into Dask plugin"""
+    #     ## Update Mini Apps
+    #     # for i in nodes:
+    #     #    self.wait_for_ssh(i)
+    #     #    command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} pip install --upgrade git+ssh://git@github.com/radical-cybertools/streaming-miniapps.git".format(self.pilot_compute_description["ec2_ssh_keyfile"],
+    #     #                                        self.pilot_compute_description["ec2_ssh_username"],
+    #     #                                        i)
+    #     #    print("Host: {} Command: {}".format(i, command))
+    #     #    install_process = subprocess.Popen(command, shell=True, cwd=self.working_directory)
+    #     #    install_process.wait()
+    #
+    #     ## Run Dask
+    #     # command = "dask-ssh --remote-dask-worker distributed.cli.dask_worker %s"%(self.host)
+    #     command = "ssh %s dask-ssh %s" % (self.host, "localhost")
+    #     if "cores_per_node" in self.pilot_compute_description:
+    #         # command = "dask-ssh --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s"%\
+    #         command = "ssh %s dask-ssh --nthreads %s %s" % \
+    #                   (self.host, str(self.pilot_compute_description["cores_per_node"]), "localhost")
+    #     print("Start Dask Cluster: {0}".format(command))
+    #     # status = subprocess.call(command, shell=True)
+    #     for i in range(3):
+    #         self.dask_process = subprocess.Popen(command, shell=True,
+    #                                              cwd=self.working_directory,
+    #                                              stdout=self.job_output,
+    #                                              stderr=self.job_error,
+    #                                              close_fds=True)
+    #         time.sleep(10)
+    #         if self.dask_process.poll != None:
+    #             with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
+    #                 master_file.write(self.host + ":8786")
+    #             break
 
     ###########################################################################
     # private methods

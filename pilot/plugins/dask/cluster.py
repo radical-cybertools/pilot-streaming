@@ -119,6 +119,24 @@ class Manager():
 
     def run_dask(self):
         """TODO Move Dask specific stuff into Dask plugin"""
+        ## Run Dask
+        # command = "dask-ssh --ssh-private-key %s --ssh-username %s --remote-dask-worker distributed.cli.dask_worker %s" % (
+        #     self.pilot_compute_description["ec2_ssh_keyfile"],
+        #     self.pilot_compute_description["ec2_ssh_username"], " ".join(nodes))
+        # if "cores_per_node" in self.pilot_compute_description:
+        #     command = "dask-ssh --ssh-private-key %s --ssh-username %s --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s" % (
+        #         self.pilot_compute_description["ec2_ssh_keyfile"], self.pilot_compute_description["ec2_ssh_username"],
+        #         str(self.pilot_compute_description["cores_per_node"]), " ".join(nodes))
+        # print("Start Dask Cluster: " + command)
+        # # status = subprocess.call(command, shell=True)
+        # for i in range(3):
+        #     self.dask_process = subprocess.Popen(command, shell=True, cwd=self.working_directory, close_fds=True)
+        #     time.sleep(10)
+        #     if self.dask_process.poll != None:
+        #         with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
+        #             master_file.write(nodes[0] + ":8786")
+        #         break
+
         ## Update Mini Apps
         # for i in nodes:
         #    self.wait_for_ssh(i)
@@ -131,14 +149,30 @@ class Manager():
 
         ## Run Dask
         # command = "dask-ssh --remote-dask-worker distributed.cli.dask_worker %s"%(self.host)
-        self.host = self.myjob.get_node_list()[0]
-        command = "ssh -o 'StrictHostKeyChecking=no' %s@%s dask-ssh %s" % (
-        self.pilot_compute_description["os_ssh_username"], self.host, "localhost")
-        if "cores_per_node" in self.pilot_compute_description:
+        self.nodes = self.myjob.get_node_list()
+        resource_url = self.pilot_compute_description["resource"]
+        self.host = urlparse(resource_url).hostname
+        self.user = None
+        if urlparse(resource_url).username is not None:
+            self.user = urlparse(resource_url).username
+        elif "os_ssh_username" in self.pilot_compute_description:
+            self.user = self.pilot_compute_description["os_ssh_username"]
+
+        # if "os_ssh_username" in self.pilot_compute_description:
+        #     command = "ssh -o 'StrictHostKeyChecking=no' %s@%s dask-ssh %s" % (self.pilot_compute_description["os_ssh_username"], self.host, " ".join(self.nodes))
+        # else:
+
+        if "cores_per_node" in self.pilot_compute_description and self.user is not None:
             # command = "dask-ssh --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s"%\
-            command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s dask-ssh --nthreads %s %s" % \
-                      (self.pilot_compute_description["os_ssh_username"], self.host,
-                       str(self.pilot_compute_description["cores_per_node"]), "localhost")
+            command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"bash -ic 'dask-ssh --nthreads %s %s'\"" % \
+                      (self.user, self.host, str(self.pilot_compute_description["cores_per_node"]), " ".join(self.nodes))
+        elif "cores_per_node" in self.pilot_compute_description:
+            command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic 'dask-ssh --nthreads %s %s'\"" % \
+                      (self.host, str(self.pilot_compute_description["cores_per_node"]), " ".join(self.nodes))
+        else:
+            command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic 'dask-ssh %s'\"" % (self.host, " ".join(self.nodes))
+
+
         print("Start Dask Cluster: {0}".format(command))
         # status = subprocess.call(command, shell=True)
         for i in range(3):
@@ -184,7 +218,7 @@ class Manager():
     def submit_compute_unit(function_name):
         pass
 
-    def get_context(self, configuration=None):
+    def get_context(self, configuration=None) -> object:
         """Returns Dask Client for Scheduler"""
         details = self.get_config_data()
         if details is not None:

@@ -41,40 +41,37 @@ sys.modules['pilot.streaming']
 
 
 RESOURCE_URL_HPC="slurm+ssh://login4.stampede2.tacc.utexas.edu"
-WORKING_DIRECTORY_HPC=os.path.join(os.environ["HOME"], "work")
-RESOURCE_URL_EDGE="ssh://js-17-136.jetstream-cloud.org"
-WORKING_DIRECTORY_EDGE="/home/aluckow"
+WORKING_DIRECTORY=os.path.join(os.environ["HOME"], "work")
+RESOURCE_URL_EDGE="ssh://aluckow@js-17-136.jetstream-cloud.org"
+
 #RESOURCE_URL_EDGE="os://cc.lrz.de"
 #RESOURCE_URL_EDGE="ssh://localhost"
 
 
-pilot_compute_description = {
-    "resource":RESOURCE_URL_HPC,
-    "working_directory": WORKING_DIRECTORY_HPC,
-    "number_of_nodes": 1,
-    "cores_per_node": 48,
-    "project": "TG-MCB090174",
-    "queue": "normal",
-    "config_name": "stampede",
-    "walltime": 59,
-    "type":"kafka"
-}
-
-#kafka_pilot = pilot.streaming.PilotComputeService.create_pilot(pilot_compute_description)
-#kafka_pilot.wait()
+# pilot_compute_description = {
+#     "resource":RESOURCE_URL_EDGE,
+#     "working_directory": WORKING_DIRECTORY,
+#     "number_of_nodes": 1,
+#     "cores_per_node": 48,
+#     "project": "TG-MCB090174",
+#     "queue": "normal",
+#     "config_name": "stampede",
+#     "walltime": 59,
+#     "type":"kafka"
+# }
+#
+# kafka_pilot = pilot.streaming.PilotComputeService.create_pilot(pilot_compute_description)
+# kafka_pilot.wait()
 
 
 #######################################################################################################################
-# Dask
+# Dask Edge
 pilot_compute_description = {
-    "resource":RESOURCE_URL_HPC,
-    "working_directory": WORKING_DIRECTORY_HPC,
+    "resource":RESOURCE_URL_EDGE,
+    "working_directory": WORKING_DIRECTORY,
     "number_of_nodes": 1,
-    "cores_per_node": 48,
-    "dask_cores" : 24,
-    "project": "TG-MCB090174",
-    "queue": "normal",
-    "walltime": 359,
+    "cores_per_node": 2,
+    "dask_cores" : 2,
     "type":"dask"
 }
 
@@ -83,6 +80,27 @@ pilot_compute_description = {
 dask_pilot = pilot.streaming.PilotComputeService.create_pilot(pilot_compute_description)
 dask_pilot.wait()
 dask_pilot.get_details()
+
+
+#######################################################################################################################
+# # Dask
+# pilot_compute_description = {
+#     "resource":RESOURCE_URL_HPC,
+#     "working_directory": WORKING_DIRECTORY,
+#     "number_of_nodes": 1,
+#     "cores_per_node": 48,
+#     "dask_cores" : 24,
+#     "project": "TG-MCB090174",
+#     "queue": "normal",
+#     "walltime": 359,
+#     "type":"dask"
+# }
+#
+#
+#
+# dask_pilot = pilot.streaming.PilotComputeService.create_pilot(pilot_compute_description)
+# dask_pilot.wait()
+# dask_pilot.get_details()
 
 dask_client  = distributed.Client(dask_pilot.get_details()['master_url'])
 #dask_client  = distributed.Client()
