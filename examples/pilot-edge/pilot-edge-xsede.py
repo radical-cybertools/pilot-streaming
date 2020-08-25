@@ -48,20 +48,20 @@ RESOURCE_URL_EDGE="ssh://aluckow@js-17-136.jetstream-cloud.org"
 #RESOURCE_URL_EDGE="ssh://localhost"
 
 
-# pilot_compute_description = {
-#     "resource":RESOURCE_URL_EDGE,
-#     "working_directory": WORKING_DIRECTORY,
-#     "number_of_nodes": 1,
-#     "cores_per_node": 48,
-#     "project": "TG-MCB090174",
-#     "queue": "normal",
-#     "config_name": "stampede",
-#     "walltime": 59,
-#     "type":"kafka"
-# }
-#
-# kafka_pilot = pilot.streaming.PilotComputeService.create_pilot(pilot_compute_description)
-# kafka_pilot.wait()
+pilot_compute_description = {
+    "resource":RESOURCE_URL_EDGE,
+    "working_directory": WORKING_DIRECTORY,
+    "number_of_nodes": 1,
+    "cores_per_node": 48,
+    "project": "TG-MCB090174",
+    "queue": "normal",
+    "config_name": "stampede",
+    "walltime": 59,
+    "type":"kafka"
+}
+
+kafka_pilot = pilot.streaming.PilotComputeService.create_pilot(pilot_compute_description)
+kafka_pilot.wait()
 
 
 #######################################################################################################################
