@@ -5,6 +5,10 @@ Kafka Cluster Manager
 import os, sys
 import logging
 import time
+from urllib.parse import urlparse
+
+import pilot
+
 from . import bootstrap_kafka
 
 from pilot.job.slurm import Service, Job
@@ -39,7 +43,20 @@ class Manager():
     ):
         try:
             # create a job service for SLURM LRMS
-            js = Service(resource_url)
+            #js = Service(resource_url)
+            url_schema = urlparse(resource_url).scheme
+            js = None
+            if url_schema.startswith("slurm"):
+                js = pilot.job.slurm.Service(resource_url)
+            elif url_schema.startswith("ec2"):
+                js = pilot.job.ec2.Service(resource_url)
+            elif url_schema.startswith("os"):
+                js = pilot.job.os.Service(resource_url)
+            elif url_schema.startswith("ssh"):
+                js = pilot.job.ssh.Service(resource_url)
+            else:
+                print("Unsupported URL Schema: %s " % resource_url)
+                return
             
             # environment, executable & arguments
             executable = "python"
