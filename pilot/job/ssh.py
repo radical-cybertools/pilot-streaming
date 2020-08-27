@@ -24,12 +24,12 @@ class State:
 
 
 class Service(object):
-    """ Plugin for Amazon EC2 and EUCA
+    """ Plugin for SSH
 
         Manages endpoint in the form of:
 
-            ec2+ssh://<EC2 Endpoint>
-            euca+ssh://<EUCA Endpoint>
+            ssh://<SSH Endpoint>
+
     """
 
     def __init__(self, resource_url, pilot_compute_description=None):
@@ -48,21 +48,25 @@ class Service(object):
 
 
 class Job(object):
-    """ Plugin for SSH (currently executes Dask)
-
-        Executes Dask agent on node
+    """ Plugin for SSH (to execute defined command on remote machine)
 
     """
 
     def __init__(self, job_description, resource_url, pilot_compute_description):
+        self.resource_url = resource_url
 
         self.job_description = job_description
-        self.resource_url = resource_url
-        if pilot_compute_description == None:
-            self.pilot_compute_description = job_description
-        else:
-            self.pilot_compute_description = pilot_compute_description
-        self.host = urlparse(self.resource_url).netloc
+        self.pilot_compute_description = job_description
+
+        # if pilot_compute_description == None:
+        #     self.pilot_compute_description = job_description
+        # else:
+        #     self.pilot_compute_description = pilot_compute_description
+        # self.host = urlparse(self.resource_url).netloc
+        self.host = urlparse(resource_url).hostname
+        self.user = None
+        if urlparse(resource_url).username is not None:
+            self.user = urlparse(resource_url).username
         logger.debug("URL: " + str(self.resource_url) + " Host: " + self.host)
         self.id = "pilot-streaming-ssh" + str(uuid.uuid1())
         self.job_id = self.id
@@ -103,11 +107,11 @@ class Job(object):
                     raise Exception("Submission of agent failed.")
 
         logger.debug("Job State : %s" % (self.get_state()))
-        # self.run_dask()
+        self.run_command()
 
     def check_vm_running(self):
         args = []
-        args.extend(["ssh", self.host, "/bin/date"])
+        args.extend(["ssh", "-l", self.user, self.host, "/bin/date"])
         logger.debug("Execute: " + str(args))
         subprocess_handle = subprocess.Popen(args=args,
                                              stdout=self.job_output,
@@ -125,38 +129,6 @@ class Job(object):
 
     def wait_for_running(self, node):
         pass
-
-    # def run_dask(self):
-    #     """TODO Move Dask specific stuff into Dask plugin"""
-    #     nodes = self.get_node_list()
-    #     ## Update Mini Apps
-    #     for i in nodes:
-    #         self.wait_for_running(i)
-    #         command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} pip install --upgrade git+ssh://git@github.com/radical-cybertools/streaming-miniapps.git".format(
-    #             self.pilot_compute_description["ec2_ssh_keyfile"],
-    #             self.pilot_compute_description["ec2_ssh_username"],
-    #             i)
-    #         print("Host: {} Command: {}".format(i, command))
-    #         install_process = subprocess.Popen(command, shell=True, cwd=self.working_directory)
-    #         install_process.wait()
-    #
-    #     ## Run Dask
-    #     command = "dask-ssh --ssh-private-key %s --ssh-username %s --remote-dask-worker distributed.cli.dask_worker %s" % (
-    #         self.pilot_compute_description["ec2_ssh_keyfile"],
-    #         self.pilot_compute_description["ec2_ssh_username"], " ".join(nodes))
-    #     if "cores_per_node" in self.pilot_compute_description:
-    #         command = "dask-ssh --ssh-private-key %s --ssh-username %s --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s" % (
-    #             self.pilot_compute_description["ec2_ssh_keyfile"], self.pilot_compute_description["ec2_ssh_username"],
-    #             str(self.pilot_compute_description["cores_per_node"]), " ".join(nodes))
-    #     print("Start Dask Cluster: " + command)
-    #     # status = subprocess.call(command, shell=True)
-    #     for i in range(3):
-    #         self.dask_process = subprocess.Popen(command, shell=True, cwd=self.working_directory, close_fds=True)
-    #         time.sleep(10)
-    #         if self.dask_process.poll != None:
-    #             with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
-    #                 master_file.write(nodes[0] + ":8786")
-    #             break
 
     def get_id(self):
         return self.job_id
@@ -187,40 +159,32 @@ class Job(object):
         self.job_error.close()
 
     def get_node_list(self):
-        return ["localhost"]  # not yet available on manager side for slurm
+        return ["localhost"]  # only single host via SSH
 
-    # def run_dask(self):
-    #     """TODO Move Dask specific stuff into Dask plugin"""
-    #     ## Update Mini Apps
-    #     # for i in nodes:
-    #     #    self.wait_for_ssh(i)
-    #     #    command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} pip install --upgrade git+ssh://git@github.com/radical-cybertools/streaming-miniapps.git".format(self.pilot_compute_description["ec2_ssh_keyfile"],
-    #     #                                        self.pilot_compute_description["ec2_ssh_username"],
-    #     #                                        i)
-    #     #    print("Host: {} Command: {}".format(i, command))
-    #     #    install_process = subprocess.Popen(command, shell=True, cwd=self.working_directory)
-    #     #    install_process.wait()
-    #
-    #     ## Run Dask
-    #     # command = "dask-ssh --remote-dask-worker distributed.cli.dask_worker %s"%(self.host)
-    #     command = "ssh %s dask-ssh %s" % (self.host, "localhost")
-    #     if "cores_per_node" in self.pilot_compute_description:
-    #         # command = "dask-ssh --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s"%\
-    #         command = "ssh %s dask-ssh --nthreads %s %s" % \
-    #                   (self.host, str(self.pilot_compute_description["cores_per_node"]), "localhost")
-    #     print("Start Dask Cluster: {0}".format(command))
-    #     # status = subprocess.call(command, shell=True)
-    #     for i in range(3):
-    #         self.dask_process = subprocess.Popen(command, shell=True,
-    #                                              cwd=self.working_directory,
-    #                                              stdout=self.job_output,
-    #                                              stderr=self.job_error,
-    #                                              close_fds=True)
-    #         time.sleep(10)
-    #         if self.dask_process.poll != None:
-    #             with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
-    #                 master_file.write(self.host + ":8786")
-    #             break
+    def run_command(self):
+
+        if self.user is not None:
+            command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"bash -ic '%s %s'\"" % \
+                      (self.user, self.host,
+                       str(self.pilot_compute_description["executable"]),
+                       " ".join(self.pilot_compute_description["arguments"]))
+        else:
+            command = "ssh -o 'StrictHostKeyChecking=no'  %s -t \"bash -ic '%s %s'\"" % \
+                      (self.host,
+                       str(self.pilot_compute_description["executable"]),
+                       " ".join(self.pilot_compute_description["arguments"]))
+
+        print("Execute SSH Command: {0}".format(command))
+        # status = subprocess.call(command, shell=True)
+        for i in range(3):
+            self.ssh_process = subprocess.Popen(command, shell=True,
+                                                cwd=self.working_directory,
+                                                stdout=self.job_output,
+                                                stderr=self.job_error,
+                                                close_fds=True)
+            time.sleep(10)
+            if self.ssh_process.poll is not None:
+                break
 
     ###########################################################################
     # private methods

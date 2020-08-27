@@ -79,18 +79,19 @@ class Manager():
 
             # environment, executable & arguments
             # NOT used yet - hardcoded in EC2 / SSH plugin
-            executable = "python"
-            arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ", str(cores_per_node)]
-            if "dask_cores" in pilot_compute_description:
-                arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ",
-                             str(pilot_compute_description["dask_cores"])]
+            # executable = "python"
+            # arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ", str(cores_per_node)]
+            # if "dask_cores" in pilot_compute_description:
+            #     arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ",
+            #                  str(pilot_compute_description["dask_cores"])]
+            #
+            # if extend_job_id != None:
+            #     arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", "-j", extend_job_id]
+            # logging.debug("Run %s Args: %s" % (executable, str(arguments)))
 
-            if extend_job_id != None:
-                arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", "-j", extend_job_id]
-            logging.debug("Run %s Args: %s" % (executable, str(arguments)))
-
-            # executable = "/bin/hostname" # not required - just starting vms
-            # arguments = "" # not required - just starting vms
+            # Boostrap of dask is done after ssh machine is initialized
+            executable = "/bin/hostname" # not required - just starting vms
+            arguments = "" # not required - just starting vms
             jd = {
                 "executable": executable,
                 "arguments": arguments,
@@ -171,7 +172,6 @@ class Manager():
                       (self.host, str(self.pilot_compute_description["cores_per_node"]), " ".join(self.nodes))
         else:
             command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic 'dask-ssh %s'\"" % (self.host, " ".join(self.nodes))
-
 
         print("Start Dask Cluster: {0}".format(command))
         # status = subprocess.call(command, shell=True)
