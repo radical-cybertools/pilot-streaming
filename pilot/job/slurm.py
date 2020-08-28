@@ -198,8 +198,10 @@ class Job(object):
         output = subprocess.check_output(start_command, shell=True).decode("utf-8") 
         logging.debug("Cancel SLURM job: %s Output: %s"%(start_command, output))        
         return self.get_job_status(output)
-        
-        
+
+    def get_node_list(self):
+        pass #not yet available on manager side for slurm
+
     def get_local_job_id(self, output_string):
         match=re.search("(?<=batch\\ job\\ )[0-9]*", str(output_string), re.S)
         if match:

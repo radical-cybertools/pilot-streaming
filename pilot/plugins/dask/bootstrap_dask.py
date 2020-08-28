@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" Dask Bootstrap Script (based on Dask Distributed 1.20.2 release) """
+""" Dask Bootstrap Script (based on Dask Distributed 2.23.x release) """
 import os, sys
 import pdb
 import urllib.request, urllib.parse, urllib.error

@@ -5,18 +5,20 @@
 # SPARK_HOME='/usr/local/Cellar/apache-spark/2.2.1/libexec/'
 # Start Spark: /usr/local/Cellar/apache-spark/2.2.1/libexec/sbin/start-all.sh
 
+import logging
 import os
 import time
 import uuid
-import pilot.plugins.serverless.cluster
-import pilot.plugins.spark.cluster
-import pilot.plugins.spark.bootstrap_spark
+import pyspark
 import pilot.plugins.dask.cluster
 import pilot.plugins.kafka.cluster
 import pilot.plugins.kinesis.cluster
-import pyspark
-import logging
+import pilot.plugins.serverless.cluster
+import pilot.plugins.spark.bootstrap_spark
+import pilot.plugins.spark.cluster
+
 logging.basicConfig(level=logging.DEBUG)
+
 
 class PilotAPIException(Exception):
     pass
@@ -54,7 +56,6 @@ class PilotComputeDescription(dict):
     def __getattr__(self, attr):
         return self[attr]
 
-
         #############################################################################
 
 
@@ -80,7 +81,6 @@ class PilotCompute(object):
         self.spark_sql_context = spark_sql_context
         self.cluster_manager = cluster_manager
 
-    
     def cancel(self):
         """ Remove the PilotCompute from the PilotCompute Service.
         """
@@ -94,27 +94,22 @@ class PilotCompute(object):
     def submit(self, function_name):
         self.cluster_manager.submit_compute_unit(function_name)
 
-            
     def get_state(self):
         if self.saga_job != None:
             self.saga_job.get_state()
 
     def get_id(self):
-        return self.cluster_manager.get_jobid() 
+        return self.cluster_manager.get_jobid()
 
     def get_details(self):
         return self.cluster_manager.get_config_data()
-    
+
     def wait(self):
         self.cluster_manager.wait()
-    
-    
-    
-    
+
     def get_context(self, configuration=None):
         return self.cluster_manager.get_context(configuration)
-    
-    
+
     ##############################################################################
     # Non-API extension methods specific to Spark
     def get_spark_sql_context(self):
@@ -197,8 +192,8 @@ class PilotComputeService(object):
         :param pilotcompute_description: dictionary containing detail about the spark cluster to launch
         :return: Pilot
         """
-        #import commandline.main
-        #spark_cluster = commandline.main.PilotStreamingCLI()
+        # import commandline.main
+        # spark_cluster = commandline.main.PilotStreamingCLI()
 
         if "resource" in pilotcompute_description:
             resource_url = pilotcompute_description["resource"]
@@ -206,7 +201,7 @@ class PilotComputeService(object):
         working_directory = "/tmp"
         if "working_directory" in pilotcompute_description:
             working_directory = pilotcompute_description["working_directory"]
-        
+
         print("Working Directory: {}".format(working_directory))
 
         project = None
@@ -228,19 +223,19 @@ class PilotComputeService(object):
         number_cores = 1
         if "number_cores" in pilotcompute_description:
             number_cores = int(pilotcompute_description["number_cores"])
-            
-        number_of_nodes=1
+
+        number_of_nodes = 1
         if "number_of_nodes" in pilotcompute_description:
             number_of_nodes = int(pilotcompute_description["number_of_nodes"])
 
         cores_per_node = 1
         if "cores_per_node" in pilotcompute_description:
             cores_per_node = int(pilotcompute_description["cores_per_node"])
-            
-        config_name="default"
+
+        config_name = "default"
         if "config_name" in pilotcompute_description:
             config_name = pilotcompute_description["config_name"]
-            
+
         parent = None
         if "parent" in pilotcompute_description:
             parent = pilotcompute_description["parent"]
@@ -248,12 +243,12 @@ class PilotComputeService(object):
         framework_type = None
         if "type" not in pilotcompute_description:
             raise PilotAPIException("Invalid Pilot Compute Description: type not specified")
-        
+
         framework_type = pilotcompute_description["type"]
-            
+
         manager = None
         if framework_type is None:
-            raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s"%framework_type)
+            raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s" % framework_type)
         elif framework_type == "spark":
             jobid = "spark-" + str(uuid.uuid1())
             manager = pilot.plugins.spark.cluster.Manager(jobid, working_directory)
@@ -269,7 +264,6 @@ class PilotComputeService(object):
         elif framework_type == "lambda":
             jobid = "lambda-" + str(uuid.uuid1())
             manager = pilot.plugins.serverless.cluster.Manager(jobid, working_directory)
-            
 
         batch_job = manager.submit_job(
             resource_url=resource_url,
@@ -281,14 +275,14 @@ class PilotComputeService(object):
             project=project,
             reservation=reservation,
             config_name=config_name,
-            extend_job_id=parent, 
+            extend_job_id=parent,
             pilot_compute_description=pilotcompute_description
         )
 
         details = manager.get_config_data()
         p = PilotCompute(batch_job, details, cluster_manager=manager)
         return p
-    
+
     ###############################################################################################
 
     @classmethod
@@ -361,4 +355,3 @@ class PilotComputeService(object):
             "web_ui_url": "http://%s:8080" % master,
         }
         return details
-
