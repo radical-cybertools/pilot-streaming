@@ -44,6 +44,7 @@ class Manager:
             # create a job service for SLURM LRMS
             # js = Service(resource_url)
             url_schema = urlparse(resource_url).scheme
+            print("Kafka Plugin for Job Type: {}".format(url_schema))
             js = None
             if url_schema.startswith("slurm"):
                 js = pilot.job.slurm.Service(resource_url)

@@ -77,21 +77,22 @@ class Manager():
 
             self.pilot_compute_description = pilot_compute_description
 
-            # environment, executable & arguments
-            # NOT used yet - hardcoded in EC2 / SSH plugin
-            # executable = "python"
-            # arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ", str(cores_per_node)]
-            # if "dask_cores" in pilot_compute_description:
-            #     arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ",
-            #                  str(pilot_compute_description["dask_cores"])]
-            #
-            # if extend_job_id != None:
-            #     arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", "-j", extend_job_id]
-            # logging.debug("Run %s Args: %s" % (executable, str(arguments)))
-
-            # Boostrap of dask is done after ssh machine is initialized
-            executable = "/bin/hostname" # not required - just starting vms
-            arguments = "" # not required - just starting vms
+            if url_schema.startswith("slurm"):
+                # SLURM plugin
+                executable = "python"
+                arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ", str(cores_per_node)]
+                if "dask_cores" in pilot_compute_description:
+                    arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ",
+                                 str(pilot_compute_description["dask_cores"])]
+                
+                if extend_job_id != None:
+                    arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", "-j", extend_job_id]
+                logging.debug("Run %s Args: %s" % (executable, str(arguments)))
+            else:
+                # EC2 / OS / SSH plugin
+                # Boostrap of dask is done after ssh machine is initialized
+                executable = "/bin/hostname" # not required - just starting vms
+                arguments = "" # not required - just starting vms
             jd = {
                 "executable": executable,
                 "arguments": arguments,
