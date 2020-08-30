@@ -134,8 +134,10 @@ class Manager:
                             # print line.strip().replace("=", ": ")
                             line_comp = line.split("=")
                             kafka_config[line_comp[0].strip()] = line_comp[1].strip()
-        else: #generate default config from hostname
+        else: #generate default config from hostname with default ports ###fallback
+            kafka_config["master_url"]="{}:2181".format(self.host)
             kafka_config["zookeeper.connect"]="{}:2181".format(self.host)
+            kafka_config["listeners"]="{}:9092".format(self.host)
 
         print(str(kafka_config))
         details = {"master_url": kafka_config["zookeeper.connect"],
