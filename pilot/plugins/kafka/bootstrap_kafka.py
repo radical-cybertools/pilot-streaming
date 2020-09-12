@@ -25,7 +25,8 @@ VERSION = "2.6.0"
 # KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 # KAFKA_DOWNLOAD_URL = "http://apache.mirrors.lucidnetworks.net/kafka/"+ VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 # KAFKA_DOWNLOAD_URL = "http://mirrors.gigenet.com/apache/kafka/"+ VERSION + "/kafka_2.11-" + VERSION + ".tgz"
-KAFKA_DOWNLOAD_URL = "http://mirrors.gigenet.com/apache/kafka/" + VERSION + "/kafka_2.13-" + VERSION + ".tgz"
+#KAFKA_DOWNLOAD_URL = "http://mirrors.gigenet.com/apache/kafka/" + VERSION + "/kafka_2.13-" + VERSION + ".tgz"
+KAFKA_DOWNLOAD_URL = "https://downloads.apache.org/kafka/" + VERSION + "/kafka_2.13-" + VERSION + ".tgz"
 WORKING_DIRECTORY = os.path.join(os.getcwd())
 
 # For using an existing installation
