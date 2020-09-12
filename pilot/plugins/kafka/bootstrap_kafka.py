@@ -69,8 +69,18 @@ class KafkaBootstrap():
         print(("Access config in module: " + module + " File: server.properties"))
         my_data = pkg_resources.resource_string(module, "server.properties").decode("utf-8")
         # print(my_data)
+        # Find out external IP
+        external_ip = hostname
+        try:
+            # check whether this host has an external ip that should be used
+            external_ip = urllib.request.urlopen('https://ident.me').read().decode('utf8')
+            logging.debug("External IP discovered: {}".format(external_ip))
+        except:
+            logging.debug("No external IP discovered.")
+        
+        
         # have at least 4 Kafka log directories containing broker id in config template
-        my_data = my_data % (broker_id, hostname, hostname, broker_id, broker_id, broker_id, broker_id, master)
+        my_data = my_data % (broker_id, hostname, external_ip, broker_id, broker_id, broker_id, broker_id, master)
         my_data = os.path.expandvars(my_data)
         return my_data
 

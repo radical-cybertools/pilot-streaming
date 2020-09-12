@@ -44,6 +44,7 @@ class Manager:
             # create a job service for SLURM LRMS
             # js = Service(resource_url)
             url_schema = urlparse(resource_url).scheme
+            print("Kafka Plugin for Job Type: {}".format(url_schema))
             js = None
             if url_schema.startswith("slurm"):
                 js = pilot.job.slurm.Service(resource_url)
@@ -133,8 +134,10 @@ class Manager:
                             # print line.strip().replace("=", ": ")
                             line_comp = line.split("=")
                             kafka_config[line_comp[0].strip()] = line_comp[1].strip()
-        else: #generate default config from hostname
+        else: #generate default config from hostname with default ports ###fallback
+            kafka_config["master_url"]="{}:2181".format(self.host)
             kafka_config["zookeeper.connect"]="{}:2181".format(self.host)
+            kafka_config["listeners"]="{}:9092".format(self.host)
 
         print(str(kafka_config))
         details = {"master_url": kafka_config["zookeeper.connect"],
