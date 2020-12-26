@@ -60,8 +60,8 @@ class Job(object):
         print("URL: " + str(resource_url) + " Type: " + str(type(resource_url)))
         self.resource_url = resource_url
         self.pilot_compute_description = pilot_compute_description
-
-        self.id = "pilotstreaming-" + str(uuid.uuid1())
+        self.working_directory = None
+        self.id = "pilotstreaming-" + str(uuid.uuid4())
         self.job_id = self.id
         self.job_timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         # self.job_output = open("pilotstreaming_agent_output_"+self.job_timestamp+".log", "w")
@@ -82,7 +82,7 @@ class Job(object):
 
     def run_os_instances(self):
         print(str(self.pilot_compute_description))
-        self.server = self.conn.create_server(name=self.pilot_compute_description["os_name"],
+        self.server = self.conn.create_server(name=self.pilot_compute_description["os_name"] + "-" + self.job_id [-5:],
                                               image=self.pilot_compute_description["os_image_id"],
                                               flavor=self.pilot_compute_description["os_instance_type"],
                                               key_name=self.pilot_compute_description["os_ssh_keyname"],
@@ -90,7 +90,7 @@ class Job(object):
                                               auto_ip=True,
                                               ips=None,
                                               ip_pool=None,
-                                              root_volume=None,
+                                              root_volume=None, #self.pilot_compute_description["os_image_id"],
                                               terminate_volume=True,
                                               wait=False,
                                               timeout=180,
@@ -107,6 +107,9 @@ class Job(object):
         self.wait_for_running()
         self.ip = self.conn.create_floating_ip(network=self.pilot_compute_description["os_network_floating_ip"],
                                                server=self.server)
+        self.wait_for_ssh(self.get_nodes_list_public()[0])
+
+        self.job_id = self.server["id"]
         # if "type" in self.pilot_compute_description and self.pilot_compute_description["type"] == "dask":
         #     """TODO Move Dask specific stuff into Dask plugin"""
         #     print("Run Dask")
@@ -189,10 +192,15 @@ class Job(object):
             if s != "ACTIVE":   time.sleep(2)
 
 
-    def get_node_list(self):
+
+    def get_nodes_list(self):
         nodes = []
         # for i in self.ec2_instances:
         #    nodes.append(i.private_ip_address)
+        host = self.ip["fixed_ip_address"]
+        return [host]
+
+    def get_nodes_list_public(self):
         host = self.ip["floating_ip_address"]
         return [host]
 

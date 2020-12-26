@@ -4,6 +4,7 @@ Kafka Cluster Manager
 import logging
 # import saga
 import os
+import subprocess
 import time
 from urllib.parse import urlparse
 
@@ -20,6 +21,8 @@ class Manager:
         self.host = None
         self.ssh_job = None  # Handle to SSH Job
         self.local_id = None  # Local Resource Manager ID (e.g. SLURM id)
+        self.config_name ="default"
+        self.extend_job_id = None
         try:
             os.makedirs(os.path.join(self.working_directory, 'config'))
         except:
@@ -57,13 +60,23 @@ class Manager:
             else:
                 print("Unsupported URL Schema: %s " % resource_url)
                 return
-
+            self.config_name = config_name
             self.host = urlparse(resource_url).hostname
-            # environment, executable & arguments
-            executable = "mkdir {}; cd {}; python".format(self.jobid, self.jobid)
-            arguments = ["-m ", "pilot.plugins.kafka.bootstrap_kafka", " -n ", config_name]
-            if extend_job_id != None:
-                arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-j", extend_job_id]
+
+            if url_schema.startswith("slurm"):
+                # environment, executable & arguments
+                executable = "mkdir {}; cd {}; python".format(self.jobid, self.jobid)
+                arguments = ["-m ", "pilot.plugins.kafka.bootstrap_kafka", " -n ", config_name]
+
+                self.extend_job_id = extend_job_id
+                if self.extend_job_id is not None:
+                    arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-j", extend_job_id]
+            else: # cloud
+                # EC2 / OS / SSH plugin
+                # Boostrap of dask is done after ssh machine is initialized
+                executable = "/bin/hostname"  # not required - just starting vms
+                arguments = ""  # not required - just starting vms
+
             logging.debug("Run %s Args: %s" % (executable, str(arguments)))
 
             jd = {
@@ -85,11 +98,87 @@ class Manager:
             self.local_id = self.ssh_job.get_id()
             print("**** Job: " + str(self.local_id) + " State : %s" % (self.ssh_job.get_state()))
             if self.ssh_job.get_state() == State.RUNNING:
+                if not url_schema.startswith("slurm"):
+                    self.run_kafka()
                 with open(os.path.join(self.working_directory, "kafka_started"), "w") as master_file:
-                    master_file.write(self.host + ":8786")
+                    master_file.write(self.host + ":9092")
             return self.ssh_job
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))
+
+    def run_kafka(self):
+        """
+        For cloud adaptors this method is running the bootstrap script on the first node allocated
+        by the cloud job adaptor.
+        :return:
+        """
+        resource_url = self.pilot_compute_description["resource"]
+        # get public and private IPs of nodes
+        self.nodes = self.ssh_job.get_nodes_list()
+        self.host = self.ssh_job.get_nodes_list_public()[0]  # first node is master host - requires public ip to connect to
+
+        self.user = None
+        if urlparse(resource_url).username is not None:
+            self.user = urlparse(resource_url).username
+        elif "os_ssh_username" in self.pilot_compute_description:
+            self.user = self.pilot_compute_description["os_ssh_username"]
+
+
+
+        # if "os_ssh_username" in self.pilot_compute_description:
+        #     command = "ssh -o 'StrictHostKeyChecking=no' %s@%s dask-ssh %s" % (self.pilot_compute_description["os_ssh_username"], self.host, " ".join(self.nodes))
+        # else:
+
+        executable = "mkdir {}; cd {}; python".format(self.jobid, self.jobid)
+        arguments = ["-m ", "pilot.plugins.kafka.bootstrap_kafka", " -n ", self.config_name]
+        if self.extend_job_id is not None:
+            arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-j", self.extend_job_id]
+        command = "{} {}".format(self.arguments, "".join(arguments))
+        logging.debug("Command {} ".format(command))
+
+        if self.user is not None:
+            # command = "dask-ssh --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s"%\
+            command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"bash -ic '%s'\"" % \
+                      (self.user, self.host, command)
+        else:
+            command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic '%s'\"" % \
+                      (self.host, command)
+
+        print("Start Kafka Cluster: {0}".format(command))
+        # status = subprocess.call(command, shell=True)
+        for i in range(3):
+            self.kafka_process = subprocess.Popen(command, shell=True,
+                                                  cwd=self.working_directory,
+                                                  stdout=self.job_output,
+                                                  stderr=self.job_error,
+                                                  close_fds=True)
+            time.sleep(10)
+            if self.kafka_process.poll is not None:
+                break
+
+    def install_pilot_streaming(self, hostname):
+        """
+        Installs and bootstraps latest pilot-streaming and mini apps from github
+        :param hostname:
+        :return:
+        """
+        #
+        command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} pip install --upgrade git+ssh://git@github.com/radical-cybertools/pilot-streaming.git".format(
+            self.pilot_compute_description["os_ssh_keyfile"],
+            self.pilot_compute_description["os_ssh_username"],
+            hostname)
+        print("Host: {} Command: {}".format(hostname, command))
+        install_process = subprocess.Popen(command, shell=True, cwd=self.working_directory)
+        install_process.wait()
+
+        # MINI Apps
+        command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} pip install --upgrade git+ssh://git@github.com/radical-cybertools/streaming-miniapps.git".format(
+                     self.pilot_compute_description["os_ssh_keyfile"],
+                     self.pilot_compute_description["os_ssh_username"],
+                     hostname)
+        print("Host: {} Command: {}".format(hostname, command))
+        install_process = subprocess.Popen(command, shell=True, cwd=self.working_directory)
+        install_process.wait()
 
     def wait(self):
         while True:

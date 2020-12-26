@@ -27,8 +27,8 @@ with the Pilot-Streaming version (currently 2.4.4).
 
 
     conda install paramiko distributed 
-    conda install -c conda-forge boto3  pykafka pyspark  dask distributed python-confluent-kafka pexpect redis-py 
-    
+    conda install -c conda-forge boto3 python-openstackclient pykafka pyspark dask distributed python-confluent-kafka pexpect redis-py  
+    pip install hostlist
 
 To install Pilot-Streaming type:
 

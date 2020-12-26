@@ -113,7 +113,7 @@ class Manager():
             self.local_id = self.myjob.get_id()
             print("**** Job: " + str(self.local_id) + " State: %s" % (self.myjob.get_state()))
             if not url_schema.startswith("slurm"):  # Dask is started in SLURM script. This is for ec2, openstack and ssh adaptors
-                self.run_dask()
+                self.run_dask() # run dask on cloud platforms
 
             return self.myjob
         except Exception as ex:
@@ -151,9 +151,9 @@ class Manager():
 
         ## Run Dask
         # command = "dask-ssh --remote-dask-worker distributed.cli.dask_worker %s"%(self.host)
-        self.nodes = self.myjob.get_node_list()
+        self.nodes = self.myjob.get_nodes_list()
         resource_url = self.pilot_compute_description["resource"]
-        self.host = urlparse(resource_url).hostname
+        self.host = self.myjob.get_nodes_list_public()[0] #first node is master host - requires public ip to connect to
         self.user = None
         if urlparse(resource_url).username is not None:
             self.user = urlparse(resource_url).username
@@ -171,6 +171,9 @@ class Manager():
         elif "cores_per_node" in self.pilot_compute_description:
             command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic 'dask-ssh --nthreads %s %s'\"" % \
                       (self.host, str(self.pilot_compute_description["cores_per_node"]), " ".join(self.nodes))
+        elif self.user is not None:
+            command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"bash -ic 'dask-ssh %s'\"" % \
+                      (self.user, self.host, " ".join(self.nodes))
         else:
             command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic 'dask-ssh %s'\"" % (self.host, " ".join(self.nodes))
 
@@ -193,7 +196,7 @@ class Manager():
             state = self.myjob.get_state()
             logging.debug("**** Job: " + str(self.local_id) + " State: %s" % (state))
             if state.lower() == "running":
-                logging.debug("looking for Dask startup state at: %s" % self.working_directory)
+                logging.debug("Looking for Dask startup state at: %s" % self.working_directory)
                 if self.is_scheduler_started():
                     for i in range(5):
                         try:
