@@ -16,11 +16,11 @@ logger.setLevel(logging.DEBUG)
 
 
 class State:
-    UNKNOWN = "unknown"
-    PENDING = "pending"
-    RUNNING = "running"
-    FAILED = "failed"
-    DONE = "done"
+    UNKNOWN = "Unknown"
+    PENDING = "Pending"
+    RUNNING = "Running"
+    FAILED = "Failed"
+    DONE = "Done"
 
 
 class Service(object):

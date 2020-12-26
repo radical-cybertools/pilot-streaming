@@ -24,7 +24,7 @@ class State:
 
 
 class Service(object):
-    """ Plugin for Amazon EC2 and EUCA
+    """ Plugin for Amazon EC2 and OpenStack
 
         Manages endpoint in the form of:
 
@@ -82,7 +82,10 @@ class Job(object):
 
     def run_os_instances(self):
         print(str(self.pilot_compute_description))
-        self.server = self.conn.create_server(name=self.pilot_compute_description["os_name"] + "-" + self.job_id [-5:],
+        name = "{}-{}-{}".format(self.pilot_compute_description["os_name"],
+                                 self.pilot_compute_description["type"],
+                                 self.job_id[-5:])
+        self.server = self.conn.create_server(name=name,
                                               image=self.pilot_compute_description["os_image_id"],
                                               flavor=self.pilot_compute_description["os_instance_type"],
                                               key_name=self.pilot_compute_description["os_ssh_keyname"],
@@ -96,7 +99,7 @@ class Job(object):
                                               timeout=180,
                                               reuse_ips=True,
                                               network=self.pilot_compute_description["os_network"],
-                                              boot_from_volume=True,
+                                              boot_from_volume=False,
                                               volume_size='20',
                                               boot_volume=None,
                                               volumes=None,
@@ -117,7 +120,7 @@ class Job(object):
         #     self.run_dask()
 
     def run(self):
-        """ Start VMs """
+        """ Start VMs on OS"""
         # Submit job
         print("Start OpenStack VMs")
         self.working_directory = os.getcwd()

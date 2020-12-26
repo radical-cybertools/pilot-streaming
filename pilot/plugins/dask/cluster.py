@@ -36,9 +36,10 @@ class Manager():
         self.myjob = None  # SAGA Job
         self.local_id = None  # Local Resource Manager ID (e.g. SLURM id)
         self.dask_process = None
-        self.job_timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        self.job_output = open("pilotstreaming_os_dask_agent_output_" + self.job_timestamp + ".log", "w")
-        self.job_error = open("pilotstreaming_os_dask_agent_output__agent_error_" + self.job_timestamp + ".log", "w")
+        self.job_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.job_output = open(self.job_timestamp + "_dask_pilotstreaming_agent_output.log", "w")
+        self.job_error = open(self.job_timestamp + "_dask_pilotstreaming_agent_error.log", "w")
+
         try:
             os.makedirs(self.working_directory)
         except:

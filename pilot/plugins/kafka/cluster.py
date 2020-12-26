@@ -6,6 +6,7 @@ import logging
 import os
 import subprocess
 import time
+from datetime import datetime
 from urllib.parse import urlparse
 
 import pilot
@@ -18,11 +19,17 @@ class Manager:
     def __init__(self, jobid, working_directory):
         self.jobid = jobid
         self.working_directory = os.path.join(working_directory, jobid)
+        self.executable = "mkdir {}; cd {}; python".format(self.jobid, self.jobid)
+        self.job_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.job_output = open(self.job_timestamp + "_kafka_pilotstreaming_agent_output.log", "w")
+        self.job_error = open(self.job_timestamp + "_kafka_pilotstreaming_agent_error.log", "w")
         self.host = None
-        self.ssh_job = None  # Handle to SSH Job
+        self.user = None
+        self.pilot_job = None  # Handle to SSH Job
         self.local_id = None  # Local Resource Manager ID (e.g. SLURM id)
         self.config_name ="default"
         self.extend_job_id = None
+        self.pilot_compute_description = None
         try:
             os.makedirs(os.path.join(self.working_directory, 'config'))
         except:
@@ -44,10 +51,12 @@ class Manager:
                    pilot_compute_description=None
                    ):
         try:
-            # create a job service for SLURM LRMS
-            # js = Service(resource_url)
+            self.pilot_compute_description = pilot_compute_description
+            self.config_name=config_name
             url_schema = urlparse(resource_url).scheme
             print("Kafka Plugin for Job Type: {}".format(url_schema))
+
+            # select appropriate adaptor for creation of pilot job
             js = None
             if url_schema.startswith("slurm"):
                 js = pilot.job.slurm.Service(resource_url)
@@ -66,8 +75,7 @@ class Manager:
             if url_schema.startswith("slurm"):
                 # environment, executable & arguments
                 executable = "mkdir {}; cd {}; python".format(self.jobid, self.jobid)
-                arguments = ["-m ", "pilot.plugins.kafka.bootstrap_kafka", " -n ", config_name]
-
+                arguments = ["-m ", "pilot.plugins.kafka.bootstrap_kafka", " -n ", self.config_name]
                 self.extend_job_id = extend_job_id
                 if self.extend_job_id is not None:
                     arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-j", extend_job_id]
@@ -93,16 +101,16 @@ class Manager:
                 "walltime": walltime,
                 "pilot_compute_description": pilot_compute_description
             }
-            self.ssh_job = js.create_job(jd)
-            self.ssh_job.run()
-            self.local_id = self.ssh_job.get_id()
-            print("**** Job: " + str(self.local_id) + " State : %s" % (self.ssh_job.get_state()))
-            if self.ssh_job.get_state() == State.RUNNING:
+            self.pilot_job = js.create_job(jd)
+            self.pilot_job.run()
+            self.local_id = self.pilot_job.get_id()
+            print("**** Job: " + str(self.local_id) + " State : %s" % (self.pilot_job.get_state()))
+            if self.pilot_job.get_state() == State.RUNNING:
                 if not url_schema.startswith("slurm"):
                     self.run_kafka()
                 with open(os.path.join(self.working_directory, "kafka_started"), "w") as master_file:
                     master_file.write(self.host + ":9092")
-            return self.ssh_job
+            return self.pilot_job
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))
 
@@ -114,26 +122,23 @@ class Manager:
         """
         resource_url = self.pilot_compute_description["resource"]
         # get public and private IPs of nodes
-        self.nodes = self.ssh_job.get_nodes_list()
-        self.host = self.ssh_job.get_nodes_list_public()[0]  # first node is master host - requires public ip to connect to
+        self.nodes = self.pilot_job.get_nodes_list()
+        self.host = self.pilot_job.get_nodes_list_public()[0]  # first node is master host - requires public ip to connect to
 
-        self.user = None
         if urlparse(resource_url).username is not None:
             self.user = urlparse(resource_url).username
         elif "os_ssh_username" in self.pilot_compute_description:
             self.user = self.pilot_compute_description["os_ssh_username"]
 
+        # install pilot-streaming
 
+        self.install_pilot_streaming()
 
-        # if "os_ssh_username" in self.pilot_compute_description:
-        #     command = "ssh -o 'StrictHostKeyChecking=no' %s@%s dask-ssh %s" % (self.pilot_compute_description["os_ssh_username"], self.host, " ".join(self.nodes))
-        # else:
-
-        executable = "mkdir {}; cd {}; python".format(self.jobid, self.jobid)
-        arguments = ["-m ", "pilot.plugins.kafka.bootstrap_kafka", " -n ", self.config_name]
+        self.executable = "mkdir {}; cd {}; python".format(self.jobid, self.jobid)
+        self.arguments = ["-m ", "pilot.plugins.kafka.bootstrap_kafka", " -n ", self.config_name]
         if self.extend_job_id is not None:
-            arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-j", self.extend_job_id]
-        command = "{} {}".format(self.arguments, "".join(arguments))
+            self.arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-j", self.extend_job_id]
+        command = "{} {}".format(self.executable, "".join(self.arguments))
         logging.debug("Command {} ".format(command))
 
         if self.user is not None:
@@ -182,13 +187,13 @@ class Manager:
 
     def wait(self):
         while True:
-            state = self.ssh_job.get_state()
+            state = self.pilot_job.get_state()
             logging.debug(
                 "**** Job: " + str(self.local_id) + " State: %s" % state + " isRunning: %s" % (state == State.RUNNING))
             if state == State.RUNNING:
-                logging.debug("looking for Kafka startup state at: %s" % self.working_directory)
-                if os.path.exists(os.path.join(self.working_directory, "kafka_started")):
-                    break
+                break
+                #logging.debug("looking for Kafka startup state at: %s" % self.working_directory)
+                #if os.path.exists(os.path.join(self.working_directory, "kafka_started")):
             elif state == State.FAILED:
                 break
             time.sleep(3)
