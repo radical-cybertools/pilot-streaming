@@ -189,12 +189,18 @@ class KafkaBootstrap():
         os.system(". ~/.bashrc & " + start_command)
 
         logging.debug("Start Kafka Cluster")
+        # remove dangling keys referencing localhost
+        os.system("ssh-keygen -f $HOME/.ssh/known_hosts -R localhost")
         for node in list(self.broker_config_files.keys()):
             config = self.broker_config_files[node]
-            start_command = os.path.join("ssh " + node.strip() + " " + self.kafka_home, "bin/kafka-server-start.sh") + \
-                            " -daemon " + config
-            logging.debug("Execute: %s" % start_command)
-            os.system(". ~/.bashrc & " + start_command)
+            start_command = os.path.join(self.kafka_home, "bin/kafka-server-start.sh") + " -daemon " + config
+            result = execute_ssh_command(node.strip(),
+                                         user=None,
+                                         command=start_command,
+                                         keyfile=None)
+            print("Host: {} Command: {} Result: {}".format(node.strip(), start_command, result))
+            #logging.debug("Execute: %s" % start_command)
+            #os.system(". ~/.bashrc & " + start_command)
 
         print(("Kafka started with configuration: %s" % self.job_conf_dir))
 
@@ -227,9 +233,7 @@ class KafkaBootstrap():
 
         for node in list(self.broker_config_files.keys()):
             config = self.broker_config_files[node]
-            start_command = os.path.join("ssh " + node.strip() + " " + self.kafka_home, "bin/kafka-server-start.sh") + \
-                            " -daemon " + config
-
+            start_command = os.path.join(self.kafka_home, "bin/kafka-server-start.sh") + " -daemon " + config
             result = execute_ssh_command(node.strip(),
                                          user=None,
                                          command=start_command,
