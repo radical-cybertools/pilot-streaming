@@ -17,6 +17,8 @@ import hostlist
 import pkg_resources
 from pykafka import KafkaClient
 
+from pilot.util.ssh_utils import execute_ssh_command
+
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
@@ -224,8 +226,14 @@ class KafkaBootstrap():
             config = self.broker_config_files[node]
             start_command = os.path.join("ssh " + node.strip() + " " + self.kafka_home, "bin/kafka-server-start.sh") + \
                             " -daemon " + config
-            logging.debug("Execute: %s" % start_command)
-            os.system(". ~/.bashrc & " + start_command)
+            result = execute_ssh_command(node.strip(),
+                                         user=None,
+                                         command=start_command,
+                                         keyfile=None)
+            print("Host: {} Command: {} Result: {}".format(node.strip(), start_command, result))
+
+            #logging.debug("Execute: %s" % start_command)
+            #os.system(". ~/.bashrc & " + start_command)
 
         print(("Kafka started with configuration: %s" % self.job_conf_dir))
 
@@ -318,7 +326,7 @@ if __name__ == "__main__":
                       help="clean Kafka topics in Zookeeper after termination")
 
     parser.add_option("-n", "--config_name", action="store", type="string", dest="config_name", default="default")
-    parser.add_option("-m", "--machines", action="store", type="string", dest="config_name")
+    # parser.add_option("-m", "--machines", action="store", type="string", dest="config_name")
 
     (options, args) = parser.parse_args()
     config_name = options.config_name
