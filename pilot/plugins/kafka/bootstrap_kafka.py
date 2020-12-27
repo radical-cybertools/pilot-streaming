@@ -318,7 +318,7 @@ if __name__ == "__main__":
                       help="clean Kafka topics in Zookeeper after termination")
 
     parser.add_option("-n", "--config_name", action="store", type="string", dest="config_name", default="default")
-    parser.add_option("-h", "--hosts", action="store", type="string", dest="config_name")
+    parser.add_option("-m", "--machines", action="store", type="string", dest="config_name")
 
     (options, args) = parser.parse_args()
     config_name = options.config_name

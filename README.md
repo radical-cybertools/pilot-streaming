@@ -86,3 +86,6 @@ see `dask` for setting up a Dask Distributed 1.20.2 cluster
     psm --resource=slurm://localhost --queue=normal --walltime=59 --number_cores=24 --project=xxx
 
 
+# Useful Commands:
+
+* Testing Kafka Config: `bin/kafka-configs.sh --bootstrap-server localhost:9092 --describe --all  --entity-type brokers`
