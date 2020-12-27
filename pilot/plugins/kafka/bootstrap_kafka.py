@@ -77,8 +77,7 @@ class KafkaBootstrap():
             logging.debug("External IP discovered: {}".format(external_ip))
         except:
             logging.debug("No external IP discovered.")
-        
-        
+
         # have at least 4 Kafka log directories containing broker id in config template
         my_data = my_data % (broker_id, hostname, external_ip, broker_id, broker_id, broker_id, broker_id, master)
         my_data = os.path.expandvars(my_data)
@@ -319,10 +318,19 @@ if __name__ == "__main__":
                       help="clean Kafka topics in Zookeeper after termination")
 
     parser.add_option("-n", "--config_name", action="store", type="string", dest="config_name", default="default")
+    parser.add_option("-h", "--hosts", action="store", type="string", dest="config_name")
+
+    (options, args) = parser.parse_args()
+    config_name = options.config_name
+    logging.debug("Bootstrap Kafka on " + socket.gethostname())
 
     node_list = KafkaBootstrap.get_nodelist_from_resourcemanager()
     number_nodes = len(node_list)
     print("nodes: %s" % str(node_list))
+
+
+    #################################################################################################################
+    # Download Kafka
     run_timestamp = datetime.datetime.now()
     performance_trace_filename = "kafka_performance_" + run_timestamp.strftime("%Y%m%d-%H%M%S") + ".csv"
     kafka_config_filename = "kafka_config_" + run_timestamp.strftime("%Y%m%d-%H%M%S")
@@ -333,9 +341,6 @@ if __name__ == "__main__":
     performance_trace_file = open(os.path.join(WORKING_DIRECTORY, performance_trace_filename), "a")
     start = time.time()
     # performance_trace_file.write("start_time, %.5f"%(time.time()))
-    (options, args) = parser.parse_args()
-    config_name = options.config_name
-    logging.debug("Bootstrap Kafka on " + socket.gethostname())
 
     filename = os.path.basename(KAFKA_DOWNLOAD_URL)
     kafka_home = ""
