@@ -17,7 +17,7 @@ import hostlist
 import pkg_resources
 from pykafka import KafkaClient
 
-from pilot.util.ssh_utils import execute_ssh_command
+from pilot.util.ssh_utils import execute_ssh_command, execute_ssh_command_as_daemon
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -194,7 +194,7 @@ class KafkaBootstrap():
         for node in list(self.broker_config_files.keys()):
             config = self.broker_config_files[node]
             start_command = os.path.join(self.kafka_home, "bin/kafka-server-start.sh") + " -daemon " + config
-            result = execute_ssh_command(node.strip(),
+            result = execute_ssh_command_as_daemon(node.strip(),
                                          user=None,
                                          command=start_command,
                                          keyfile=None)
