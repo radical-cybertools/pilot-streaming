@@ -163,7 +163,7 @@ class Manager():
         if "cores_per_node" in self.pilot_compute_description:
             dask_command = 'dask-ssh --nthreads {} {}'.format(self.pilot_compute_description["cores_per_node"], " ".join(self.nodes))
         else:
-            dask_command = 'dask-ssh {}'
+            dask_command = 'dask-ssh {}'.format(" ".join(self.nodes))
 
         result = execute_ssh_command(host=self.host, user=self.user, arguments=None, command=dask_command,
                                      working_directory=self.working_directory,
