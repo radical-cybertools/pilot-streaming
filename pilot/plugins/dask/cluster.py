@@ -165,7 +165,10 @@ class Manager():
         else:
             dask_command = 'dask-ssh {}'
 
-        result = execute_ssh_command(dask_command)
+        result = execute_ssh_command(host=self.host, user=self.user, arguments=None, command=dask_command,
+                                     working_directory=self.working_directory,
+                                     job_output=self.job_output, job_error=self.job_error,
+                                     keyfile=self.pilot_compute_description["os_ssh_keyfile"])
         if result == True:
             with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
                 master_file.write(self.host + ":8786")
