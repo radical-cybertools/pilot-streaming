@@ -10,7 +10,7 @@ import sys
 import logging
 import time
 from datetime import datetime
-from pilot.util.ssh_utils import install_pilot_streaming
+from pilot.util.ssh_utils import install_pilot_streaming, execute_ssh_command
 
 import distributed
 import subprocess
@@ -160,32 +160,42 @@ class Manager():
 
         install_pilot_streaming(self.host, self.pilot_compute_description)
 
-        if "cores_per_node" in self.pilot_compute_description and self.user is not None:
-            # command = "dask-ssh --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s"%\
-            command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"bash -ic 'dask-ssh --nthreads %s %s'\"" % \
-                      (self.user, self.host, str(self.pilot_compute_description["cores_per_node"]), " ".join(self.nodes))
-        elif "cores_per_node" in self.pilot_compute_description:
-            command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic 'dask-ssh --nthreads %s %s'\"" % \
-                      (self.host, str(self.pilot_compute_description["cores_per_node"]), " ".join(self.nodes))
-        elif self.user is not None:
-            command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"bash -ic 'dask-ssh %s'\"" % \
-                      (self.user, self.host, " ".join(self.nodes))
+        if "cores_per_node" in self.pilot_compute_description:
+            dask_command = 'dask-ssh --nthreads {} {}'.format(self.pilot_compute_description["cores_per_node"], " ".join(self.nodes))
         else:
-            command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic 'dask-ssh %s'\"" % (self.host, " ".join(self.nodes))
+            dask_command = 'dask-ssh {}'
 
-        print("Start Dask Cluster: {0}".format(command))
-        # status = subprocess.call(command, shell=True)
-        for i in range(3):
-            self.dask_process = subprocess.Popen(command, shell=True,
-                                                 cwd=self.working_directory,
-                                                 stdout=self.job_output,
-                                                 stderr=self.job_error,
-                                                 close_fds=True)
-            time.sleep(10)
-            if self.dask_process.poll is not None:
-                with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
-                    master_file.write(self.host + ":8786")
-                break
+        result = execute_ssh_command(dask_command)
+        if result == True:
+            with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
+                master_file.write(self.host + ":8786")
+
+        # if "cores_per_node" in self.pilot_compute_description and self.user is not None:
+        #     # command = "dask-ssh --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s"%\
+        #     command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"bash -ic 'dask-ssh --nthreads %s %s'\"" % \
+        #               (self.user, self.host, str(self.pilot_compute_description["cores_per_node"]), " ".join(self.nodes))
+        # elif "cores_per_node" in self.pilot_compute_description:
+        #     command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic 'dask-ssh --nthreads %s %s'\"" % \
+        #               (self.host, str(self.pilot_compute_description["cores_per_node"]), " ".join(self.nodes))
+        # elif self.user is not None:
+        #     command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"bash -ic 'dask-ssh %s'\"" % \
+        #               (self.user, self.host, " ".join(self.nodes))
+        # else:
+        #     command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic 'dask-ssh %s'\"" % (self.host, " ".join(self.nodes))
+        #
+        # print("Start Dask Cluster: {0}".format(command))
+        # # status = subprocess.call(command, shell=True)
+        # for i in range(3):
+        #     self.dask_process = subprocess.Popen(command, shell=True,
+        #                                          cwd=self.working_directory,
+        #                                          stdout=self.job_output,
+        #                                          stderr=self.job_error,
+        #                                          close_fds=True)
+        #     time.sleep(10)
+        #     if self.dask_process.poll is not None:
+        #         with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
+        #             master_file.write(self.host + ":8786")
+        #         break
 
     def wait(self):
         while True:
