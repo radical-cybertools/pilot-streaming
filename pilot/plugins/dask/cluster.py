@@ -10,6 +10,7 @@ import sys
 import logging
 import time
 from datetime import datetime
+from pilot.util.ssh_utils import install_pilot_streaming
 
 import distributed
 import subprocess
@@ -120,7 +121,12 @@ class Manager():
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))
 
+
+
+
     def run_dask(self):
+
+
         """TODO Move Dask specific stuff into Dask plugin"""
         ## Run Dask
         # command = "dask-ssh --ssh-private-key %s --ssh-username %s --remote-dask-worker distributed.cli.dask_worker %s" % (
@@ -140,15 +146,6 @@ class Manager():
         #             master_file.write(nodes[0] + ":8786")
         #         break
 
-        ## Update Mini Apps
-        # for i in nodes:
-        #    self.wait_for_ssh(i)
-        #    command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} pip install --upgrade git+ssh://git@github.com/radical-cybertools/streaming-miniapps.git".format(self.pilot_compute_description["ec2_ssh_keyfile"],
-        #                                        self.pilot_compute_description["ec2_ssh_username"],
-        #                                        i)
-        #    print("Host: {} Command: {}".format(i, command))
-        #    install_process = subprocess.Popen(command, shell=True, cwd=self.working_directory)
-        #    install_process.wait()
 
         ## Run Dask
         # command = "dask-ssh --remote-dask-worker distributed.cli.dask_worker %s"%(self.host)
@@ -161,9 +158,7 @@ class Manager():
         elif "os_ssh_username" in self.pilot_compute_description:
             self.user = self.pilot_compute_description["os_ssh_username"]
 
-        # if "os_ssh_username" in self.pilot_compute_description:
-        #     command = "ssh -o 'StrictHostKeyChecking=no' %s@%s dask-ssh %s" % (self.pilot_compute_description["os_ssh_username"], self.host, " ".join(self.nodes))
-        # else:
+        install_pilot_streaming(self.host, self.pilot_compute_description)
 
         if "cores_per_node" in self.pilot_compute_description and self.user is not None:
             # command = "dask-ssh --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s"%\

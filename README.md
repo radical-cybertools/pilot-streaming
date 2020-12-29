@@ -26,7 +26,7 @@ important dependencies (such as PySpark and Dask). Make sure the PySpark version
 with the Pilot-Streaming version (currently 2.4.4).
 
 
-    conda install paramiko distributed 
+    conda install paramiko  
     conda install -c conda-forge boto3 python-openstackclient pykafka pyspark dask distributed python-confluent-kafka pexpect redis-py  
     pip install hostlist
 

@@ -49,7 +49,7 @@ def execute_ssh_command(host, user=None, command="/bin/date", arguments=None, wo
 def execute_ssh_command_as_daemon(host, user=None, command="/bin/date", arguments=None, working_directory=os.getcwd(),
                         job_output=None, job_error=None, keyfile=None) -> object:
     """
-    Execute SSH Command
+    Execute SSH Command FOR KAFKA
     :param host:
     :param user:
     :param command:
@@ -88,3 +88,39 @@ def execute_ssh_command_as_daemon(host, user=None, command="/bin/date", argument
     if ssh_process.poll is not None:
         return True
     return False
+
+
+
+def install_pilot_streaming(hostname, pilot_compute_description):
+    """
+    Installs and bootstraps latest pilot-streaming and mini apps from github
+    :param hostname:
+    :return:
+    """
+
+    # Dask Distributed
+    start = time.time()
+    command = "pip install --upgrade dask distributed"
+    result = execute_ssh_command(hostname,
+                                 user=pilot_compute_description["os_ssh_username"],
+                                 command=command,
+                                 keyfile=pilot_compute_description["os_ssh_keyfile"])
+    print("Host: {} Command: {} Result: {} Time: {}".format(hostname, command, result, time.time()-start))
+
+    # Pilot-Streaming
+    start = time.time()
+    command = "pip install --upgrade git+ssh://git@github.com/radical-cybertools/pilot-streaming.git"
+    result = execute_ssh_command(hostname,
+                                 user=pilot_compute_description["os_ssh_username"],
+                                 command=command,
+                                 keyfile=pilot_compute_description["os_ssh_keyfile"])
+    print("Host: {} Command: {} Result: {} Time: {}".format(hostname, command, result, time.time()-start))
+
+    # MINI Apps
+    start = time.time()
+    command = "pip install --upgrade git+ssh://git@github.com/radical-cybertools/streaming-miniapps.git"
+    result = execute_ssh_command(hostname,
+                                 user=pilot_compute_description["os_ssh_username"],
+                                 command=command,
+                                 keyfile=pilot_compute_description["os_ssh_keyfile"])
+    print("Host: {} Command: {} Result: {} Time: {}".format(hostname, command, result, time.time()-start))

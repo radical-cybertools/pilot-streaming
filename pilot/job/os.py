@@ -155,37 +155,6 @@ class Job(object):
                 pass
             time.sleep(math.pow(2, i))
 
-    # def run_dask(self):
-    #     """TODO Move Dask specific stuff into Dask plugin"""
-    #     nodes = self.get_node_list()
-    #     ## Update Mini Apps
-    #     for i in nodes:
-    #         self.wait_for_ssh(i)
-    #         command = "ssh -o 'StrictHostKeyChecking=no' -i {} {}@{} pip install --upgrade git+ssh://git@github.com/radical-cybertools/streaming-miniapps.git".format(
-    #             self.pilot_compute_description["os_ssh_keyfile"],
-    #             self.pilot_compute_description["os_ssh_username"],
-    #             i)
-    #         print("Host: {} Command: {}".format(i, command))
-    #         install_process = subprocess.Popen(command, shell=True, cwd=self.working_directory)
-    #         install_process.wait()
-    #
-    #     ## Run Dask
-    #     command = "dask-ssh --ssh-private-key %s --ssh-username %s --remote-dask-worker distributed.cli.dask_worker %s" % (
-    #         self.pilot_compute_description["os_ssh_keyfile"],
-    #         self.pilot_compute_description["os_ssh_username"], " ".join(nodes))
-    #     if "cores_per_node" in self.pilot_compute_description:
-    #         command = "dask-ssh --ssh-private-key %s --ssh-username %s --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s" % (
-    #             self.pilot_compute_description["os_ssh_keyfile"], self.pilot_compute_description["os_ssh_username"],
-    #             str(self.pilot_compute_description["cores_per_node"]), " ".join(nodes))
-    #     print("Start Dask Cluster: " + command)
-    #     # status = subprocess.call(command, shell=True)
-    #     for i in range(3):
-    #         self.dask_process = subprocess.Popen(command, shell=True, cwd=self.working_directory, close_fds=True)
-    #         time.sleep(10)
-    #         if self.dask_process.poll != None:
-    #             with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
-    #                 master_file.write(nodes[0] + ":8786")
-    #             break
 
     def wait_for_running(self):
         s = "UNKNOWN"
@@ -193,7 +162,6 @@ class Job(object):
             s = self.conn.update_server(name_or_id=self.server["id"])["status"]
             print("Server: {} Status: {}".format(self.server["id"], s))
             if s != "ACTIVE":   time.sleep(2)
-
 
 
     def get_nodes_list(self):
@@ -221,8 +189,27 @@ class Job(object):
 
     def cancel(self):
         print("Delete server {}".format(self.server["id"]))
-        self.conn.delete_server(name_or_id=self.server["id"], delete_ips=True)
+        server_id = self.server["id"]
+        volumes = self.conn.list_volumes() # searching for volume in order to manually delete it
+        volume_id = None
+        for v in volumes:
+            if len(v["attachments"])==1:
+                server_volume_is_attached_to = v["attachments"][0]["server_id"]
+                if server_volume_is_attached_to == server_id:
+                    volume_id = v["attachments"][0]["volume_id"]
+                    break
+
+        self.conn.delete_server(name_or_id=server_id, delete_ips=True)
         self.conn.delete_floating_ip(self.ip)
+
+        if volume_id is not None:
+            status=None
+            while status != "available":
+                vol = self.conn.get_volume(name_or_id=volume_id)
+                status = vol["status"]
+                if status != "available": time.sleep(2)
+            self.conn.delete_volume(name_or_id=volume_id)
+
         self.conn.close()
 
     ###########################################################################
