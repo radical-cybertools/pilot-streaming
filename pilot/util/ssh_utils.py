@@ -85,9 +85,9 @@ def execute_ssh_command_shell_as_daemon(host, user=None, command="/bin/date", ar
                                        stdout=job_output,
                                        stderr=job_error,
                                        close_fds=True)
-        time.sleep(10)
-    if ssh_process.poll is not None:
-        return True
+    #     time.sleep(10)
+    # if ssh_process.poll is not None:
+    #     return True
     return False
 
 
