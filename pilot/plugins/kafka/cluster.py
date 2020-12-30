@@ -126,7 +126,7 @@ class Manager:
         # get public and private IPs of nodes
         self.nodes = self.pilot_job.get_nodes_list()
         self.host = self.pilot_job.get_nodes_list_public()[0]  # first node is master host - requires public ip to connect to
-
+        self.host = self.nodes[0]
         if urlparse(resource_url).username is not None:
             self.user = urlparse(resource_url).username
         elif "os_ssh_username" in self.pilot_compute_description:

@@ -151,7 +151,8 @@ class Manager():
         # command = "dask-ssh --remote-dask-worker distributed.cli.dask_worker %s"%(self.host)
         self.nodes = self.myjob.get_nodes_list()
         resource_url = self.pilot_compute_description["resource"]
-        self.host = self.myjob.get_nodes_list_public()[0] #first node is master host - requires public ip to connect to
+        #self.host = self.myjob.get_nodes_list_public()[0] #first node is master host - requires public ip to connect to
+        self.host = self.nodes[0] #first node is master host - requires public ip to connect to
         self.user = None
         if urlparse(resource_url).username is not None:
             self.user = urlparse(resource_url).username
