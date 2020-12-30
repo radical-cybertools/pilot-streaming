@@ -42,7 +42,7 @@ def execute_ssh_command(host, user=None, command="/bin/date", arguments=None, wo
                                        stderr=job_error,
                                        close_fds=True)
         if ssh_process.poll is not None:
-            ssh_process.wait(60)
+            ssh_process.wait(240)
             return True
         time.sleep(10)
     return False
