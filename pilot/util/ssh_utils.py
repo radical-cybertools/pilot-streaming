@@ -42,6 +42,7 @@ def execute_ssh_command(host, user=None, command="/bin/date", arguments=None, wo
                                        stderr=job_error,
                                        close_fds=True)
         if ssh_process.poll is not None:
+            ssh_process.wait(60)
             return True
         time.sleep(10)
     return False
@@ -144,15 +145,6 @@ def install_pilot_streaming(hostname, pilot_compute_description):
     :return:
     """
 
-    # Dask Distributed
-    start = time.time()
-    command = "pip install --upgrade dask distributed"
-    result = execute_ssh_command(hostname,
-                                 user=pilot_compute_description["os_ssh_username"],
-                                 command=command,
-                                 keyfile=pilot_compute_description["os_ssh_keyfile"])
-    print("Host: {} Command: {} Result: {} Time: {}".format(hostname, command, result, time.time()-start))
-
     # Pilot-Streaming
     start = time.time()
     command = "pip install --upgrade git+ssh://git@github.com/radical-cybertools/pilot-streaming.git"
@@ -161,6 +153,15 @@ def install_pilot_streaming(hostname, pilot_compute_description):
                                  command=command,
                                  keyfile=pilot_compute_description["os_ssh_keyfile"])
     print("Host: {} Command: {} Result: {} Time: {}".format(hostname, command, result, time.time()-start))
+
+    # Dask Distributed
+    start = time.time()
+    command = "pip install --upgrade dask distributed"
+    result = execute_ssh_command(hostname,
+                                 user=pilot_compute_description["os_ssh_username"],
+                                 command=command,
+                                 keyfile=pilot_compute_description["os_ssh_keyfile"])
+    print("Host: {} Command: {} Result: {} Time: {}".format(hostname, command, result, time.time() - start))
 
     # MINI Apps
     start = time.time()
