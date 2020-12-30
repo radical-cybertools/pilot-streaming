@@ -41,9 +41,9 @@ def execute_ssh_command(host, user=None, command="/bin/date", arguments=None, wo
                                        stdout=job_output,
                                        stderr=job_error,
                                        close_fds=True)
+        if ssh_process.poll is not None:
+            return True
         time.sleep(10)
-    if ssh_process.poll is not None:
-        return True
     return False
 
 
@@ -85,9 +85,10 @@ def execute_ssh_command_shell_as_daemon(host, user=None, command="/bin/date", ar
                                        stdout=job_output,
                                        stderr=job_error,
                                        close_fds=True)
-    #     time.sleep(10)
-    # if ssh_process.poll is not None:
-    #     return True
+        if ssh_process.poll is None:
+            time.sleep(10)
+            continue
+        return True
     return False
 
 
@@ -129,9 +130,9 @@ def execute_ssh_command_as_daemon(host, user=None, command="/bin/date", argument
                                        stdout=job_output,
                                        stderr=job_error,
                                        close_fds=True)
+        if ssh_process.poll is not None:
+            return True
         time.sleep(10)
-    if ssh_process.poll is not None:
-        return True
     return False
 
 
