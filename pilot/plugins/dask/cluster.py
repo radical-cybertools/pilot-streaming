@@ -10,7 +10,7 @@ import sys
 import logging
 import time
 from datetime import datetime
-from pilot.util.ssh_utils import install_pilot_streaming, execute_ssh_command
+from pilot.util.ssh_utils import install_pilot_streaming, execute_ssh_command_shell_as_daemon
 
 import distributed
 import subprocess
@@ -165,7 +165,7 @@ class Manager():
         else:
             dask_command = 'dask-ssh {}'.format(" ".join(self.nodes))
 
-        result = execute_ssh_command(host=self.host, user=self.user, arguments=None, command=dask_command,
+        result = execute_ssh_command_shell_as_daemon(host=self.host, user=self.user, arguments=None, command=dask_command,
                                      working_directory=self.working_directory,
                                      job_output=self.job_output, job_error=self.job_error,
                                      keyfile=self.pilot_compute_description["os_ssh_keyfile"])
