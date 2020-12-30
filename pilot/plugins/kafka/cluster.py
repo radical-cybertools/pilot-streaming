@@ -12,7 +12,8 @@ from urllib.parse import urlparse
 import pilot
 from pilot.job.slurm import Service
 from ...job.ssh import State
-from pilot.util.ssh_utils import execute_ssh_command
+from pilot.util.ssh_utils import install_pilot_streaming, execute_ssh_command_shell_as_daemon, execute_ssh_command
+
 
 class Manager:
 
@@ -132,7 +133,7 @@ class Manager:
             self.user = self.pilot_compute_description["os_ssh_username"]
 
         # install pilot-streaming
-        self.install_pilot_streaming(self.host)
+        install_pilot_streaming(self.host, self.pilot_compute_description)
 
         # run Kafka
         self.executable = "mkdir {}; cd {}; python".format(self.jobid, self.jobid)
@@ -142,54 +143,12 @@ class Manager:
         command = "{} {}".format(self.executable, "".join(self.arguments))
         logging.debug("Command {} ".format(command))
 
-
         result=execute_ssh_command(host=self.host, user=self.user, command=command, arguments=None,
                             working_directory=self.working_directory,
                             job_output=self.job_output, job_error=self.job_error,
                             keyfile=self.pilot_compute_description["os_ssh_keyfile"])
         print("Host: {} Command: {} Result: {}".format(self.host, command, result))
 
-        # if self.user is not None:
-        #     # command = "dask-ssh --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s"%\
-        #     command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"bash -ic '%s'\"" % \
-        #               (self.user, self.host, command)
-        # else:
-        #     command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic '%s'\"" % \
-        #               (self.host, command)
-        #
-        # print("Start Kafka Cluster: {0}".format(command))
-        # # status = subprocess.call(command, shell=True)
-        # for i in range(3):
-        #     self.kafka_process = subprocess.Popen(command, shell=True,
-        #                                           cwd=self.working_directory,
-        #                                           stdout=self.job_output,
-        #                                           stderr=self.job_error,
-        #                                           close_fds=True)
-        #     time.sleep(10)
-        #     if self.kafka_process.poll is not None:
-        #         break
-
-    def install_pilot_streaming(self, hostname):
-        """
-        Installs and bootstraps latest pilot-streaming and mini apps from github
-        :param hostname:
-        :return:
-        """
-        #
-        command = "pip install --upgrade git+ssh://git@github.com/radical-cybertools/pilot-streaming.git"
-        result = execute_ssh_command(hostname,
-                            user=self.pilot_compute_description["os_ssh_username"],
-                            command=command,
-                            keyfile=self.pilot_compute_description["os_ssh_keyfile"])
-        print("Host: {} Command: {} Result: {}".format(hostname, command, result))
-
-        # MINI Apps
-        command = "pip install --upgrade git+ssh://git@github.com/radical-cybertools/streaming-miniapps.git"
-        result = execute_ssh_command(hostname,
-                                     user=self.pilot_compute_description["os_ssh_username"],
-                                     command=command,
-                                     keyfile=self.pilot_compute_description["os_ssh_keyfile"])
-        print("Host: {} Command: {} Result: {}".format(hostname, command, result))
 
     def wait(self):
         while True:
