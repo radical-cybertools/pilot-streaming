@@ -76,7 +76,7 @@ def execute_ssh_command_shell_as_daemon(host, user=None, command="/bin/date", ar
     # else:
     #     ssh_command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic '%s'\"" % (host, command)
 
-    ssh_command = f"ssh -o 'StrictHostKeyChecking=no' {key_parameter} {user_parameter} {host} -t \"nohup bash -ic '{command} {arguments_parameter}' &\""
+    ssh_command = f"ssh -o 'StrictHostKeyChecking=no' {key_parameter} {user_parameter} {host} -t \"bash -ic 'nohup {command} {arguments_parameter}&'\""
     print("Execute SSH : {0}".format(ssh_command))
     # status = subprocess.call(command, shell=True)
     for i in range(3):
