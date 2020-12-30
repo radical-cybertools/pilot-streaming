@@ -110,7 +110,7 @@ class Job(object):
         self.wait_for_running()
         self.ip = self.conn.create_floating_ip(network=self.pilot_compute_description["os_network_floating_ip"],
                                                server=self.server)
-        self.wait_for_ssh(self.get_nodes_list_public()[0])
+        self.wait_for_ssh(self.get_nodes_list()[0])
 
         self.job_id = self.server["id"]
         # if "type" in self.pilot_compute_description and self.pilot_compute_description["type"] == "dask":
