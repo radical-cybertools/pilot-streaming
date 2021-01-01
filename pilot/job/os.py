@@ -108,7 +108,7 @@ class Job(object):
                                               ips=None,
                                               ip_pool=None,
                                               root_volume=None, #self.pilot_compute_description["os_image_id"],
-                                              terminate_volume=True,
+                                              terminate_volume=False,
                                               wait=False,
                                               timeout=180,
                                               reuse_ips=True,
