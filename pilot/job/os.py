@@ -88,8 +88,19 @@ class Job(object):
         volume_size = int(self.pilot_compute_description["os_volume_size"]) \
             if "os_volume_size" in self.pilot_compute_description else 20
 
-        self.server = self.conn.create_server(name=name,
-                                              image=self.pilot_compute_description["os_image_id"],
+
+        # if a volume is specified boot from volume and NOT images
+        volume_id=None
+        image_id=None
+        if "os_volume_id" in self.pilot_compute_description:
+            image_id=None
+            volume_id=self.pilot_compute_description["os_volume_id"]
+        else:
+            image_id=self.pilot_compute_description["os_image_id"]
+            volume_id = None
+
+        self.server = self.conn.create_serve:wqr(name=name,
+                                              image=image_id,
                                               flavor=self.pilot_compute_description["os_instance_type"],
                                               key_name=self.pilot_compute_description["os_ssh_keyname"],
                                               security_groups=[self.pilot_compute_description["os_security_group"]],
@@ -104,7 +115,7 @@ class Job(object):
                                               network=self.pilot_compute_description["os_network"],
                                               boot_from_volume=False,
                                               volume_size=volume_size,
-                                              boot_volume=None,
+                                              boot_volume=volume_id,
                                               volumes=None,
                                               nat_destination=None,
                                               group=None)
