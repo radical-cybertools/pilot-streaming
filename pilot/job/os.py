@@ -99,7 +99,7 @@ class Job(object):
             image_id=self.pilot_compute_description["os_image_id"]
             volume_id = None
 
-        self.server = self.conn.create_serve:wqr(name=name,
+        self.server = self.conn.create_serve(name=name,
                                               image=image_id,
                                               flavor=self.pilot_compute_description["os_instance_type"],
                                               key_name=self.pilot_compute_description["os_ssh_keyname"],
