@@ -85,6 +85,8 @@ class Job(object):
         name = "{}-{}-{}".format(self.pilot_compute_description["os_name"],
                                  self.pilot_compute_description["type"],
                                  self.job_id[-5:])
+        volume_size = int(self.pilot_compute_descriptio["os_volume_size"]) if "os_volume_size" in self.pilot_compute_description else 20
+
         self.server = self.conn.create_server(name=name,
                                               image=self.pilot_compute_description["os_image_id"],
                                               flavor=self.pilot_compute_description["os_instance_type"],
@@ -100,7 +102,7 @@ class Job(object):
                                               reuse_ips=True,
                                               network=self.pilot_compute_description["os_network"],
                                               boot_from_volume=False,
-                                              volume_size='20',
+                                              volume_size=volume_size,
                                               boot_volume=None,
                                               volumes=None,
                                               nat_destination=None,
