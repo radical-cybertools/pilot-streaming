@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
 # VERSION="0.10.1.0"
-VERSION = "2.7.0"
+VERSION = "3.0.0"
 # KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 # KAFKA_DOWNLOAD_URL = "http://apache.mirrors.lucidnetworks.net/kafka/"+ VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 # KAFKA_DOWNLOAD_URL = "http://mirrors.gigenet.com/apache/kafka/"+ VERSION + "/kafka_2.11-" + VERSION + ".tgz"
@@ -164,7 +164,10 @@ class KafkaBootstrap():
 
         for idx, node in enumerate(nodes):
             path = os.path.join(self.job_conf_dir, "broker-%d" % idx)
-            os.makedirs(path)
+            try:
+                os.makedirs(path)
+            except:
+                pass #do nothing as path exists
             server_properties_filename = os.path.join(path, "server.properties")
             server_properties_file = open(server_properties_filename, "w")
             server_properties_file.write(
@@ -254,7 +257,10 @@ class KafkaBootstrap():
         for node in nodes:
             idx = max_id + 1
             path = os.path.join(self.job_conf_dir, "broker-%d" % idx)
-            os.makedirs(path)
+            try:
+                os.makedirs(path)
+            except:
+                pass # do nothing as path exist
             server_properties_filename = os.path.join(path, "server.properties")
             server_properties_file = open(server_properties_filename, "w")
             server_properties_file.write(
