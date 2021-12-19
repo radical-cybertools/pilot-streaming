@@ -51,7 +51,7 @@
         $ pip install --upgrade .
 
 
-* Using the example notebook to use Pilot-Streaming to run Kafka: 
+* Using the example notebook to use Pilot-Streaming to run Kafka: <https://github.com/radical-cybertools/pilot-streaming/blob/master/examples/edge_examples_jetstream.ipynb>
 
 * Consider using an editor that supports remote editing, e.g. VS Code with Remote - SSH extension <https://code.visualstudio.com/docs/remote/ssh>
 
