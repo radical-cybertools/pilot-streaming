@@ -219,6 +219,7 @@ class Manager:
 
         print(str(kafka_config))
         details = {"master_url": kafka_config["zookeeper.connect"],
+                   "bootstrap_servers": "{}:9092".format(self.host),
                    "details": kafka_config}
         return details
 
