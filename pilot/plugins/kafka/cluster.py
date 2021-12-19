@@ -153,7 +153,7 @@ class Manager:
 
         logging.debug("Install and run Kafka")
         # run Kafka
-        job_id_work_dir = os.path.join(self.working_directory, self.jobid)
+        job_id_work_dir = os.path.join(self.working_directory)
         self.executable = "mkdir {}; cd {}; python".format(job_id_work_dir, job_id_work_dir)
         self.arguments = ["-m ", "pilot.plugins.kafka.bootstrap_kafka", " -n ", self.config_name]
         if self.extend_job_id is not None:
@@ -213,6 +213,7 @@ class Manager:
                             kafka_config[line_comp[0].strip()] = line_comp[1].strip()
         else: #generate default config from hostname with default ports ###fallback
             kafka_config["master_url"]="{}:2181".format(self.host)
+            kafka_config["bootstrap_servers"]="{}:9092".format(self.host)
             kafka_config["zookeeper.connect"]="{}:2181".format(self.host)
             kafka_config["listeners"]="{}:9092".format(self.host)
 

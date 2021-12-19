@@ -202,6 +202,9 @@ class Job(object):
     def get_node_list(self):
         pass #not yet available on manager side for slurm
 
+    def get_node_list(self):
+        pass #not yet available on manager side for slurm
+
     def get_local_job_id(self, output_string):
         match=re.search("(?<=batch\\ job\\ )[0-9]*", str(output_string), re.S)
         if match:
