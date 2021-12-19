@@ -51,13 +51,7 @@
         $ pip install --upgrade .
 
 
-* Install Streaming Mini-Apps:
-
-        $ git clone git@github.com:radical-cybertools/streaming-miniapps.git
-        $ cd streaming-miniapps
-        $ pip install --upgrade .
-
-
+* Using the example notebook to use Pilot-Streaming to run Kafka: 
 
 * Consider using an editor that supports remote editing, e.g. VS Code with Remote - SSH extension <https://code.visualstudio.com/docs/remote/ssh>
 
