@@ -158,8 +158,18 @@ class Job(object):
         self.job_output.close()
         self.job_error.close()
 
+    
+    def get_nodes_list(self):
+        return [self.host]  # only single host via SSH
+
+    
     def get_node_list(self):
-        return ["localhost"]  # only single host via SSH
+        self.get_nodes_list()
+
+
+    def get_nodes_list_public(self):
+        self.get_nodes_list()
+        
 
     def run_command(self):
 

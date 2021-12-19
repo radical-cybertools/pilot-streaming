@@ -9,6 +9,8 @@ import time
 from datetime import datetime
 from urllib.parse import urlparse
 
+import getpass
+
 import pilot
 from pilot.job.slurm import Service
 from ...job.ssh import State
@@ -106,10 +108,12 @@ class Manager:
             self.pilot_job.run()
             self.local_id = self.pilot_job.get_id()
             current_state=self.pilot_job.get_state()
-            print("**** Job: " + str(self.local_id) + " State : %s" % (current_state))
+            print("**** Job: " + str(self.local_id) + " State: %s" % (current_state))
             if current_state == State.RUNNING:
                 if not url_schema.startswith("slurm"):
+                    logging.debug("Job: " + str(self.local_id) + " Start Kafka now...")
                     self.run_kafka()
+                    logging.debug("Kafka started")
                 with open(os.path.join(self.working_directory, "kafka_started"), "w") as master_file:
                     master_file.write(self.host + ":9092")
             return self.pilot_job
@@ -123,20 +127,34 @@ class Manager:
         :return:
         """
         resource_url = self.pilot_compute_description["resource"]
+        logging.debug("Ressource: {}".format(resource_url))
         # get public and private IPs of nodes
         self.nodes = self.pilot_job.get_nodes_list()
-        self.host = self.pilot_job.get_nodes_list_public()[0]  # first node is master host - requires public ip to connect to
+        logging.debug("Nodes: {}".format(self.nodes))
+        try:
+            self.host = self.pilot_job.get_nodes_list_public()[0]  # first node is master host - requires public ip to connect to
+        except:
+            pass
         self.host = self.nodes[0]
-        if urlparse(resource_url).username is not None:
+        logging.debug("Discover username")
+        if "username" in urlparse(resource_url):
             self.user = urlparse(resource_url).username
         elif "os_ssh_username" in self.pilot_compute_description:
             self.user = self.pilot_compute_description["os_ssh_username"]
+        else:
+            # set defaults so that installation routines work
+            self.user = getpass.getuser()
+            self.pilot_compute_description["os_ssh_username"]=self.user
+            self.pilot_compute_description["os_ssh_keyfile"]="~/.ssh/id_rsa"
 
+        logging.debug("Install Pilot-Streaming")
         # install pilot-streaming
         install_pilot_streaming(self.host, self.pilot_compute_description)
 
+        logging.debug("Install and run Kafka")
         # run Kafka
-        self.executable = "mkdir {}; cd {}; python".format(self.jobid, self.jobid)
+        job_id_work_dir = os.path.join(self.working_directory)
+        self.executable = "mkdir {}; cd {}; python".format(job_id_work_dir, job_id_work_dir)
         self.arguments = ["-m ", "pilot.plugins.kafka.bootstrap_kafka", " -n ", self.config_name]
         if self.extend_job_id is not None:
             self.arguments = ["-m", "pilot.plugins.kafka.bootstrap_kafka", "-j", self.extend_job_id]
@@ -195,11 +213,13 @@ class Manager:
                             kafka_config[line_comp[0].strip()] = line_comp[1].strip()
         else: #generate default config from hostname with default ports ###fallback
             kafka_config["master_url"]="{}:2181".format(self.host)
+            kafka_config["bootstrap_servers"]="{}:9092".format(self.host)
             kafka_config["zookeeper.connect"]="{}:2181".format(self.host)
             kafka_config["listeners"]="{}:9092".format(self.host)
 
         print(str(kafka_config))
         details = {"master_url": kafka_config["zookeeper.connect"],
+                   "bootstrap_servers": "{}:9092".format(self.host),
                    "details": kafka_config}
         return details
 
