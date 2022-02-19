@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
 # VERSION="0.10.1.0"
-VERSION = "3.0.0"
+VERSION = "2.8.1" 
 # KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 # KAFKA_DOWNLOAD_URL = "http://apache.mirrors.lucidnetworks.net/kafka/"+ VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 # KAFKA_DOWNLOAD_URL = "http://mirrors.gigenet.com/apache/kafka/"+ VERSION + "/kafka_2.11-" + VERSION + ".tgz"

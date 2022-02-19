@@ -9,6 +9,7 @@ import os
 import sys
 import logging
 import time
+import getpass
 from datetime import datetime
 from pilot.util.ssh_utils import install_pilot_streaming, execute_ssh_command_shell_as_daemon
 
@@ -154,10 +155,18 @@ class Manager():
         #self.host = self.myjob.get_nodes_list_public()[0] #first node is master host - requires public ip to connect to
         self.host = self.nodes[0] #first node is master host - requires public ip to connect to
         self.user = None
+        print("Check for user name")
         if urlparse(resource_url).username is not None:
             self.user = urlparse(resource_url).username
         elif "os_ssh_username" in self.pilot_compute_description:
             self.user = self.pilot_compute_description["os_ssh_username"]
+        else:
+            self.user = getpass.getuser()
+
+        print("Check for ssh key")
+        self.ssh_key = "~/.ssh/id_rsa"
+        if "os_ssh_keyfile" in self.pilot_compute_description["os_ssh_keyfile"]:
+            self.ssh_key = self.pilot_compute_description["os_ssh_keyfile"]
 
         install_pilot_streaming(self.host, self.pilot_compute_description)
 
@@ -169,7 +178,7 @@ class Manager():
         result = execute_ssh_command_shell_as_daemon(host=self.host, user=self.user, arguments=None, command=dask_command,
                                      working_directory=self.working_directory,
                                      job_output=self.job_output, job_error=self.job_error,
-                                     keyfile=self.pilot_compute_description["os_ssh_keyfile"])
+                                     keyfile=self.ssh_key)
         if result == True:
             with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
                 master_file.write(self.host + ":8786")
