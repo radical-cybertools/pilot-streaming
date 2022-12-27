@@ -9,10 +9,14 @@ import sys
 import time
 import traceback
 import uuid
-from keystoneauth1 import loading
-from keystoneauth1 import session
-import openstack
-from novaclient.client import Client
+
+try:
+    from keystoneauth1 import loading
+    from keystoneauth1 import session
+    import openstack
+    from novaclient.client import Client
+except:
+    pass
 
 
 class State:

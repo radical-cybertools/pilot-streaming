@@ -10,10 +10,12 @@ import sys
 import logging
 import time
 import getpass
+import numpy as np
 from datetime import datetime
 from pilot.util.ssh_utils import install_pilot_streaming, execute_ssh_command_shell_as_daemon
 
 import distributed
+from dask.distributed import Client, SSHCluster
 import subprocess
 
 logging.getLogger("tornado.application").setLevel(logging.CRITICAL)
@@ -126,28 +128,6 @@ class Manager():
 
 
     def run_dask(self):
-
-
-        """TODO Move Dask specific stuff into Dask plugin"""
-        ## Run Dask
-        # command = "dask-ssh --ssh-private-key %s --ssh-username %s --remote-dask-worker distributed.cli.dask_worker %s" % (
-        #     self.pilot_compute_description["ec2_ssh_keyfile"],
-        #     self.pilot_compute_description["ec2_ssh_username"], " ".join(nodes))
-        # if "cores_per_node" in self.pilot_compute_description:
-        #     command = "dask-ssh --ssh-private-key %s --ssh-username %s --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s" % (
-        #         self.pilot_compute_description["ec2_ssh_keyfile"], self.pilot_compute_description["ec2_ssh_username"],
-        #         str(self.pilot_compute_description["cores_per_node"]), " ".join(nodes))
-        # print("Start Dask Cluster: " + command)
-        # # status = subprocess.call(command, shell=True)
-        # for i in range(3):
-        #     self.dask_process = subprocess.Popen(command, shell=True, cwd=self.working_directory, close_fds=True)
-        #     time.sleep(10)
-        #     if self.dask_process.poll != None:
-        #         with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
-        #             master_file.write(nodes[0] + ":8786")
-        #         break
-
-
         ## Run Dask
         # command = "dask-ssh --remote-dask-worker distributed.cli.dask_worker %s"%(self.host)
         self.nodes = self.myjob.get_nodes_list()
@@ -158,57 +138,43 @@ class Manager():
         print("Check for user name")
         if urlparse(resource_url).username is not None:
             self.user = urlparse(resource_url).username
+            self.pilot_compute_description["os_ssh_username"] = self.user
         elif "os_ssh_username" in self.pilot_compute_description:
             self.user = self.pilot_compute_description["os_ssh_username"]
         else:
             self.user = getpass.getuser()
+            self.pilot_compute_description["os_ssh_username"] = self.user
 
         print("Check for ssh key")
         self.ssh_key = "~/.ssh/id_rsa"
-        if "os_ssh_keyfile" in self.pilot_compute_description["os_ssh_keyfile"]:
-            self.ssh_key = self.pilot_compute_description["os_ssh_keyfile"]
+        try:
+            if "os_ssh_keyfile" in self.pilot_compute_description["os_ssh_keyfile"]:
+                self.ssh_key = self.pilot_compute_description["os_ssh_keyfile"]
+        except:
+            #set to default key for further processing
+            self.pilot_compute_description["os_ssh_keyfile"] = self.ssh_key 
 
-        install_pilot_streaming(self.host, self.pilot_compute_description)
+        
+        worker_options={"nthreads": 1, "n_workers": 1}
+        try:
+            if "cores_per_node" in self.pilot_compute_description:
+                dask_command = 'dask-ssh --nthreads {} {}'.format(self.pilot_compute_description["cores_per_node"], " ".join(self.nodes))
+        except:
+            pass
+        
+        hosts = list(np.append(self.nodes[0], self.nodes))
+        cluster = SSHCluster(hosts,
+                            connect_options={"known_hosts": None},
+                            worker_options=worker_options,
+                            scheduler_options={"port": 0, "dashboard_address": ":8797"})
+        client = Client(cluster)
+        print(client.scheduler_info())
+        self.host = client.scheduler_info()["address"]
 
-        if "cores_per_node" in self.pilot_compute_description:
-            dask_command = 'dask-ssh --nthreads {} {}'.format(self.pilot_compute_description["cores_per_node"], " ".join(self.nodes))
-        else:
-            dask_command = 'dask-ssh {}'.format(" ".join(self.nodes))
-
-        result = execute_ssh_command_shell_as_daemon(host=self.host, user=self.user, arguments=None, command=dask_command,
-                                     working_directory=self.working_directory,
-                                     job_output=self.job_output, job_error=self.job_error,
-                                     keyfile=self.ssh_key)
-        if result == True:
+        if self.host is not None:
             with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
-                master_file.write(self.host + ":8786")
+                master_file.write(self.host)
 
-        # if "cores_per_node" in self.pilot_compute_description and self.user is not None:
-        #     # command = "dask-ssh --nthreads %s --remote-dask-worker distributed.cli.dask_worker %s"%\
-        #     command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"bash -ic 'dask-ssh --nthreads %s %s'\"" % \
-        #               (self.user, self.host, str(self.pilot_compute_description["cores_per_node"]), " ".join(self.nodes))
-        # elif "cores_per_node" in self.pilot_compute_description:
-        #     command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic 'dask-ssh --nthreads %s %s'\"" % \
-        #               (self.host, str(self.pilot_compute_description["cores_per_node"]), " ".join(self.nodes))
-        # elif self.user is not None:
-        #     command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"bash -ic 'dask-ssh %s'\"" % \
-        #               (self.user, self.host, " ".join(self.nodes))
-        # else:
-        #     command = "ssh -o 'StrictHostKeyChecking=no' %s -t \"bash -ic 'dask-ssh %s'\"" % (self.host, " ".join(self.nodes))
-        #
-        # print("Start Dask Cluster: {0}".format(command))
-        # # status = subprocess.call(command, shell=True)
-        # for i in range(3):
-        #     self.dask_process = subprocess.Popen(command, shell=True,
-        #                                          cwd=self.working_directory,
-        #                                          stdout=self.job_output,
-        #                                          stderr=self.job_error,
-        #                                          close_fds=True)
-        #     time.sleep(10)
-        #     if self.dask_process.poll is not None:
-        #         with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
-        #             master_file.write(self.host + ":8786")
-        #         break
 
     def wait(self):
         while True:
@@ -268,11 +234,16 @@ class Manager():
         with open(master_file, 'r') as f:
             master = f.read()
 
-        master_host = master.split(":")[0]
-        details = {
-            "master_url": "tcp://%s:8786" % master_host,
-            "web_ui_url": "http://%s:8787" % master_host,
-        }
+        if master.startswith("tcp://"):
+            details = {
+                "master_url": master
+            }
+        else:
+            master_host = master.split(":")[0]
+            details = {
+                "master_url": "tcp://%s:8786" % master_host,
+                "web_ui_url": "http://%s:8787" % master_host,
+            }
         return details
 
     def print_config_data(self):

@@ -82,7 +82,7 @@ setup(name='Pilot-Streaming',
 
       # data files for easy_install
       package_data= {'': ['*.xml', '*.yaml', '*.properties']},
-      install_requires=['uuid', 'pykafka', 'argparse', "python-hostlist" ],
+      install_requires=['uuid', 'pykafka', 'argparse', 'python-hostlist', 'dask', 'distributed', 'pyspark', 'paramiko', 'boto3'],
       entry_points = {
         'console_scripts': ['psm=commandline.main:main',
                             'pilot-streaming=commandline.main:main']

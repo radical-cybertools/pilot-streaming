@@ -2,8 +2,7 @@
 # Mac OS:
 # brew install apache-spark kafka
 # conda install dask distributed
-# SPARK_HOME='/usr/local/Cellar/apache-spark/2.2.1/libexec/'
-# Start Spark: /usr/local/Cellar/apache-spark/2.2.1/libexec/sbin/start-all.sh
+# conda install -c conda-forge pyspark
 
 import logging
 import os
