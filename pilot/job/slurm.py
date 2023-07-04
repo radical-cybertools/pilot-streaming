@@ -147,6 +147,8 @@ class Job(object):
                 tmp.write("#SBATCH -o %s\n"%self.pilot_compute_description["output"])
                 tmp.write("#SBATCH -e %s\n"%self.pilot_compute_description["error"])
                 tmp.write("#SBATCH -p %s\n"%self.pilot_compute_description["queue"])
+                for sc in self.pilot_compute_description.get("scheduler_script_commands", []):
+                    tmp.write(sc)
                 tmp.write("cd %s\n"%self.pilot_compute_description["working_directory"])
                 tmp.write("%s\n"%self.command)
                 tmp.flush()
