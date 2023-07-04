@@ -121,6 +121,10 @@ class Job(object):
             walltime_slurm = "" + str(hrs) + ":" + str(minu) + ":00"
         self.pilot_compute_description["walltime_slurm"]=walltime_slurm
 
+        self.pilot_compute_description["scheduler_script_commands"] = \
+            job_description.get("scheduler_script_commands", [])
+
+
        
     def run(self):
         o = urlparse(self.resource_url)
@@ -147,7 +151,7 @@ class Job(object):
                 tmp.write("#SBATCH -o %s\n"%self.pilot_compute_description["output"])
                 tmp.write("#SBATCH -e %s\n"%self.pilot_compute_description["error"])
                 tmp.write("#SBATCH -p %s\n"%self.pilot_compute_description["queue"])
-                for sc in self.pilot_compute_description.get("scheduler_script_commands", []):
+                for sc in self.pilot_compute_description["scheduler_script_commands"]:
                     tmp.write(sc)
                 tmp.write("cd %s\n"%self.pilot_compute_description["working_directory"])
                 tmp.write("%s\n"%self.command)
