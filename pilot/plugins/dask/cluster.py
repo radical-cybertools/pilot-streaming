@@ -123,6 +123,7 @@ class Manager():
             return self.myjob
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))
+            raise ex
 
 
 

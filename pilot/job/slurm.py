@@ -171,7 +171,6 @@ class Job(object):
                                          shell=True).decode("utf-8")
         except Exception as err:
             logger.debug("Pilot-Streaming SLURM job submission failed: %s" % err)
-            logger.debug("Output - \n" + str(outstr))
             raise err
 
         start_command = ("ssh %s "%target_host)
@@ -186,7 +185,9 @@ class Job(object):
         return self.job_id
 
     def get_state(self):
-        start_command=("%s %s %s"%("squeue", "-j", self.job_id ))
+        o = urlparse(self.resource_url)
+        target_host = o.netloc
+        start_command=("ssh %s %s %s %s"%(target_host, "squeue", "-j", self.job_id ))
         for i in range(3):
             try:
                 output = subprocess.check_output(start_command, stderr=subprocess.STDOUT, shell=True).decode("utf-8") 
@@ -194,8 +195,8 @@ class Job(object):
                 #signal.signal(signal.SIGCHLD, signal.SIG_IGN) 
                 status = self.get_job_status(output)
                 return status
-            except:
-                logging.debug("Error check for Job Status. Backoff polling")        
+            except Exception as err:
+                logging.debug("Error check for Job Status. Backoff polling. err: %s" % err)
                 time.sleep(10)
         
 
