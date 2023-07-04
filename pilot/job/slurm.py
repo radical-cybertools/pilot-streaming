@@ -48,6 +48,7 @@ class Job(object):
         
         self.job_description = job_description
         self.command = self.job_description["executable"]
+        args = None
         if "arguments" in self.job_description:
             args =  self.job_description["arguments"]
             if isinstance(self.job_description["arguments"], list):
@@ -122,7 +123,7 @@ class Job(object):
         self.pilot_compute_description["walltime_slurm"]=walltime_slurm
 
         self.pilot_compute_description["scheduler_script_commands"] = \
-            job_description.get("scheduler_script_commands", [])
+            job_description["pilot_compute_description"].get("scheduler_script_commands", [])
 
 
        
@@ -145,14 +146,14 @@ class Job(object):
                 tmp.write("\n")
                 tmp.write("#SBATCH -A %s\n"%str(self.pilot_compute_description["project"]))
                 tmp.write("\n")
-                if self.pilot_compute_description["reservation"] is not None:
+                if "reservation" in self.pilot_compute_description and self.pilot_compute_description["reservation"] is not None:
                     tmp.write("#SBATCH --reservation  %s\n"%str(self.pilot_compute_description["reservation"]))
                 tmp.write("\n")
                 tmp.write("#SBATCH -o %s\n"%self.pilot_compute_description["output"])
                 tmp.write("#SBATCH -e %s\n"%self.pilot_compute_description["error"])
                 tmp.write("#SBATCH -p %s\n"%self.pilot_compute_description["queue"])
                 for sc in self.pilot_compute_description["scheduler_script_commands"]:
-                    tmp.write(sc)
+                    tmp.write("%s\n", sc)
                 tmp.write("cd %s\n"%self.pilot_compute_description["working_directory"])
                 tmp.write("%s\n"%self.command)
                 tmp.flush()

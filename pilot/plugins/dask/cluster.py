@@ -25,7 +25,7 @@ logging.getLogger("distributed.utils").setLevel(logging.CRITICAL)
 import pilot.job.slurm
 import pilot.job.ec2
 import pilot.job.ssh
-import pilot.job.os
+import pilot.job.pilot_os
 
 from urllib.parse import urlparse
 
@@ -139,14 +139,18 @@ class Manager():
         if urlparse(resource_url).username is not None:
             self.user = urlparse(resource_url).username
             self.pilot_compute_description["os_ssh_username"] = self.user
+
         elif "os_ssh_username" in self.pilot_compute_description:
             self.user = self.pilot_compute_description["os_ssh_username"]
         else:
             self.user = getpass.getuser()
             self.pilot_compute_description["os_ssh_username"] = self.user
 
+
+        print("Check for user name*****", self.user)
+
         print("Check for ssh key")
-        self.ssh_key = "~/.ssh/id_rsa"
+        self.ssh_key = "~/.ssh/nersc"
         try:
             if "os_ssh_keyfile" in self.pilot_compute_description["os_ssh_keyfile"]:
                 self.ssh_key = self.pilot_compute_description["os_ssh_keyfile"]
@@ -158,13 +162,14 @@ class Manager():
         worker_options={"nthreads": 1, "n_workers": 1}
         try:
             if "cores_per_node" in self.pilot_compute_description:
-                dask_command = 'dask-ssh --nthreads {} {}'.format(self.pilot_compute_description["cores_per_node"], " ".join(self.nodes))
+                dask_command = 'dask-ssh --nthreads {} {}'.format(self.user, self.pilot_compute_description["cores_per_node"], " ".join(self.nodes))
         except:
             pass
         
         hosts = list(np.append(self.nodes[0], self.nodes))
+        print("Connecting to hosts", hosts)
         cluster = SSHCluster(hosts,
-                            connect_options={"known_hosts": None},
+                            connect_options={"known_hosts": None,  "username": self.user},
                             worker_options=worker_options,
                             scheduler_options={"port": 0, "dashboard_address": ":8797"})
         client = Client(cluster)
