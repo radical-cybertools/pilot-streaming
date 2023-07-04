@@ -153,31 +153,31 @@ class Job(object):
                 tmp.write("#SBATCH -e %s\n"%self.pilot_compute_description["error"])
                 tmp.write("#SBATCH -p %s\n"%self.pilot_compute_description["queue"])
                 for sc in self.pilot_compute_description["scheduler_script_commands"]:
-                    tmp.write("%s\n", sc)
+                    tmp.write("%s\n" % sc)
                 tmp.write("cd %s\n"%self.pilot_compute_description["working_directory"])
                 tmp.write("%s\n"%self.command)
                 tmp.flush()
                 start_command = ("scp %s %s:~/"%(tmpf_name, target_host))
-                status = subprocess.call(start_command, shell=True)
-        finally:
-            pass
-            #os.remove(tmpf)
+                subprocess.check_call(start_command, shell=True)
+        except Exception as err:
+            raise Exception("Creation of Batch script failed with error: %s" % err)
 
         start_command = ("ssh %s "%target_host)
         start_command = start_command + ("sbatch  %s"%os.path.basename(tmpf_name))
         print(("Submission of Job Command: %s"%start_command))
-        outstr = subprocess.check_output(start_command, 
+        try:
+            outstr = subprocess.check_output(start_command,
                                          stderr=subprocess.STDOUT,
-                                         shell=True).decode("utf-8") 
-       
-        
-        
+                                         shell=True).decode("utf-8")
+        except Exception as err:
+            logger.debug("Pilot-Streaming SLURM job submission failed: %s" % err)
+            logger.debug("Output - \n" + str(outstr))
+            raise err
+
         start_command = ("ssh %s "%target_host)
         start_command = start_command + ("rm %s"%os.path.basename(tmpf_name))
         print(("Cleanup: %s"%start_command))
         status = subprocess.call(start_command, shell=True)
-        logger.debug("Pilot-Streaming SLURM: SSH run job finished")
-        logger.debug("Output - \n" + str(outstr))
         self.job_id=self.get_local_job_id(outstr)
         if self.job_id == None or self.job_id == "":
             raise Exception("Pilot-Streaming Submission via slurm+ssh:// failed")
