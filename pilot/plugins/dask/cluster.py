@@ -163,7 +163,7 @@ class Manager():
         worker_options={"nthreads": 1, "n_workers": 1}
         try:
             if "cores_per_node" in self.pilot_compute_description:
-                dask_command = 'dask-ssh --nthreads {} {}'.format(self.user, self.pilot_compute_description["cores_per_node"], " ".join(self.nodes))
+                dask_command = 'dask-ssh --ssh-private-key {} --nthreads {} {}'.format(self.ssh_key, self.user, self.pilot_compute_description["cores_per_node"], " ".join(self.nodes))
         except:
             pass
         
