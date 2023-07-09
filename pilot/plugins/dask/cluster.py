@@ -151,7 +151,7 @@ class Manager():
         print("Check for user name*****", self.user)
 
         print("Check for ssh key")
-        self.ssh_key = "~/.ssh/nersc"
+        self.ssh_key = "~/.ssh/mykey"
         try:
             if "os_ssh_keyfile" in self.pilot_compute_description["os_ssh_keyfile"]:
                 self.ssh_key = self.pilot_compute_description["os_ssh_keyfile"]
