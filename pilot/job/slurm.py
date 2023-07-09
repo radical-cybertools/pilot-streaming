@@ -185,9 +185,7 @@ class Job(object):
         return self.job_id
 
     def get_state(self):
-        o = urlparse(self.resource_url)
-        target_host = o.netloc
-        start_command=("ssh %s %s %s %s"%(target_host, "squeue", "-j", self.job_id ))
+        start_command=("%s %s %s"%("squeue", "-j", self.job_id ))
         for i in range(3):
             try:
                 output = subprocess.check_output(start_command, stderr=subprocess.STDOUT, shell=True).decode("utf-8") 
