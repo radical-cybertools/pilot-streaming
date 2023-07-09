@@ -50,6 +50,8 @@ class DaskBootstrap():
         self.dask_process = None
         self.extension_job_id = extension_job_id
         self.cores_per_node=cores_per_node
+        self.ssh_key = ".ssh/nersc" #perlmutter - TODO: Should make it as input parameter from the pilot job description.
+        self.dash_ssh = "dask-ssh --ssh-private-key {}" % self.ssh_key
         self.dask_memory_limit=92e9    #Stampede
         #self.dask_memory_limit=110e9 #Wrangler
         try:
@@ -150,9 +152,9 @@ class DaskBootstrap():
         os.system("killall -s 9 dask-scheduler")
         os.system("pkill -9 dask-worker")
         time.sleep(5)
-        command = "dask-ssh --remote-dask-worker distributed.cli.dask_worker %s"%(" ".join(self.nodes))
+        command = "{} --remote-dask-worker distributed.cli.dask_worker %s"%(self.dash_ssh, " ".join(self.nodes))
         if self.cores_per_node is not None and self.dask_memory_limit is not None:
-                command = "dask-ssh --nthreads %s --memory-limit %d --remote-dask-worker distributed.cli.dask_worker %s"%(str(self.cores_per_node), self.dask_memory_limit, " ".join(self.nodes))
+                command = "{} --nthreads %s --memory-limit %d --remote-dask-worker distributed.cli.dask_worker %s"%(self.dash_ssh, , str(self.cores_per_node), self.dask_memory_limit, " ".join(self.nodes))
         logging.debug("Start Dask Cluster: " + command)
         #status = subprocess.call(command, shell=True)
         self.dask_process = subprocess.Popen(command, shell=True)
@@ -190,7 +192,7 @@ class DaskBootstrap():
         os.system("killall -s 9 dask-scheduler")
         os.system("pkill -9 dask-worker")
         time.sleep(5)
-        command = "dask-ssh --scheduler %s %s"%(self.master, " ".join(self.nodes))
+        command = "{} --scheduler %s %s"%(self.dash_ssh, self.master, " ".join(self.nodes))
         logging.debug("Start Dask Cluster Extension: " + command)
         #status = subprocess.call(command, shell=True)
         self.dask_process = subprocess.Popen(command, shell=True)
