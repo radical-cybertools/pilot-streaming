@@ -12,6 +12,8 @@ Host localhost perlmutter.nersc.gov nid* dtn*.nersc.gov
 ```
 
 4. copy the private key so dash can use the private key to start scheduler/worker on the compute nodes once provisioned. TODO: Not sure why nersc private key isn't working.
+
+NOTE: Need to do this everytime nersc key is refreshed(i.e every 24hrs)
 ```
 ~/.ssh/nersc to ~/.ssh/mykey
 ```
@@ -25,4 +27,7 @@ python setup.py install
 ```
 
 8. Execute python ps-dask.py on perlmutter login node.
-``` python ps-dask.py ```
+``` python examples/ps-dask.py ```
+
+8. For GPU Execute python gpu-ps-dask.py on perlmutter login node.
+``` python examples/gpu-ps-dask.py ```
