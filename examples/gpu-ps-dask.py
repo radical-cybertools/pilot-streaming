@@ -25,7 +25,7 @@ pilot_compute_description_dask = {
     "walltime": 5,
     "type":"dask",
     "project": "m4408",
-    "scheduler_script_commands": ["#SBATCH --constraint=cpu"]
+    "scheduler_script_commands": ["#SBATCH --constraint=gpu"]
 }
 
 #%%time
