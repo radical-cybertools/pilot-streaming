@@ -18,6 +18,12 @@ NOTE: Need to do this everytime nersc key is refreshed(i.e every 24hrs)
 ~/.ssh/nersc to ~/.ssh/mykey
 ```
 
+5. Python version setup. Add these two statements in ~/.bashrc
+```
+module load python
+conda activate myenv
+```
+
 6. install pilot-streaming from [branch](https://github.com/radical-cybertools/pilot-streaming/tree/support-perl). Once verified we can merge these changes.
 
 ```
@@ -26,7 +32,7 @@ cd pilot-streaming
 python setup.py install
 ```
 
-8. Execute python ps-dask.py on perlmutter login node.
+7. Execute python ps-dask.py on perlmutter login node.
 ``` python examples/ps-dask.py ```
 
 8. For GPU Execute python gpu-ps-dask.py on perlmutter login node.
