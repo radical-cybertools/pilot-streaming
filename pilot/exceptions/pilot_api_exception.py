@@ -1,0 +1,2 @@
+class PilotAPIException(Exception):
+    pass

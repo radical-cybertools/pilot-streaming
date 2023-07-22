@@ -1,22 +1,14 @@
 #!/usr/bin/env python
 
-from bigjob import logger
 import os
 import uuid
 import time
 import traceback
 import sys
 import subprocess
-import saga
 import datetime
 
-class State:
-    UNKNOWN="unknown"
-    PENDING="pending"
-    RUNNING="running"
-    FAILED="failed"
-    DONE="done"
-
+from pilot.job.state import State
 
 
 class Service(object):
@@ -57,9 +49,10 @@ class Job(object):
     def __init__(self, job_description, resource_url, pilot_compute_description):
 
         self.job_description = job_description
-        logger.debug("URL: " + str(resource_url) + " Type: " + str(type(resource_url)))
-        self.resource_url = saga.Url(str(resource_url))
-        self.pilot_compute_description = pilot_compute_description
+        print("URL: " + str(resource_url) + " Type: " + str(type(resource_url)))
+        self.resource_url = str(resource_url)
+        if "pilot_compute_description" in job_description:
+            self.pilot_compute_description = job_description["pilot_compute_description"]
 
         self.id="pilot-streaming-ec2" + str(uuid.uuid1())
         self.subprocess_handle=None
@@ -83,15 +76,15 @@ class Job(object):
                 #args.append(self.job_description.executable)
                 #args.extend(self.job_description.arguments)
                 args.extend(["python", "-m", "bigjob.bigjob_agent"])
-                args.extend(self.job_description.arguments)
-                logger.debug("Execute: " + str(args))
+                args.extend(self.job_description["arguments"])
+                print("Execute: " + str(args))
                 self.subprocess_handle=subprocess.Popen(args=args,
                                                         stdout=self.job_output,
                                                         stderr=self.job_error,
                                                         cwd=working_directory,
                                                         shell=False)
                 if self.subprocess_handle.poll() != None and self.subprocess_handle.poll()!=0:
-                    logger.warning("Submission failed.")
+                    print("Submission failed.")
                     trials = trials + 1
                     time.sleep(30)
                     continue
@@ -99,14 +92,14 @@ class Job(object):
                     break
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                logger.warning("Submission failed: " + str(exc_value))
+                print("Submission failed: " + str(exc_value))
                 #self.__print_traceback()
                 trials = trials + 1
                 time.sleep(3)
                 if trials == TRIAL_MAX:
                     raise Exception("Submission of agent failed.")
 
-        logger.debug("Job State : %s" % (self.get_state()))
+        print("Job State : %s" % (self.get_state()))
 
 
 
@@ -128,7 +121,7 @@ class Job(object):
                 elif rc==0:
                     result = State.DONE
         except:
-            logger.warning("Instance not reachable/active yet...")
+            print("Instance not reachable/active yet...")
         return result
 
 

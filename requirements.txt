@@ -1,7 +1,4 @@
-keystoneauth1~=4.3.0
-boto3~=1.16.41
-distributed~=2022.12.1
+distributed
+dask
 hostlist~=1.4.4
-pykafka~=2.8.0
-pyspark~=3.2.1
 setuptools~=51.0.0

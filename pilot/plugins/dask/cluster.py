@@ -23,9 +23,8 @@ logging.getLogger("distributed.utils").setLevel(logging.CRITICAL)
 
 # Resource Managers supported by Dask Pilot-Streaming Plugin
 import pilot.job.slurm
-import pilot.job.ec2
 import pilot.job.ssh
-import pilot.job.pilot_os
+import pilot.job.fork
 
 from urllib.parse import urlparse
 
@@ -71,11 +70,13 @@ class Manager():
             if url_schema.startswith("slurm"):
                 js = pilot.job.slurm.Service(resource_url)
             elif url_schema.startswith("ec2"):
-                js = pilot.job.ec2.Service(resource_url)
+                js = pilot.job.ec2.SSHService(resource_url)
             elif url_schema.startswith("os"):
-                js = pilot.job.os.Service(resource_url)
+                js = pilot.job.os.SSHService(resource_url)
             elif url_schema.startswith("ssh"):
-                js = pilot.job.ssh.Service(resource_url)
+                js = pilot.job.ssh.SSHService(resource_url)
+            elif url_schema.startswith("fork"):
+                js = pilot.job.local_subprocess.SSHService(resource_url)
             else:
                 print("Unsupported URL Schema: %s " % resource_url)
                 return

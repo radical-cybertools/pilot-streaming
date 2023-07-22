@@ -12,7 +12,7 @@ import pennylane as qml
 from timeit import default_timer as timer
 
 
-RESOURCE_URL_HPC="slurm://localhost"
+RESOURCE_URL_HPC="ssh://localhost"
 # RESOURCE_URL_HPC="ssh://localhost"
 WORKING_DIRECTORY=os.path.join(os.environ["HOME"], "work")
 
