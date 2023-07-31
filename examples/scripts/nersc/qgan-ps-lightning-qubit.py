@@ -12,8 +12,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
-from dask import delayed
 from torch.utils.data import Dataset
+import socket
 
 import pilot.streaming
 
@@ -25,17 +25,11 @@ pilot_compute_description_dask = {
     "working_directory": os.path.join(os.path.expanduser("~"), "work"),
     "number_cores": 48,
     "queue": "normal",
-    "walltime": 5,
+    "walltime": 10,
     "type": "dask",
     "project": "m4408",
     "scheduler_script_commands": ["#SBATCH --constraint=gpu"]
 }
-
-# Set the random seed for reproducibility
-seed = 42
-torch.manual_seed(seed)
-np.random.seed(seed)
-random.seed(seed)
 
 
 class DigitsDataset(Dataset):
@@ -75,6 +69,12 @@ class DigitsDataset(Dataset):
         # Return image and label
         return image, 0
 
+
+# Set the random seed for reproducibility
+seed = 42
+torch.manual_seed(seed)
+np.random.seed(seed)
+random.seed(seed)
 
 image_size = 8  # Height / width of the square images
 batch_size = 1
@@ -121,49 +121,13 @@ class Discriminator(nn.Module):
 
 
 # Quantum variables
-n_qubits = 25  # Total number of qubits / N
-n_a_qubits = 21  # Number of ancillary qubits / N_A
+n_qubits = 5  # Total number of qubits / N
+n_a_qubits = 1  # Number of ancillary qubits / N_A
 q_depth = 6  # Depth of the parameterised quantum circuit / D
 n_generators = 4  # Number of subgenerators for the patch method / N_G
 
-# Quantum simulator
-dev = qml.device("lightning.gpu", wires=n_qubits)
 # Enable CUDA device if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-@qml.qnode(dev, interface="torch", diff_method="parameter-shift")
-def quantum_circuit(noise, weights):
-    weights = weights.reshape(q_depth, n_qubits)
-
-    # Initialise latent vectors
-    for i in range(n_qubits):
-        qml.RY(noise[i], wires=i)
-
-    # Repeated layer
-    for i in range(q_depth):
-        # Parameterised layer
-        for y in range(n_qubits):
-            qml.RY(weights[i][y], wires=y)
-
-        # Control Z gates
-        for y in range(n_qubits - 1):
-            qml.CZ(wires=[y, y + 1])
-
-    return qml.probs(wires=list(range(n_qubits)))
-
-
-# For further info on how the non-linear transform is implemented in Pennylane
-# https://discuss.pennylane.ai/t/ancillary-subsystem-measurement-then-trace-out/1532
-def partial_measure(noise, weights):
-    # Non-linear Transform
-    probs = quantum_circuit(noise, weights)
-    probsgiven0 = probs[: (2 ** (n_qubits - n_a_qubits))]
-    probsgiven0 /= torch.sum(probs)
-
-    # Post-Processing
-    probsgiven = probsgiven0 / torch.max(probsgiven0)
-    return probsgiven
 
 
 class PatchQuantumGenerator(nn.Module):
@@ -208,7 +172,44 @@ class PatchQuantumGenerator(nn.Module):
         return images
 
 
-@delayed
+# For further info on how the non-linear transform is implemented in Pennylane
+# https://discuss.pennylane.ai/t/ancillary-subsystem-measurement-then-trace-out/1532
+def partial_measure(noise, weights):
+    # Non-linear Transform
+    probs = quantum_circuit(noise, weights)
+    probsgiven0 = probs[: (2 ** (n_qubits - n_a_qubits))]
+    probsgiven0 /= torch.sum(probs)
+
+    # Post-Processing
+    probsgiven = probsgiven0 / torch.max(probsgiven0)
+    return probsgiven
+
+
+# Quantum simulator
+dev = qml.device("lightning.qubit", wires=n_qubits)
+
+
+@qml.qnode(dev, interface="torch", diff_method="parameter-shift")
+def quantum_circuit(noise, weights):
+    weights = weights.reshape(q_depth, n_qubits)
+
+    # Initialise latent vectors
+    for i in range(n_qubits):
+        qml.RY(noise[i], wires=i)
+
+    # Repeated layer
+    for i in range(q_depth):
+        # Parameterised layer
+        for y in range(n_qubits):
+            qml.RY(weights[i][y], wires=y)
+
+        # Control Z gates
+        for y in range(n_qubits - 1):
+            qml.CZ(wires=[y, y + 1])
+
+    return qml.probs(wires=list(range(n_qubits)))
+
+
 def run_training():
     lrG = 0.3  # Learning rate for the generator
     lrD = 0.01  # Learning rate for the discriminator
@@ -301,5 +302,10 @@ if __name__ == "__main__":
 
     dask_client = distributed.Client(dask_pilot.get_details()['master_url'])
     dask_client.scheduler_info()
+    print(dask_client.gather(dask_client.map(lambda a: a * a, range(10))))
+    print(dask_client.gather(dask_client.map(lambda a: socket.gethostname(), range(10))))
 
-    print(dask_client.gather(run_training()))
+
+    training_future = dask_client.compute(run_training())
+    dask_client.gather(training_future)
+
