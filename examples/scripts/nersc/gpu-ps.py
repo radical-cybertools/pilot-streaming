@@ -1,18 +1,13 @@
-import os, sys
-sys.path.insert(0, os.path.abspath('../..'))
-import distributed
-import json
-import pilot.streaming
-import getpass
+import os
 import socket
-import logging
-sys.modules['pilot.streaming']
+
+import distributed
 import pennylane as qml
-from timeit import default_timer as timer
 
+import pilot.streaming
 
-RESOURCE_URL_HPC="slurm://localhost"
-WORKING_DIRECTORY=os.path.join(os.environ["HOME"], "work")
+RESOURCE_URL_HPC = "slurm://localhost"
+WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
 pilot_compute_description_dask = {
     "resource": RESOURCE_URL_HPC,
@@ -20,17 +15,15 @@ pilot_compute_description_dask = {
     "number_cores": 48,
     "queue": "normal",
     "walltime": 5,
-    "type":"dask",
+    "type": "dask",
     "project": "m4408",
-    "scheduler_script_commands": ["#SBATCH --constraint=cpu"]
+    "scheduler_script_commands": ["#SBATCH --constraint=gpu"]
 }
 
 
 def run_circuit():
     wires = 4
     layers = 1
-    num_runs = 50
-    GPUs = 1
 
     dev = qml.device('default.qubit', wires=wires, shots=None)
 
@@ -45,17 +38,17 @@ def run_circuit():
     return val
 
 
-if __name__== "__main__":
+if __name__ == "__main__":
     dask_pilot = pilot.streaming.PilotComputeService.create_pilot(pilot_compute_description_dask)
     print("waiting for dask pilot to start")
     dask_pilot.wait()
     print("waiting done for dask pilot to start")
     print(dask_pilot.get_details())
 
-    dask_client  = distributed.Client(dask_pilot.get_details()['master_url'])
+    dask_client = distributed.Client(dask_pilot.get_details()['master_url'])
     dask_client.scheduler_info()
 
-    print(dask_client.gather(dask_client.map(lambda a: a*a, range(10))))
+    print(dask_client.gather(dask_client.map(lambda a: a * a, range(10))))
     print(dask_client.gather(dask_client.map(lambda a: socket.gethostname(), range(10))))
     print(dask_client.gather(dask_client.map(lambda a: run_circuit(), range(10))))
     dask_pilot.cancel()
