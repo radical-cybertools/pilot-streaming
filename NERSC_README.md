@@ -18,10 +18,16 @@ NOTE: Need to do this everytime nersc key is refreshed(i.e every 24hrs)
 ~/.ssh/nersc to ~/.ssh/mykey
 ```
 
+Nersc Python setup - create Python environment in /global/common/software/m4408 for faster access.
+```
+conda create --prefix /global/common/software/m4408/$USER python=3
+source activate /global/common/software/m4408/$USER
+```
+
 5. Python version setup. Add these two statements in ~/.bashrc
 ```
 module load python
-conda activate myenv
+source activate /global/common/software/m4408/$USER
 ```
 
 6. install pilot-streaming from [branch](https://github.com/radical-cybertools/pilot-streaming/tree/support-perl). Once verified we can merge these changes.
@@ -30,6 +36,7 @@ conda activate myenv
 git clone -b support-perl https://github.com/radical-cybertools/pilot-streaming.git
 cd pilot-streaming
 python setup.py install
+pip install -r requirements.txt
 ```
 
 7. Execute python ps-dask.py on perlmutter login node.

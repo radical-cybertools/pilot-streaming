@@ -6,12 +6,12 @@ import pennylane as qml
 
 import pilot.streaming
 
-RESOURCE_URL_HPC = "slurm://localhost"
-WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
+RESOURCE_URL_HPC = "ssh://pmantha@localhost"
+WORKING_DIRECTORY = os.path.join(os.environ["PSCRATCH"], "work")
 
 pilot_compute_description_dask = {
     "resource": RESOURCE_URL_HPC,
-    "working_directory": os.path.join(os.path.expanduser("~"), "work"),
+    "working_directory": WORKING_DIRECTORY,
     "number_cores": 48,
     "queue": "normal",
     "walltime": 5,
@@ -19,19 +19,18 @@ pilot_compute_description_dask = {
     "project": "m4408",
     "scheduler_script_commands": ["#SBATCH --constraint=gpu"]
 }
+wires = 4
+layers = 1
+dev = qml.device('lightning.qubit', wires=wires, shots=None)
+
+
+@qml.qnode(dev)
+def circuit(parameters):
+    qml.StronglyEntanglingLayers(weights=parameters, wires=range(wires))
+    return [qml.expval(qml.PauliZ(i)) for i in range(wires)]
 
 
 def run_circuit():
-    wires = 4
-    layers = 1
-
-    dev = qml.device('default.qubit', wires=wires, shots=None)
-
-    @qml.qnode(dev)
-    def circuit(parameters):
-        qml.StronglyEntanglingLayers(weights=parameters, wires=range(wires))
-        return [qml.expval(qml.PauliZ(i)) for i in range(wires)]
-
     shape = qml.StronglyEntanglingLayers.shape(n_layers=layers, n_wires=wires)
     weights = qml.numpy.random.random(size=shape)
     val = circuit(weights)

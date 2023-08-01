@@ -7,11 +7,11 @@ import pennylane as qml
 import pilot.streaming
 
 RESOURCE_URL_HPC = "slurm://localhost"
-WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
+WORKING_DIRECTORY = os.path.join(os.environ["PSCRATCH"], "work")
 
 pilot_compute_description_dask = {
     "resource": RESOURCE_URL_HPC,
-    "working_directory": os.path.join(os.path.expanduser("~"), "work"),
+    "working_directory": WORKING_DIRECTORY,
     "number_cores": 48,
     "queue": "normal",
     "walltime": 5,
