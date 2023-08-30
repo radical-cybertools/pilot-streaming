@@ -73,6 +73,7 @@ class Job(object):
         self.job_timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         self.job_output = open("pilotstreaming_agent_ssh_output_" + self.job_timestamp + ".log", "w")
         self.job_error = open("pilotstreaming_agent_ssh_error_" + self.job_timestamp + ".log", "w")
+        self.ssh_process = None
 
     def run(self):
         """ Start VMs"""
@@ -154,7 +155,7 @@ class Job(object):
             logger.warning("Instance not reachable/active yet...")
 
     def cancel(self):
-        if self.subprocess_handle != None: self.subprocess_handle.terminate()
+        if self.ssh_process != None: self.ssh_process.terminate()
         self.job_output.close()
         self.job_error.close()
 

@@ -9,6 +9,8 @@ import os
 import time
 import uuid
 import pyspark
+from pyspark import SQLContext
+
 import pilot.plugins.dask.cluster
 import pilot.plugins.kafka.cluster
 import pilot.plugins.kinesis.cluster

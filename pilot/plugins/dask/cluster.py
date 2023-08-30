@@ -5,18 +5,16 @@ Supports launch via SLURM, EC2/SSH, SSH
 
 """
 
+import getpass
+import logging
 import os
 import sys
-import logging
 import time
-import getpass
-import numpy as np
 from datetime import datetime
-from pilot.util.ssh_utils import install_pilot_streaming, execute_ssh_command_shell_as_daemon
 
 import distributed
+import numpy as np
 from dask.distributed import Client, SSHCluster
-import subprocess
 
 logging.getLogger("tornado.application").setLevel(logging.CRITICAL)
 logging.getLogger("distributed.utils").setLevel(logging.CRITICAL)
@@ -40,6 +38,7 @@ class Manager():
         self.myjob = None  # SAGA Job
         self.local_id = None  # Local Resource Manager ID (e.g. SLURM id)
         self.dask_process = None
+        self.dask_cluster = None
         self.job_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.job_output = open(self.job_timestamp + "_dask_pilotstreaming_agent_output.log", "w")
         self.job_error = open(self.job_timestamp + "_dask_pilotstreaming_agent_error.log", "w")
@@ -49,7 +48,7 @@ class Manager():
         except:
             pass
 
-    # Dask 1.20
+    # Dask 2023.8.1
     def submit_job(self,
                    resource_url="fork://localhost",
                    number_of_nodes=1,
@@ -89,15 +88,15 @@ class Manager():
                 if "dask_cores" in pilot_compute_description:
                     arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ",
                                  str(pilot_compute_description["dask_cores"])]
-                
+
                 if extend_job_id != None:
                     arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", "-j", extend_job_id]
                 logging.debug("Run %s Args: %s" % (executable, str(arguments)))
             else:
                 # EC2 / OS / SSH plugin
                 # Boostrap of dask is done after ssh machine is initialized
-                executable = "/bin/hostname" # not required - just starting vms
-                arguments = "" # not required - just starting vms
+                executable = "/bin/hostname"  # not required - just starting vms
+                arguments = ""  # not required - just starting vms
             jd = {
                 "executable": executable,
                 "arguments": arguments,
@@ -112,29 +111,26 @@ class Manager():
                 "walltime": walltime,
                 "pilot_compute_description": pilot_compute_description
             }
-
             self.myjob = js.create_job(jd)
             self.myjob.run()
             self.local_id = self.myjob.get_id()
             print("**** Job: " + str(self.local_id) + " State: %s" % (self.myjob.get_state()))
-            if not url_schema.startswith("slurm"):  # Dask is started in SLURM script. This is for ec2, openstack and ssh adaptors
-                self.run_dask() # run dask on cloud platforms
+            if not url_schema.startswith(
+                    "slurm"):  # Dask is started in SLURM script. This is for ec2, openstack and ssh adaptors
+                self.run_dask()  # run dask on cloud platforms
 
             return self.myjob
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))
             raise ex
 
-
-
-
     def run_dask(self):
         ## Run Dask
         # command = "dask-ssh --remote-dask-worker distributed.cli.dask_worker %s"%(self.host)
         self.nodes = self.myjob.get_nodes_list()
         resource_url = self.pilot_compute_description["resource"]
-        #self.host = self.myjob.get_nodes_list_public()[0] #first node is master host - requires public ip to connect to
-        self.host = self.nodes[0] #first node is master host - requires public ip to connect to
+        # self.host = self.myjob.get_nodes_list_public()[0] #first node is master host - requires public ip to connect to
+        self.host = self.nodes[0]  # first node is master host - requires public ip to connect to
         self.user = None
         print("Check for user name")
         if urlparse(resource_url).username is not None:
@@ -147,7 +143,6 @@ class Manager():
             self.user = getpass.getuser()
             self.pilot_compute_description["os_ssh_username"] = self.user
 
-
         print("Check for user name*****", self.user)
 
         print("Check for ssh key")
@@ -156,31 +151,32 @@ class Manager():
             if "os_ssh_keyfile" in self.pilot_compute_description["os_ssh_keyfile"]:
                 self.ssh_key = self.pilot_compute_description["os_ssh_keyfile"]
         except:
-            #set to default key for further processing
-            self.pilot_compute_description["os_ssh_keyfile"] = self.ssh_key 
+            # set to default key for further processing
+            self.pilot_compute_description["os_ssh_keyfile"] = self.ssh_key
 
-        
-        worker_options={"nthreads": 1, "n_workers": 1}
+        worker_options = {"nthreads": 1, "n_workers": 1, "memory_limit": '3GB'}
         try:
             if "cores_per_node" in self.pilot_compute_description:
-                dask_command = 'dask-ssh --ssh-private-key {} --nthreads {} {}'.format(self.ssh_key, self.user, self.pilot_compute_description["cores_per_node"], " ".join(self.nodes))
+                # dask_command = 'dask-ssh --ssh-private-key {} --nthreads {} {}'.format(self.ssh_key, self.user, self.pilot_compute_description["cores_per_node"], " ".join(self.nodes))
+                worker_options = {"nthreads": 1,
+                                  "n_workers": self.pilot_compute_description["cores_per_node"],
+                                  "memory_limit": '3GB'}
         except:
             pass
-        
+
         hosts = list(np.append(self.nodes[0], self.nodes))
         print("Connecting to hosts", hosts)
-        cluster = SSHCluster(hosts,
-                            connect_options={"known_hosts": None,  "username": self.user},
-                            worker_options=worker_options,
-                            scheduler_options={"port": 0, "dashboard_address": ":8797"})
-        client = Client(cluster)
+        self.dask_cluster = SSHCluster(hosts,
+                             connect_options={"known_hosts": None, "username": self.user},
+                             worker_options=worker_options,
+                             scheduler_options={"port": 0, "dashboard_address": ":8797"})
+        client = Client(self.dask_cluster)
         print(client.scheduler_info())
         self.host = client.scheduler_info()["address"]
 
         if self.host is not None:
             with open(os.path.join(self.working_directory, "dask_scheduler"), "w") as master_file:
                 master_file.write(self.host)
-
 
     def wait(self):
         while True:
@@ -208,7 +204,8 @@ class Manager():
     def cancel(self):
         c = self.get_context()
         c.run_on_scheduler(lambda dask_scheduler=None: dask_scheduler.close() & sys.exit(0))
-        self.myjob.cancel()
+        self.dask_cluster.close()
+        #self.myjob.cancel()
 
     def submit_compute_unit(function_name):
         pass
