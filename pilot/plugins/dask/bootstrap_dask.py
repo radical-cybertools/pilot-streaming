@@ -52,6 +52,7 @@ class DaskBootstrap():
         self.cores_per_node=cores_per_node
         self.ssh_key = "~/.ssh/mykey" #perlmutter - TODO: Should make it as input parameter from the pilot job description.
         self.dask_ssh = "dask-ssh --ssh-private-key %s" % self.ssh_key
+        #self.dask_ssh = "dask-ssh"
         self.dask_memory_limit=92e9    #Stampede
         #self.dask_memory_limit=110e9 #Wrangler
         try:

@@ -12,11 +12,12 @@ WORKING_DIRECTORY = os.path.join(os.environ["PSCRATCH"], "work")
 pilot_compute_description_dask = {
     "resource": RESOURCE_URL_HPC,
     "working_directory": WORKING_DIRECTORY,
-    "number_cores": 48,
+    "number_cores": 1,
     "queue": "normal",
     "walltime": 5,
     "type": "dask",
     "project": "m4408",
+    "os_ssh_keyfile": "~/.ssh/nersc",
     "scheduler_script_commands": ["#SBATCH --constraint=cpu"]
 }
 
