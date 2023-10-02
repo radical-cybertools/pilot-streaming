@@ -51,9 +51,9 @@ class DaskBootstrap():
         self.extension_job_id = extension_job_id
         self.cores_per_node=cores_per_node
         self.ssh_key = "~/.ssh/mykey" #perlmutter - TODO: Should make it as input parameter from the pilot job description.
-        self.dask_ssh = "dask-ssh --ssh-private-key %s" % self.ssh_key
+        self.dask_ssh = "dask ssh --ssh-private-key %s" % self.ssh_key
         #self.dask_ssh = "dask-ssh"
-        self.dask_memory_limit=92e9    #Stampede
+        self.dask_memory_limit="auto" #92e9    #Stampede
         #self.dask_memory_limit=110e9 #Wrangler
         try:
             os.makedirs(self.job_conf_dir)
@@ -155,18 +155,17 @@ class DaskBootstrap():
         time.sleep(5)
         command = "%s --remote-dask-worker distributed.cli.dask_worker %s"%(self.dask_ssh, " ".join(self.nodes))
         if self.cores_per_node is not None and self.dask_memory_limit is not None:
-                command = "%s --nthreads %s --memory-limit %d --remote-dask-worker distributed.cli.dask_worker %s"%(self.dask_ssh, str(self.cores_per_node), self.dask_memory_limit, " ".join(self.nodes))
+                command = "%s --nworkers %s --nthreads 1 --memory-limit %s --remote-dask-worker distributed.cli.dask_worker --remote-python %s %s"%(self.dask_ssh, str(self.cores_per_node), self.dask_memory_limit, sys.executable," ".join(self.nodes))
         logging.debug("Start Dask Cluster: " + command)
         #status = subprocess.call(command, shell=True)
         self.dask_process = subprocess.Popen(command, shell=True)
         print("Dask started.")
-
-
+        
     def check_dask(self):
         try:
             import distributed
             client = distributed.Client(self.nodes[0].strip()+":8786")
-            print("Found %d workers: %s" % (len(list(brokers.keys())), str(brokers)))
+            # print("Found %d workers: %s" % (len(list(brokers.keys())), str(brokers)))
             return client.scheduler_info()
         except:
             pass
@@ -181,7 +180,7 @@ class DaskBootstrap():
         self.configure_dask()
         self.start_dask()
         
-    ##################################################################################
+    ############################################################################
     # Extension
 
     def extend(self):

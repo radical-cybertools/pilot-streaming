@@ -73,10 +73,14 @@ class Job(object):
         logger.debug("Pilot-Streaming SLURM: Parsing job description: %s"%str(job_description))
         
         self.pilot_compute_description = {}
-        if 'queue' in job_description: 
+        if 'queue' in job_description or job_description['queue'] is not None or job_description['queue'] != "None": 
             self.pilot_compute_description['queue'] = job_description['queue']
-        
+
         logging.debug("Queue: %s"%self.pilot_compute_description['queue'])
+        
+        if 'qos' in job_description: 
+            self.pilot_compute_description['qos'] = job_description['qos']
+        
         
         if 'project' in job_description: 
             self.pilot_compute_description['project'] = job_description['project']
@@ -148,10 +152,13 @@ class Job(object):
                 tmp.write("\n")
                 if "reservation" in self.pilot_compute_description and self.pilot_compute_description["reservation"] is not None:
                     tmp.write("#SBATCH --reservation  %s\n"%str(self.pilot_compute_description["reservation"]))
-                tmp.write("\n")
+                    tmp.write("\n")
                 tmp.write("#SBATCH -o %s\n"%self.pilot_compute_description["output"])
                 tmp.write("#SBATCH -e %s\n"%self.pilot_compute_description["error"])
-                tmp.write("#SBATCH -p %s\n"%self.pilot_compute_description["queue"])
+                if "queue" in self.pilot_compute_description:
+                    tmp.write("#SBATCH -p %s\n"%self.pilot_compute_description["queue"])
+                if "qos" in self.pilot_compute_description:
+                    tmp.write("#SBATCH --qos %s\n"%self.pilot_compute_description["qos"])
                 for sc in self.pilot_compute_description["scheduler_script_commands"]:
                     tmp.write("%s\n" % sc)
                 tmp.write("cd %s\n"%self.pilot_compute_description["working_directory"])

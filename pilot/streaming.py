@@ -217,6 +217,10 @@ class PilotComputeService(object):
         if "queue" in pilotcompute_description:
             queue = pilotcompute_description["queue"]
 
+        qos = None
+        if "qos" in pilotcompute_description:
+            qos = pilotcompute_description["qos"]
+
         walltime = 10
         if "walltime" in pilotcompute_description:
             walltime = pilotcompute_description["walltime"]
@@ -284,7 +288,7 @@ class PilotComputeService(object):
         p = PilotCompute(batch_job, details, cluster_manager=manager)
         return p
 
-    ###############################################################################################
+    ############################################################################
 
     @classmethod
     def __connected_yarn_spark_cluster(self, pilotcompute_description):
