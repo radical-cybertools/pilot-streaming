@@ -15,8 +15,9 @@ import pilot.plugins.dask.cluster
 import pilot.plugins.kafka.cluster
 import pilot.plugins.kinesis.cluster
 import pilot.plugins.serverless.cluster
-import pilot.plugins.spark.bootstrap_spark
 import pilot.plugins.spark.cluster
+import pilot.plugins.spark.bootstrap_spark
+import pilot.plugins.ray.cluster
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -75,7 +76,8 @@ class PilotCompute(object):
         re-initialized.
     """
 
-    def __init__(self, saga_job=None, details=None, spark_context=None, spark_sql_context=None, cluster_manager=None):
+    def __init__(self, saga_job=None, details=None, 
+                 spark_context=None, spark_sql_context=None, cluster_manager=None):
         self.saga_job = saga_job
         self.details = details
         self.spark_context = spark_context
@@ -256,19 +258,28 @@ class PilotComputeService(object):
             raise PilotAPIException("Invalid Pilot Compute Description: invalid type: %s" % framework_type)
         elif framework_type == "spark":
             jobid = "spark-" + str(uuid.uuid1())
-            manager = pilot.plugins.spark.cluster.Manager(jobid, working_directory)
+            manager = pilot.plugins.spark.cluster.Manager(jobid, 
+                                                          working_directory)
         elif framework_type == "kafka":
             jobid = "kafka-" + str(uuid.uuid1())
-            manager = pilot.plugins.kafka.cluster.Manager(jobid, working_directory)
+            manager = pilot.plugins.kafka.cluster.Manager(jobid, 
+                                                          working_directory)
         elif framework_type == "dask":
             jobid = "dask-" + str(uuid.uuid1())
-            manager = pilot.plugins.dask.cluster.Manager(jobid, working_directory)
+            manager = pilot.plugins.dask.cluster.Manager(jobid, 
+                                                         working_directory)
         elif framework_type == "kinesis":
             jobid = "kinesis-" + str(uuid.uuid1())
-            manager = pilot.plugins.kinesis.cluster.Manager(jobid, working_directory)
+            manager = pilot.plugins.kinesis.cluster.Manager(jobid, 
+                                                            working_directory)
         elif framework_type == "lambda":
             jobid = "lambda-" + str(uuid.uuid1())
-            manager = pilot.plugins.serverless.cluster.Manager(jobid, working_directory)
+            manager = pilot.plugins.serverless.cluster.Manager(jobid, 
+                                                               working_directory)
+        elif framework_type == "ray":
+            jobid = "ray-" + str(uuid.uuid1())
+            manager = pilot.plugins.ray.cluster.Manager(jobid, 
+                                                        working_directory)
 
         batch_job = manager.submit_job(
             resource_url=resource_url,

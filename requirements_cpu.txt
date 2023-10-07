@@ -13,4 +13,5 @@ pandas~=2.0.1
 argparse~=1.4.0
 torch~=2.0.1
 torchvision~=0.15.2
+ray~=2.7.0
 pennylane-lightning

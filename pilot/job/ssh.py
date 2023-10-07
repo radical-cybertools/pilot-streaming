@@ -58,6 +58,15 @@ class Job(object):
         self.job_description = job_description
         self.pilot_compute_description = job_description
 
+        self.working_directory = os.getcwd()
+        if "working_directory" in self.job_description:
+            self.working_directory = self.job_description["working_directory"]
+            print("Working Directory: %s" % self.working_directory)
+            try:
+                os.makedirs(self.working_directory, exist_ok=True)
+            except:
+                pass
+
         # if pilot_compute_description == None:
         #     self.pilot_compute_description = job_description
         # else:
@@ -71,21 +80,16 @@ class Job(object):
         self.id = "pilot-streaming-ssh" + str(uuid.uuid1())
         self.job_id = self.id
         self.job_timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        self.job_output = open("pilotstreaming_agent_ssh_output_" + self.job_timestamp + ".log", "w")
-        self.job_error = open("pilotstreaming_agent_ssh_error_" + self.job_timestamp + ".log", "w")
+        self.job_output = open(
+                                os.path.join(self.working_directory,"pilotstreaming_agent_ssh_output_" + self.job_timestamp + ".log"), "w")
+        self.job_error = open(
+                              os.path.join(self.working_directory, "pilotstreaming_agent_ssh_error_" + self.job_timestamp + ".log"), "w")
         self.ssh_process = None
 
     def run(self):
-        """ Start VMs"""
+        """ run command via ssh on VM"""
         # Submit job
-        self.working_directory = os.getcwd()
-        if "working_directory" in self.job_description:
-            self.working_directory = self.job_description["working_directory"]
-            print("Working Directory: %s" % self.working_directory)
-            try:
-                os.makedirs(self.working_directory, exist_ok=True)
-            except:
-                pass
+   
 
         TRIAL_MAX = 3
         trials = 0
@@ -110,9 +114,17 @@ class Job(object):
         logger.debug("Job State : %s" % (self.get_state()))
         self.run_command()
 
+
     def check_vm_running(self):
+        """ check if VM is running"""
+        
         args = []
-        args.extend(["ssh", "-l", self.user, self.host, "/bin/date"])
+        if self.user is None or self.user =="" or self.user == "None":
+            args.extend(["ssh", self.host, "/bin/date"])            
+        else:
+            args.extend(["ssh", "-l", self.user, self.host, "/bin/date"])
+            
+        
         logger.debug("Execute: " + str(args))
         subprocess_handle = subprocess.Popen(args=args,
                                              stdout=self.job_output,
@@ -174,14 +186,16 @@ class Job(object):
 
     def run_command(self):
 
-        if self.user is not None:
-            command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"bash -ic '%s %s'\"" % \
+        if self.user is not None and self.user != "" and self.user != "None":
+            command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"cd %s && bash -ic '%s %s'\"" % \
                       (self.user, self.host,
+                      self.working_directory,
                        str(self.pilot_compute_description["executable"]),
                        " ".join(self.pilot_compute_description["arguments"]))
         else:
-            command = "ssh -o 'StrictHostKeyChecking=no'  %s -t \"bash -ic '%s %s'\"" % \
+            command = "ssh -o 'StrictHostKeyChecking=no'  %s -t \"cd %s && bash -ic '%s %s'\"" % \
                       (self.host,
+                       self.working_directory,
                        str(self.pilot_compute_description["executable"]),
                        " ".join(self.pilot_compute_description["arguments"]))
 
