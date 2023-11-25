@@ -35,6 +35,10 @@ class Manager():
         self.jobid = jobid
         #print("{}{}".format(self.jobid, working_directory))
         self.working_directory = os.path.join(working_directory, jobid)
+        # create working directory if not exists
+        if not os.path.exists(self.working_directory):
+            os.makedirs(self.working_directory)
+
         self.start_agent_working_directory = working_directory
         self.pilot_compute_description = None
         self.myjob = None  # SAGA Job
@@ -42,9 +46,12 @@ class Manager():
         self.ray_process = None
         self.ray_cluster = None
         self.job_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.job_output = open(self.job_timestamp + "_ray_pilotstreaming_agent_output.log", "w")
-        self.job_error = open(self.job_timestamp + "_ray_pilotstreaming_agent_error.log", "w")
+        self.job_output = open(os.path.join(self.working_directory, 
+                                            self.job_timestamp + "_ray_pilot_agent_output.log"), "w")
+        self.job_error = open(os.path.join(self.working_directory, 
+                                           self.job_timestamp + "_ray_pilot_agent_error.log"), "w")
 
+        self.ray_client = None # Ray Client
         try:
             os.makedirs(self.working_directory)
         except:
@@ -134,65 +141,7 @@ class Manager():
         except Exception as ex:
             print("An error occurred: %s" % (str(ex)))
             raise ex
-
-    # def run_ray(self):
-    #     ## Run Ray
-    #     self.nodes = self.myjob.get_nodes_list()
-    #     resource_url = self.pilot_compute_description["resource"]
-    #     # self.host = self.myjob.get_nodes_list_public()[0] #first node is master host - requires public ip to connect to
-    #     self.host = self.nodes[0]  # first node is master host - requires public ip to connect to
-    #     self.user = None
-    #     print("Check for user name")
-    #     if urlparse(resource_url).username is not None:
-    #         self.user = urlparse(resource_url).username
-    #         self.pilot_compute_description["os_ssh_username"] = self.user
-    #     elif "os_ssh_username" in self.pilot_compute_description:
-    #         self.user = self.pilot_compute_description["os_ssh_username"]
-    #     else:
-    #         self.user = getpass.getuser()
-    #         self.pilot_compute_description["os_ssh_username"] = self.user
-
-    #     print("Check for user name*****", self.user)
-
-    #     print("Check for ssh key")
-    #     self.ssh_key = "~/.ssh/mykey"
-    #     try:
-    #         if "os_ssh_keyfile" in self.pilot_compute_description["os_ssh_keyfile"]:
-    #             self.ssh_key = self.pilot_compute_description["os_ssh_keyfile"]
-    #     except:
-    #         # set to default key for further processing
-    #         self.pilot_compute_description["os_ssh_keyfile"] = self.ssh_key
-
-    #     worker_options = {"num_cpus": 1, "num_gpus": 0}
-    #     try:
-    #         if "cores_per_node" in self.pilot_compute_description:
-    #             worker_options = {"num_cpus": self.pilot_compute_description["cores_per_node"],
-    #                               "num_gpus": 0}
-    #     except:
-    #         pass
-
-    #     # create shell command to start ray head and worker nodes via ssh
-
-    #     job_id_work_dir = os.path.join(self.working_directory)
-    #     self.executable = "mkdir {}; cd {}; python".format(job_id_work_dir, job_id_work_dir)
-    #     self.arguments = ["-m ", "pilot.plugins.ray.bootstrap_ray"]
-    #     command = "{} {}".format(self.executable, "".join(self.arguments))
-    #     logging.debug("Command {} ".format(command))
-
-    #     result=execute_ssh_command(host=self.host, user=self.user, command=command, arguments=None,
-    #                         working_directory=self.working_directory,
-    #                         job_output=self.job_output, job_error=self.job_error,
-    #                         keyfile=self.pilot_compute_description["os_ssh_keyfile"])
-
-    #     hosts = list(np.append(self.nodes[0], self.nodes))
-    #     print("Connecting to hosts", hosts)
-        
-    #     print(ray.nodes())
-    #     self.host = ray.nodes()[0]["NodeManagerAddress"]
-
-    #     if self.host is not None:
-    #         with open(os.path.join(self.working_directory, "ray_scheduler"), "w") as master_file:
-    #             master_file.write(self.host)
+   
 
     def wait(self):
         while True:
@@ -205,8 +154,8 @@ class Manager():
                         try:
                             print("init Ray client")
                             c = self.get_context()
-                            print(str(c.address_info))
-                            return
+                            #print(str(c.address_info))
+                            return c
                         except IOError as e:
                             print("Ray Client Connect Attempt {} failed".format(i))
                             time.sleep(5)
@@ -215,9 +164,9 @@ class Manager():
             time.sleep(6)
 
     def cancel(self):
-        c = self.get_context()
-        ray.client().disconnect()
-        ray.shutdown()
+        # c = self.get_context()
+        # ray.client().disconnect()
+        # ray.shutdown()
         self.myjob.cancel()
 
     def submit_compute_unit(function_name):
@@ -226,14 +175,30 @@ class Manager():
     def get_context(self, configuration=None) -> object:
         """Returns Ray Client for Cluster"""
         details = self.get_config_data()
-        if details is not None:
-            print("Connect to Ray: %s" % details["master_url"])
-            
-            # create a ray client for cluster url            
-            client = ray.init(address=details["master_url"],
-                              ignore_reinit_error=True)
-            return client
-        return None
+        if details is not None and ray.is_initialized() == False:
+            print("Connect to %s"%details["master_url"])
+            #self.ray_client = ray.util.connect(details["master_url"], 
+            #                                   allow_multiple=True)
+            self.ray_client = ray.init(
+                address="ray://%s"%details["master_url"], 
+                allow_multiple=True)
+            # try:
+            #     print("Connect to Ray DIRECT: %s" % details["master_url"])            
+            #     # create a ray client for cluster url            
+            #     self.ray_client  = ray.init(address=details["master_url"],
+            #                   ignore_reinit_error=True,
+            #                   timeout=10) # RayContext
+            #     return self.ray_client 
+            # except Exception as ex:
+            #     client_address = details["master_url"].replace("6379", "10001")
+            #     print("Connect to Ray Client: %s" % client_address)            
+            #     # create a ray client for cluster url            
+            #     self.ray_client  = ray.init(address="ray://" + 
+            #                       client_address,
+            #                   ignore_reinit_error=True,
+            #                   allow_multiple=True)  # ClientContext
+            #    return self.ray_client 
+        return self.ray_client 
 
     def get_jobid(self):
         return self.jobid
@@ -260,7 +225,7 @@ class Manager():
         else:
             master_host = master.split(":")[0]
             details = {
-                "master_url": "%s:6379" % master_host,
+                "master_url": "%s:10001" % master_host,
                 "web_ui_url": "http://%s:8265" % master_host,
             }
         return details

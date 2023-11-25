@@ -70,7 +70,7 @@ class Job(object):
         o = urlparse(self.resource_url)
         self.target_host = o.netloc
         
-        logger.debug("Pilot-Streaming SLURM: Parsing job description: %s"%str(job_description))
+        logger.debug("Pilot-Job SLURM: Parsing job description: %s"%str(job_description))
         
         self.pilot_compute_description = {}
         if 'queue' in job_description or job_description['queue'] is not None or job_description['queue'] != "None": 
@@ -92,11 +92,16 @@ class Job(object):
         if 'working_directory' in job_description: 
             self.pilot_compute_description['working_directory'] = job_description['working_directory']
         
-        self.pilot_compute_description['output'] = os.path.join(self.pilot_compute_description['working_directory'], "ps-%s.stdout"%self.job_uuid_short)
+        self.pilot_compute_description['output'] = os.path.join(
+            self.pilot_compute_description['working_directory'], 
+            "ps-%s.stdout"%self.job_uuid_short)
+        
         if 'output' in job_description: 
             self.pilot_compute_description['output'] = job_description['output']
         
-        self.pilot_compute_description['error'] = os.path.join(self.pilot_compute_description['working_directory'], "ps-%s.stderr"%self.job_uuid_short)
+        if 'error' not in job_description:
+            self.pilot_compute_description['error'] = os.path.join(self.pilot_compute_description['working_directory'], "ps-%s.stderr"%self.job_uuid_short)
+        
         if 'error' in job_description: 
             self.pilot_compute_description['error'] = job_description['error']
         
@@ -148,21 +153,27 @@ class Job(object):
                 tmp.write("#SBATCH -J %s\n"%self.job_uuid_short)
                 tmp.write("#SBATCH -t %s\n"%str(self.pilot_compute_description["walltime_slurm"]))
                 tmp.write("\n")
-                tmp.write("#SBATCH -A %s\n"%str(self.pilot_compute_description["project"]))
+                
+                if "project" in self.pilot_compute_description and self.pilot_compute_description["project"] != "None" and self.pilot_compute_description["project"] != None:
+                    tmp.write("#SBATCH -A %s\n"%str(self.pilot_compute_description["project"]))
                 tmp.write("\n")
+                
                 if "reservation" in self.pilot_compute_description and self.pilot_compute_description["reservation"] is not None:
                     tmp.write("#SBATCH --reservation  %s\n"%str(self.pilot_compute_description["reservation"]))
                     tmp.write("\n")
                 tmp.write("#SBATCH -o %s\n"%self.pilot_compute_description["output"])
                 tmp.write("#SBATCH -e %s\n"%self.pilot_compute_description["error"])
-                if "queue" in self.pilot_compute_description:
+                if "queue" in self.pilot_compute_description and self.pilot_compute_description["queue"] != "None" and self.pilot_compute_description["queue"] != None:
                     tmp.write("#SBATCH -p %s\n"%self.pilot_compute_description["queue"])
                 if "qos" in self.pilot_compute_description:
                     tmp.write("#SBATCH --qos %s\n"%self.pilot_compute_description["qos"])
+                
                 for sc in self.pilot_compute_description["scheduler_script_commands"]:
                     tmp.write("%s\n" % sc)
+                
                 tmp.write("cd %s\n"%self.pilot_compute_description["working_directory"])
                 tmp.write("%s\n"%self.command)
+                
                 tmp.flush()
                 start_command = ("scp %s %s:~/"%(tmpf_name, target_host))
                 subprocess.check_call(start_command, shell=True)
@@ -177,7 +188,7 @@ class Job(object):
                                          stderr=subprocess.STDOUT,
                                          shell=True).decode("utf-8")
         except Exception as err:
-            logger.debug("Pilot-Streaming SLURM job submission failed: %s" % err)
+            logger.debug("Pilot SLURM job submission failed: %s" % err)
             raise err
 
         start_command = ("ssh %s "%target_host)
@@ -186,7 +197,7 @@ class Job(object):
         status = subprocess.call(start_command, shell=True)
         self.job_id=self.get_local_job_id(outstr)
         if self.job_id == None or self.job_id == "":
-            raise Exception("Pilot-Streaming Submission via slurm+ssh:// failed")
+            raise Exception("Pilot Submission via slurm+ssh:// failed")
         
     def get_id(self):
         return self.job_id

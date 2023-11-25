@@ -4,7 +4,7 @@ distributed~=2023.6.0
 python-hostlist
 pykafka~=2.8.0
 pyspark~=3.4.0
-setuptools~=66.0.0
+setuptools>=66.0.0
 numpy~=1.23.5
 dask~=2023.6.0
 pennylane~=0.30.0

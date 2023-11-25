@@ -141,11 +141,11 @@ class RayBootstrap():
     
     def get_nodelist_from_resourcemanager(self):
         if (os.environ.get("PBS_NODEFILE") != None and os.environ.get("PBS_NODEFILE") != ""):
-            nodes = RayBootstrap.get_pbs_allocated_nodes()
+            nodes = self.get_pbs_allocated_nodes()
         elif (os.environ.get("SLURM_NODELIST") != None):
-            nodes = RayBootstrap.get_slurm_allocated_nodes()
+            nodes = self.get_slurm_allocated_nodes()
         elif (os.environ.get("PE_HOSTFILE") != None):
-            nodes = RayBootstrap.get_sge_allocated_nodes()        
+            nodes = self.get_sge_allocated_nodes()        
         else:
             if self.ip_head_node==None:
                 hostname = socket.gethostname()
@@ -178,7 +178,7 @@ class RayBootstrap():
         #                       dashboard_host=self.nodes[0], num_cpus=0, num_gpus=0)
         
         self.ray_headnode_address = self.nodes[0]
-        cmd = "conda activate pilot-quantum; ray stop; export RAY_ENABLE_WINDOWS_OR_OSX_CLUSTER=1; ray start --head   --dashboard-host=%s --num-cpus=0 --num-gpus=0"%(self.ray_headnode_address)
+        cmd = "conda activate pilot-quantum; ray stop; export RAY_ENABLE_WINDOWS_OR_OSX_CLUSTER=1; ray start --head   --dashboard-host=%s --num-cpus=0 --num-gpus=0 --ray-client-server-port=10001"%(self.ray_headnode_address)
         print("Start Ray Head Node with command: %s"%(cmd))
         result=execute_ssh_command(host=self.ray_headnode_address, 
                                    user=getpass.getuser(),              command=cmd, arguments=None,
