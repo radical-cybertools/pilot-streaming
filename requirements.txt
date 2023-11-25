@@ -4,4 +4,4 @@ distributed~=2022.12.1
 hostlist~=1.4.4
 pykafka~=2.8.0
 pyspark~=3.2.1
-setuptools~=51.0.0
+setuptools~=65.5.1
