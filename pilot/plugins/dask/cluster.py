@@ -42,6 +42,7 @@ class Manager():
         self.job_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.job_output = open(self.job_timestamp + "_dask_pilotstreaming_agent_output.log", "w")
         self.job_error = open(self.job_timestamp + "_dask_pilotstreaming_agent_error.log", "w")
+        self.dask_worker_type = "dask"
 
         try:
             os.makedirs(self.working_directory)
@@ -81,16 +82,20 @@ class Manager():
 
             self.pilot_compute_description = pilot_compute_description
 
+            self.dask_worker_type = self.pilot_compute_description["type"]
+
             if url_schema.startswith("slurm"):
                 # SLURM plugin
                 executable = "python"
-                arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ", str(cores_per_node)]
+                arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -t ", self.dask_worker_type]
                 if "dask_cores" in pilot_compute_description:
                     arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", " -p ",
-                                 str(pilot_compute_description["dask_cores"])]
+                                 " -t ", self.dask_worker_type]
 
                 if extend_job_id != None:
-                    arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", "-j", extend_job_id]
+                    arguments = ["-m", "pilot.plugins.dask.bootstrap_dask",
+                                 " -t ", self.dask_worker_type,
+                                 "-j", extend_job_id]
                 logging.debug("Run %s Args: %s" % (executable, str(arguments)))
             else:
                 # EC2 / OS / SSH plugin

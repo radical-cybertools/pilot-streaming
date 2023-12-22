@@ -15,6 +15,9 @@ from optparse import OptionParser
 import pkg_resources
 import datetime
 
+import psutil
+import subprocess
+
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -38,7 +41,7 @@ def handler(signum, frame):
 class DaskBootstrap():
 
 
-    def __init__(self, working_directory, dask_home, config_name="default", extension_job_id=None, cores_per_node=None):
+    def __init__(self, working_directory, dask_home, config_name="default", extension_job_id=None, cores_per_node=None, worker_type="dask"):
         self.working_directory=working_directory
         self.dask_home=dask_home
         self.config_name=config_name
@@ -54,6 +57,7 @@ class DaskBootstrap():
         self.dask_ssh = "dask-ssh --ssh-private-key %s" % self.ssh_key
         #self.dask_ssh = "dask-ssh"
         self.dask_memory_limit=92e9    #Stampede
+        self.worker_type = worker_type
         #self.dask_memory_limit=110e9 #Wrangler
         try:
             os.makedirs(self.job_conf_dir)
@@ -149,33 +153,37 @@ class DaskBootstrap():
             
 
     def start_dask(self):
-        logging.debug("Start Dask")
-        os.system("killall -s 9 dask-scheduler")
-        os.system("pkill -9 dask-worker")
-        time.sleep(5)
-        command = "%s --remote-dask-worker distributed.cli.dask_worker %s"%(self.dask_ssh, " ".join(self.nodes))
-        if self.cores_per_node is not None and self.dask_memory_limit is not None:
-                command = "%s --nthreads %s --memory-limit %d --remote-dask-worker distributed.cli.dask_worker %s"%(self.dask_ssh, str(self.cores_per_node), self.dask_memory_limit, " ".join(self.nodes))
-        logging.debug("Start Dask Cluster: " + command)
-        #status = subprocess.call(command, shell=True)
-        self.dask_process = subprocess.Popen(command, shell=True)
-        print("Dask started.")
+        # logging.debug("Start Dask")
+        # os.system("killall -s 9 dask-scheduler")
+        # os.system("pkill -9 dask-worker")
+        # time.sleep(5)
+        # command = "%s --remote-dask-worker distributed.cli.dask_worker %s"%(self.dask_ssh, " ".join(self.nodes))
+        # if self.cores_per_node is not None and self.dask_memory_limit is not None:
+        #         command = "%s --nthreads %s --memory-limit %d --remote-dask-worker distributed.cli.dask_worker %s"%(self.dask_ssh, str(self.cores_per_node), self.dask_memory_limit, " ".join(self.nodes))
+        # logging.debug("Start Dask Cluster: " + command)
+        # #status = subprocess.call(command, shell=True)
+        # self.dask_process = subprocess.Popen(command, shell=True)
+        # print("Dask started.")
+        self.kill_dask_processes_on_nodes(self.nodes)
+        self.launch_dask_scheduler_via_command_line()
+        self.launch_dask_workers_via_command_line()
 
 
     def check_dask(self):
         try:
             import distributed
-            client = distributed.Client(self.nodes[0].strip()+":8786")
-            print("Found %d workers: %s" % (len(list(brokers.keys())), str(brokers)))
+            logging.debug("Nodes: %s" % (str(self.nodes)))
+            client = distributed.Client(self.master+":8786")
             return client.scheduler_info()
-        except:
-            pass
+        except Exception as e:
+            logging.debug("failed with error: %s" % e)
         return None
         
     def stop_dask(self):
         logging.debug("Stop Dask")
-        self.set_env() 
-        self.dask_process.kill()
+        self.set_env()
+        if self.dask_process:
+            self.dask_process.kill()
 
     def start(self):
         self.configure_dask()
@@ -187,7 +195,50 @@ class DaskBootstrap():
     def extend(self):
         self.configure_dask_extension()
         self.start_dask_extension()
-    
+
+
+
+    def kill_dask_processes_on_nodes(self, nodes):
+        for node in nodes:
+            try:
+                # SSH into the node and find Dask processes
+                ssh_command = f"ssh {node} 'pgrep -f \"dask (scheduler|worker|cuda)\"'"
+                process = subprocess.Popen(ssh_command, shell=True, stdout=subprocess.PIPE)
+                output, _ = process.communicate()
+
+                # Kill Dask processes found on the node
+                if output:
+                    pids = output.decode().splitlines()
+                    for pid in pids:
+                        ssh_kill_command = f"ssh {node} 'kill -9 {pid}'"
+                        subprocess.run(ssh_kill_command, shell=True, check=True)
+                    logging.debug(f"Dask processes killed on node {node}")
+                else:
+                    logging.debug(f"No Dask processes found on node {node}")
+            except subprocess.CalledProcessError as e:
+                logging.debug(f"Error executing command on node {node}: {e}")
+            except Exception as ex:
+                logging.debug(f"An error occurred: {ex}")
+
+    def launch_dask_scheduler_via_command_line(self, scheduler_port=8786):
+        logging.debug(f"Launching Dask scheduler started at {self.master}:{scheduler_port}")
+        scheduler_command = f"dask scheduler"
+        subprocess.Popen(scheduler_command, shell=True)
+        time.sleep(10)
+        logging.debug(f"Dask scheduler started at {self.master}:{scheduler_port}")
+
+    def launch_dask_workers_via_command_line(self, scheduler_port=8786):
+        master_url = f"{self.master}:{scheduler_port}"
+        logging.debug(f"Launching Workers against Dask scheduler started at {master_url}")
+        worker_command = f"dask worker {master_url}"
+        if self.worker_type == "dask-cuda":
+            worker_command = f"dask cuda worker {master_url}"
+
+        for node in self.nodes:
+            ssh_worker_command = f"ssh {node} {worker_command} "
+            subprocess.Popen(ssh_worker_command, shell=True)
+            logging.debug(f"Dask worker started on {node} using {ssh_worker_command}")
+
     def start_dask_extension(self):
         logging.debug("Start Dask Extension")
         os.system("killall -s 9 dask-scheduler")
@@ -244,12 +295,15 @@ if __name__ == "__main__" :
                   help="clean Dask")
     parser.add_option("-p", "--cores-per-node", type="string", action="store", dest="cores_per_node", default=None,
                   help="Core Per Node")
+    parser.add_option("-t", "--worker-type", type="string", action="store", dest="worker_type", default="dask",
+                  help="Dask worker type; acceptable values are dask/dask-cuda")
 
     parser.add_option("-n", "--config_name", action="store", type="string", dest="config_name", default="default")
     
     node_list = DaskBootstrap.get_nodelist_from_resourcemanager()
     number_nodes = len(node_list)
     print("nodes: %s"%str(node_list))
+
     run_timestamp=datetime.datetime.now()
     performance_trace_filename = "dask_performance_" + run_timestamp.strftime("%Y%m%d-%H%M%S") + ".csv"
     dask_config_filename = "dask_config_" + run_timestamp.strftime("%Y%m%d-%H%M%S")
@@ -265,19 +319,22 @@ if __name__ == "__main__" :
         print("No Dask Distributed found. Please install Dask Distributed!")
 
     #initialize object for managing dask clusters
-    dask = DaskBootstrap(WORKING_DIRECTORY, None, None, options.jobid, options.cores_per_node)
+    dask = DaskBootstrap(WORKING_DIRECTORY, None, None, options.jobid, options.cores_per_node, options.worker_type)
     if options.jobid is not None and options.jobid != "None":
         logging.debug("Extend Dask Cluster with PS ID: %s" % options.jobid)
         dask.extend()
     elif options.start:
+        dask_start_time = time.time()
         dask.start()
-        number_brokers=0
-        while number_brokers!=number_nodes:
-            dask_nodes=dask.check_dask()
-            logging.debug("Dask Info: %s"%(dask_nodes))
+        dask_nodes = []
+        while len(dask_nodes) != number_nodes:
+            dask_info = dask.check_dask()
+            dask_nodes = dask_info['workers'].keys()
+            logging.debug(
+                "len(dask_nodes):%s, Number_nodes:%s, Dask Info: %s" % (len(dask_nodes), number_nodes, dask_nodes))
             time.sleep(1)
         end_start = time.time()
-        performance_trace_file.write("startup, %d, %.5f\n"%(number_nodes, (end_start-end_download)))
+        performance_trace_file.write("startup, %d, %.5f\n" % (number_nodes, (end_start - dask_start_time)))
         performance_trace_file.flush()
         with open("dask_started", "w") as f:
             f.write(str(node_list))
@@ -289,16 +346,16 @@ if __name__ == "__main__" :
             logging.debug("delete: " + directory)
             shutil.rmtree(directory)
         sys.exit(0)
-    
-    print("Finished launching of Dask Cluster - Sleeping now")
+
+    logging.debug("Finished launching of Dask Cluster - Sleeping now")
 
     while not STOP:
         logging.debug("stop: " + str(STOP))
         time.sleep(10)
-            
+
     dask.stop()
     os.remove(os.path.join(WORKING_DIRECTORY, "dask_started"))
-    performance_trace_file.write("total_runtime, %d, %.5f\n"%(number_nodes, time.time()-start))
+    performance_trace_file.write("total_runtime, %d, %.5f\n" % (number_nodes, time.time() - start))
     performance_trace_file.flush()
     performance_trace_file.close()
         
