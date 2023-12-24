@@ -264,7 +264,7 @@ class PilotComputeService(object):
             jobid = "kafka-" + str(uuid.uuid1())
             manager = pilot.plugins.kafka.cluster.Manager(jobid, 
                                                           working_directory)
-        elif framework_type == "dask":
+        elif framework_type.startswith("dask"):
             jobid = "dask-" + str(uuid.uuid1())
             manager = pilot.plugins.dask.cluster.Manager(jobid, 
                                                          working_directory)
